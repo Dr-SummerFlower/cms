@@ -1,0 +1,64 @@
+import {
+  CallHandler,
+  ExecutionContext,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NestInterceptor,
+} from '@nestjs/common';
+import { catchError, map, Observable, throwError } from 'rxjs';
+
+export interface Response<T> {
+  code: number;
+  message: string;
+  data: T | null;
+}
+
+@Injectable()
+export class GlobalInterceptor<T> implements NestInterceptor<T, Response<T>> {
+  intercept(
+    _context: ExecutionContext,
+    next: CallHandler,
+  ): Observable<Response<T>> {
+    return next.handle().pipe(
+      map(
+        (data: T): Response<T> => ({
+          code: 200,
+          message: 'success',
+          data,
+        }),
+      ),
+      catchError((err) => {
+        const status =
+          err instanceof HttpException
+            ? err.getStatus()
+            : HttpStatus.INTERNAL_SERVER_ERROR;
+
+        const response: string | object =
+          err instanceof HttpException ? err.getResponse() : 'error';
+
+        let message: string;
+        if (typeof response === 'string') {
+          message = response;
+        } else if (
+          response &&
+          typeof response === 'object' &&
+          'message' in response
+        ) {
+          const msg = response.message;
+          message = Array.isArray(msg) ? msg.join(', ') : String(msg);
+        } else {
+          message = 'error';
+        }
+
+        return throwError(
+          (): Response<T> => ({
+            code: status,
+            message,
+            data: null,
+          }),
+        );
+      }),
+    );
+  }
+}

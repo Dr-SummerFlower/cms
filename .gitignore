@@ -1,0 +1,33 @@
+# 编译输出
+dist/
+node_modules/
+
+# 日志文件
+logs
+*.log
+npm-debug.log*
+
+# 环境变量文件
+.env
+.env.dev
+.env.prod
+
+# IDE
+.vscode/
+.idea/
+
+
+# Node.js运行时数据
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# TypeScript缓存
+*.tsbuildinfo
+
+# 文档文件（根据项目需要）
+@nestjs-redis_client.md
+api.md
+db.md
+dev-plan.md

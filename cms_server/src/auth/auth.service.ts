@@ -13,7 +13,7 @@ import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
-  private readonly logger = new Logger(AuthService.name);
+  private readonly logger: Logger = new Logger(AuthService.name);
 
   constructor(
     private usersService: UsersService,
@@ -56,7 +56,10 @@ export class AuthService {
       });
 
       const id: string = String(user.id);
-      const payload = { sub: id, username: user.username };
+      const payload: { sub: string; username: string } = {
+        sub: id,
+        username: user.username,
+      };
       return {
         access_token: await this.jwtService.signAsync(payload),
       };

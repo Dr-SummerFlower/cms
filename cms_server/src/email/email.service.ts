@@ -9,7 +9,7 @@ import { SendCodeDto } from './dto/send-code.dto';
 
 @Injectable()
 export class EmailService {
-  private readonly logger = new Logger(EmailService.name);
+  private readonly logger: Logger = new Logger(EmailService.name);
 
   constructor(
     @InjectRedis() private readonly redisService: Redis,

@@ -1,12 +1,7 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { EmailService } from './email.service';
 import { SendCodeDto } from './dto/send-code.dto';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBody,
-} from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('邮件服务')
 @Controller('email')
@@ -15,7 +10,8 @@ export class EmailController {
 
   @ApiOperation({
     summary: '发送邮箱验证码',
-    description: '发送邮箱验证码，用于用户注册、密码重置等场景。此接口为公开接口，无需权限验证。'
+    description:
+      '发送邮箱验证码，用于用户注册、密码重置等场景。此接口为公开接口，无需权限验证。',
   })
   @ApiBody({ type: SendCodeDto })
   @ApiResponse({

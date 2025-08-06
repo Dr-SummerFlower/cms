@@ -1,11 +1,11 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import {
-  ApiTags,
-  ApiOperation,
-  ApiBody,
-  ApiResponse,
   ApiBadRequestResponse,
+  ApiBody,
   ApiConflictResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
@@ -34,7 +34,7 @@ export class AuthController {
         summary: '登录示例',
         value: {
           email: '3606006150@qq.com',
-            password: '@Qwer123456',
+          password: '@Qwer123456',
         },
       },
     },
@@ -103,20 +103,20 @@ export class AuthController {
         summary: '注册示例',
         value: {
           username: 'summer',
-            email: '3606006150@qq.com',
-            password: '@Qwer123456',
+          email: '3606006150@qq.com',
+          password: '@Qwer123456',
           code: '123456',
         },
       },
     },
   })
   @ApiResponse({
-    status: 200,
+    status: 201,
     description: '注册成功',
     schema: {
       type: 'object',
       properties: {
-        code: { type: 'number', example: 200 },
+        code: { type: 'number', example: 201 },
         message: { type: 'string', example: 'success' },
         data: {
           type: 'object',

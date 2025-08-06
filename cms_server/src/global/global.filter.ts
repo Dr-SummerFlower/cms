@@ -23,16 +23,14 @@ export class GlobalFilter implements ExceptionFilter {
     const request: Request = ctx.getRequest<Request>();
     const status: number = exception.getStatus();
 
-    const exceptionResponse = exception.getResponse();
+    const exceptionResponse: string | object = exception.getResponse();
 
     let errorMessage: string;
     if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
       const responseObj = exceptionResponse as Record<string, unknown>;
       errorMessage = (responseObj.message as string) || exception.message;
-    } else if (typeof exceptionResponse === 'string') {
-      errorMessage = exceptionResponse;
     } else {
-      errorMessage = exception.message;
+      errorMessage = exceptionResponse;
     }
 
     const errorResponse: ErrorResponse = {

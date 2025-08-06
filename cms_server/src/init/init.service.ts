@@ -7,20 +7,22 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class InitService implements OnModuleInit {
-  private readonly logger = new Logger(InitService.name);
+  private readonly logger: Logger = new Logger(InitService.name);
 
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
     private readonly configService: ConfigService,
   ) {}
 
-  async onModuleInit() {
+  async onModuleInit(): Promise<void> {
     await this.createDefaultAdmin();
   }
 
-  private async createDefaultAdmin() {
+  private async createDefaultAdmin(): Promise<void> {
     try {
-      const existingAdmin = await this.userModel.findOne({ role: 'ADMIN' });
+      const existingAdmin: User = (await this.userModel.findOne({
+        role: 'ADMIN',
+      })) as User;
 
       if (existingAdmin) {
         return;

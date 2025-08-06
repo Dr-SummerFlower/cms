@@ -94,20 +94,21 @@ export class UsersService {
   }
 
   async updateRole(id: string, role: string): Promise<User> {
-    const user = await this.dbModel.findById(id);
+    const user: User = (await this.dbModel.findById(id)) as User;
     if (!user) {
       throw new NotFoundException('用户不存在');
     }
 
     user.role = role;
     await user.save();
-    return user as User;
+    return user;
   }
 
-  async remove(id: string): Promise<void> {
-    const user = await this.dbModel.findByIdAndDelete(id);
+  async remove(id: string): Promise<User> {
+    const user: User = (await this.dbModel.findByIdAndDelete(id)) as User;
     if (!user) {
       throw new NotFoundException('用户不存在');
     }
+    return user;
   }
 }

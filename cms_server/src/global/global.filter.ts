@@ -7,6 +7,14 @@ import {
 import { Request, Response } from 'express';
 import { HttpArgumentsHost } from '@nestjs/common/interfaces';
 
+interface ErrorResponse {
+  code: number;
+  message: string;
+  data: unknown;
+  timestamp: string;
+  path: string;
+}
+
 @Catch(HttpException)
 export class GlobalFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
@@ -15,12 +23,26 @@ export class GlobalFilter implements ExceptionFilter {
     const request: Request = ctx.getRequest<Request>();
     const status: number = exception.getStatus();
 
-    response.status(status).json({
+    const exceptionResponse = exception.getResponse();
+
+    let errorMessage: string;
+    if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
+      const responseObj = exceptionResponse as Record<string, unknown>;
+      errorMessage = (responseObj.message as string) || exception.message;
+    } else if (typeof exceptionResponse === 'string') {
+      errorMessage = exceptionResponse;
+    } else {
+      errorMessage = exception.message;
+    }
+
+    const errorResponse: ErrorResponse = {
       code: status,
-      message: 'error',
+      message: errorMessage,
       data: {},
       timestamp: new Date().toISOString(),
       path: request.url,
-    });
+    };
+
+    response.status(status).json(errorResponse);
   }
 }

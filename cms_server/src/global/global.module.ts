@@ -3,15 +3,15 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { RedisModule } from '@nestjs-redis/client';
 import { MailerModule } from '@nestjs-modules/mailer';
-import path from 'path';
+import * as path from 'path';
 import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
 import { GlobalInterceptor } from './global.interceptor';
 import { GlobalFilter } from './global.filter';
 
 // 环境配置文件路径数组
-const envFilePath = ['.env'];
+const envFilePath: string[] = ['.env'];
 // 是否为开发环境
-export const IS_DEV = process.env.RUNNING_ENV !== 'prod';
+export const IS_DEV: boolean = process.env.RUNNING_ENV !== 'prod';
 
 // 根据环境加载对应的配置文件
 if (IS_DEV) {
@@ -32,7 +32,7 @@ if (IS_DEV) {
       useFactory: (config: ConfigService) => ({
         uri: config.get<string>(
           'DB_URI',
-          'mongodb://localhost:27017/show_tix_default', // 默认数据库连接字符串
+          'mongodb://localhost:27017/cms_default', // 默认数据库连接字符串
         ),
       }),
     }),
@@ -57,13 +57,13 @@ if (IS_DEV) {
           port: 465, // SSL端口
           secure: true, // 使用SSL加密
           auth: {
-            user: config.get<string>('EMAIL_USER'), // 发件人邮箱
-            pass: config.get<string>('EMAIL_PWD'), // 邮箱授权码
+            user: config.get<string>('NOTIFY_EMAIL_USER'), // 发件人邮箱
+            pass: config.get<string>('NOTIFY_EMAIL_PWD'), // 邮箱授权码
           },
         },
         // 默认发件人配置
         defaults: {
-          from: `"演唱会管理组" <${config.get<string>('EMAIL_USER')}>`,
+          from: `"演唱会管理组" <${config.get<string>('NOTIFY_EMAIL_USER')}>`,
         },
         // 模板引擎配置
         template: {

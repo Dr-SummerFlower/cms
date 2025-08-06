@@ -2,9 +2,10 @@ import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
+  const logger = new Logger('Applicaton');
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
@@ -42,6 +43,8 @@ async function bootstrap() {
   const port = configService.get<number>('PORT') || 3000;
 
   await app.listen(port);
+  logger.log(`服务器启动成功，端口：${port}`);
+  logger.log(`Swagger文档地址：http://localhost:${port}/api-docs`);
 }
 
 bootstrap();

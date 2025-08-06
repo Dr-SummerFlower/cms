@@ -2,13 +2,13 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { RedisModule } from '@nestjs-redis/client';
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-import { TransformInterceptor } from './common/interceptors/transform.interceptor';
-import { NotificationModule } from './notification/notification.module';
 import { GlobalModule } from './global/global.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { EmailModule } from './email/email.module';
+import { InitModule } from './init/init.module';
 
 const envFilePath = ['.env'];
 const IS_DEV = process.env.RUNNING_ENV !== 'prod';
@@ -42,20 +42,13 @@ if (IS_DEV) {
         },
       }),
     }),
-    NotificationModule,
     GlobalModule,
+    UsersModule,
+    AuthModule,
+    EmailModule,
+    InitModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    {
-      provide: APP_FILTER,
-      useClass: HttpExceptionFilter,
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: TransformInterceptor,
-    },
-  ],
+  providers: [AppService],
 })
 export class AppModule {}

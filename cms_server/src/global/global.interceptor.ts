@@ -28,8 +28,8 @@ export class GlobalInterceptor<T> implements NestInterceptor<T, Response<T>> {
           data,
         }),
       ),
-      catchError((err) => {
-        const status =
+      catchError((err: any): Observable<never> => {
+        const status: number =
           err instanceof HttpException
             ? err.getStatus()
             : HttpStatus.INTERNAL_SERVER_ERROR;
@@ -45,8 +45,9 @@ export class GlobalInterceptor<T> implements NestInterceptor<T, Response<T>> {
           typeof response === 'object' &&
           'message' in response
         ) {
-          const msg = response.message;
-          message = Array.isArray(msg) ? msg.join(', ') : String(msg);
+          message = Array.isArray(response.message)
+            ? response.message.join(', ')
+            : String(response.message);
         } else {
           message = 'error';
         }

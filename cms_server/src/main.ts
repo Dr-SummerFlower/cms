@@ -34,7 +34,14 @@ async function bootstrap() {
     .setTitle('演唱会管理系统API')
     .setDescription('演唱会管理系统的RESTful API文档')
     .setVersion('1.0')
-    .addBearerAuth()
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+      'bearer',
+    )
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document);

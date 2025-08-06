@@ -52,13 +52,12 @@ export class GlobalInterceptor<T> implements NestInterceptor<T, Response<T>> {
           message = 'error';
         }
 
-        return throwError(
-          (): Response<T> => ({
-            code: status,
-            message,
-            data: null,
-          }),
-        );
+        return throwError(() => {
+          if (err instanceof HttpException) {
+            throw err;
+          }
+          throw new HttpException(message, status);
+        });
       }),
     );
   }

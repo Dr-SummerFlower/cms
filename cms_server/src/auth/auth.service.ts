@@ -62,6 +62,9 @@ export class AuthService {
       };
     } catch (error) {
       this.logger.warn(error);
+      if (error instanceof ConflictException) {
+        throw error;
+      }
       throw new InternalServerErrorException('用户注册失败，请稍后重试');
     }
   }

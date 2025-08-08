@@ -268,14 +268,15 @@ export class UsersController {
     }
     const { emailCode, ...updateData } = updateUserDto;
 
-    const needVerification = updateData.email || updateData.password;
+    const needVerification: string | undefined =
+      updateData.email || updateData.password;
 
     if (needVerification) {
       if (!emailCode) {
         throw new BadRequestException('更新邮箱或密码需要提供验证码');
       }
 
-      const currentUser = await this.usersService.findOneById(id);
+      const currentUser: User = await this.usersService.findOneById(id);
 
       await this.validationService.validateCode(
         currentUser.email,

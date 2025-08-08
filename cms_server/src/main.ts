@@ -1,13 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { INestApplication, Logger, ValidationPipe } from '@nestjs/common';
 
-async function bootstrap() {
+async function bootstrap(): Promise<void> {
   const logger = new Logger('Applicaton');
-  const app = await NestFactory.create(AppModule);
-  const configService = app.get(ConfigService);
+  const app: INestApplication = await NestFactory.create(AppModule);
+  const configService: ConfigService = app.get(ConfigService);
 
   // 全局前缀
   app.setGlobalPrefix('api');
@@ -30,7 +30,7 @@ async function bootstrap() {
   );
 
   // Swagger配置
-  const config = new DocumentBuilder()
+  const config: Omit<OpenAPIObject, 'paths'> = new DocumentBuilder()
     .setTitle('演唱会管理系统API')
     .setDescription('演唱会管理系统的RESTful API文档')
     .setVersion('1.0')
@@ -43,15 +43,18 @@ async function bootstrap() {
       'bearer',
     )
     .build();
-  const document = SwaggerModule.createDocument(app, config);
+  const document: OpenAPIObject = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document);
 
   // 获取端口
-  const port = configService.get<number>('PORT') || 3000;
+  const port: number = configService.get<number>('PORT') || 3000;
 
   await app.listen(port);
   logger.log(`服务器启动成功，端口：${port}`);
   logger.log(`Swagger文档地址：http://localhost:${port}/api-docs`);
 }
 
-bootstrap();
+bootstrap().catch((error: Error): never => {
+  console.error('应用启动失败:', error);
+  process.exit(1);
+});

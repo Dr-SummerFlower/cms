@@ -7,25 +7,24 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { catchError, map, Observable, throwError } from 'rxjs';
-
-export interface Response<T> {
-  code: number;
-  message: string;
-  data: T | null;
-}
+import { Request } from 'express';
+import { Response } from '../types/';
 
 @Injectable()
 export class GlobalInterceptor<T> implements NestInterceptor<T, Response<T>> {
   intercept(
-    _context: ExecutionContext,
+    context: ExecutionContext,
     next: CallHandler,
   ): Observable<Response<T>> {
+    const request: Request = context.switchToHttp().getRequest<Request>();
     return next.handle().pipe(
       map(
         (data: T): Response<T> => ({
           code: 200,
           message: 'success',
           data,
+          timestamp: new Date().toISOString(),
+          path: String(request.url),
         }),
       ),
       catchError((err: any): Observable<never> => {

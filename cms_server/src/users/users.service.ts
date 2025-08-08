@@ -8,16 +8,13 @@ import { FilterQuery, Model } from 'mongoose';
 import { User, UserDocument } from './entities/user.entity';
 import { PaginationDto } from './dto/pagination.dto';
 import { UserListResponseDto } from './dto/user-list-response.dto';
+import { UpdateData, UserData } from '../types';
 
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(User.name) private readonly dbModel: Model<User>) {}
 
-  async create(userData: {
-    username: string;
-    email: string;
-    password: string;
-  }): Promise<User> {
+  async create(userData: UserData): Promise<User> {
     return (await this.dbModel.create(userData)) as User;
   }
 
@@ -26,11 +23,11 @@ export class UsersService {
   }
 
   async findOneById(id: string): Promise<User> {
-    const user = await this.dbModel.findById(id);
+    const user: User = (await this.dbModel.findById(id)) as User;
     if (!user) {
       throw new NotFoundException('用户不存在');
     }
-    return user as User;
+    return user;
   }
 
   async findAll(paginationDto: PaginationDto): Promise<UserListResponseDto> {
@@ -61,11 +58,8 @@ export class UsersService {
     };
   }
 
-  async update(
-    id: string,
-    updateData: { username?: string; email?: string; password?: string },
-  ): Promise<User> {
-    const user = await this.dbModel.findById(id);
+  async update(id: string, updateData: UpdateData): Promise<User> {
+    const user = (await this.dbModel.findById(id)) as User;
     if (!user) {
       throw new NotFoundException('用户不存在');
     }
@@ -74,10 +68,10 @@ export class UsersService {
       user.username = updateData.username;
     }
     if (updateData.email) {
-      const existingUser = await this.dbModel.findOne({
+      const existingUser = (await this.dbModel.findOne({
         email: updateData.email,
         _id: { $ne: id },
-      });
+      })) as User;
 
       if (existingUser) {
         throw new BadRequestException('该邮箱已被使用');
@@ -90,7 +84,7 @@ export class UsersService {
     }
 
     await user.save();
-    return user as User;
+    return user;
   }
 
   async updateRole(id: string, role: string): Promise<User> {

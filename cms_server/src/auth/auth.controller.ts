@@ -11,7 +11,9 @@ import {
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ValidationService } from './validation.service';
+import { TokenResponse } from '../types';
 
 @ApiTags('认证管理')
 @Controller('auth')
@@ -55,6 +57,11 @@ export class AuthController {
               example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
               description: 'JWT访问令牌',
             },
+            refresh_token: {
+              type: 'string',
+              example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+              description: 'JWT刷新令牌',
+            },
           },
         },
       },
@@ -86,7 +93,7 @@ export class AuthController {
       },
     },
   })
-  login(@Body() loginDto: LoginDto): Promise<{ access_token: string }> {
+  login(@Body() loginDto: LoginDto): Promise<TokenResponse> {
     return this.authService.login(loginDto);
   }
 
@@ -126,6 +133,11 @@ export class AuthController {
               example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
               description: 'JWT访问令牌',
             },
+            refresh_token: {
+              type: 'string',
+              example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+              description: 'JWT刷新令牌',
+            },
           },
         },
       },
@@ -160,20 +172,80 @@ export class AuthController {
       },
     },
   })
-  async register(
-    @Body() registerDto: RegisterDto,
-  ): Promise<{ access_token: string }> {
+  async register(@Body() registerDto: RegisterDto): Promise<TokenResponse> {
     await this.validationService.validateCode(
       registerDto.email,
       registerDto.code,
       'register',
     );
-    const result: { access_token: string } = await this.authService.register({
+    const result: TokenResponse = await this.authService.register({
       username: registerDto.username,
       email: registerDto.email,
       password: registerDto.password,
     });
     await this.validationService.clearCode(registerDto.email, 'register');
     return result;
+  }
+
+  @Post('refresh')
+  @ApiOperation({
+    summary: '刷新访问令牌',
+    description: '使用refresh token获取新的access token和refresh token',
+  })
+  @ApiBody({
+    type: RefreshTokenDto,
+    description: 'Refresh Token信息',
+    examples: {
+      example1: {
+        summary: '刷新令牌示例',
+        value: {
+          refresh_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: '刷新成功',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: 'success' },
+        data: {
+          type: 'object',
+          properties: {
+            access_token: {
+              type: 'string',
+              example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+              description: '新的JWT访问令牌',
+            },
+            refresh_token: {
+              type: 'string',
+              example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+              description: '新的JWT刷新令牌',
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Refresh Token无效或已过期',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 401 },
+        message: { type: 'string', example: '无效的refresh token' },
+        data: { type: 'null' },
+        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
+        path: { type: 'string', example: '/api/auth/refresh' },
+      },
+    },
+  })
+  async refresh(
+    @Body() refreshTokenDto: RefreshTokenDto,
+  ): Promise<TokenResponse> {
+    return this.authService.refreshToken(refreshTokenDto.refresh_token);
   }
 }

@@ -1,16 +1,10 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRedis, Redis } from '@nestjs-redis/client';
 import { MailerService } from '@nestjs-modules/mailer';
 import { SendCodeDto } from './dto/send-code.dto';
 
 @Injectable()
 export class EmailService {
-  private readonly logger: Logger = new Logger(EmailService.name);
-
   constructor(
     @InjectRedis() private readonly redisService: Redis,
     private readonly emailService: MailerService,
@@ -39,8 +33,7 @@ export class EmailService {
       });
 
       return { success: true };
-    } catch (error) {
-      this.logger.warn(error);
+    } catch {
       throw new InternalServerErrorException('邮件发送失败，请稍后重试');
     }
   }

@@ -1,8 +1,8 @@
-import { NestFactory } from '@nestjs/core';
+import { INestApplication, Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { INestApplication, Logger, ValidationPipe } from '@nestjs/common';
 
 async function bootstrap(): Promise<void> {
   const logger = new Logger('Applicaton');

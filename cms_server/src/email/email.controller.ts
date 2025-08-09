@@ -1,8 +1,12 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { EmailService } from './email.service';
-import { SendCodeDto } from './dto/send-code.dto';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { SendCodeDto } from './dto/send-code.dto';
+import { EmailService } from './email.service';
 
+/**
+ * 邮件控制器
+ * @description 处理邮件相关的HTTP请求，提供邮件发送功能的API接口
+ */
 @ApiTags('邮件服务')
 @Controller('email')
 export class EmailController {
@@ -60,6 +64,12 @@ export class EmailController {
     },
   })
   @Post()
+  /**
+   * 发送邮箱验证码接口
+   * @description 发送邮箱验证码，用于用户注册、密码重置等场景
+   * @param sendCodeDto 发送验证码的数据传输对象
+   * @returns 返回发送结果
+   */
   sendCode(@Body() sendCodeDto: SendCodeDto): Promise<{ success: boolean }> {
     return this.emailService.sendCode(sendCodeDto);
   }

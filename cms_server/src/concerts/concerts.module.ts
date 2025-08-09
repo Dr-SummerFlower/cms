@@ -1,9 +1,9 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ConcertsService } from './concerts.service';
-import { ConcertsController } from './concerts.controller';
-import { Concert, ConcertSchema } from './entities/concert.entity';
 import { AuthModule } from '../auth/auth.module';
+import { ConcertsController } from './concerts.controller';
+import { ConcertsService } from './concerts.service';
+import { Concert, ConcertSchema } from './entities/concert.entity';
 
 @Module({
   imports: [

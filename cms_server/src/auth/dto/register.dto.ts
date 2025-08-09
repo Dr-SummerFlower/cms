@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
@@ -6,9 +7,18 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
 
+/**
+ * 用户注册数据传输对象
+ * @class RegisterDto
+ * @description 定义用户注册时需要提供的数据结构
+ */
 export class RegisterDto {
+  /**
+   * 用户名
+   * @type {string}
+   * @description 用户注册用户名，长度4-20个字符
+   */
   @ApiProperty({
     description: '用户名',
     example: 'summer',
@@ -21,6 +31,11 @@ export class RegisterDto {
   @MaxLength(20, { message: '用户名最多20个字符' })
   username: string;
 
+  /**
+   * 用户邮箱
+   * @type {string}
+   * @description 用户注册邮箱地址
+   */
   @ApiProperty({
     description: '用户邮箱',
     example: '3606006150@qq.com',
@@ -29,6 +44,11 @@ export class RegisterDto {
   @IsEmail({}, { message: '请输入有效的邮箱地址' })
   email: string;
 
+  /**
+   * 用户密码
+   * @type {string}
+   * @description 用户注册密码，至少8个字符，必须包含大小写字母和数字
+   */
   @ApiProperty({
     description: '用户密码，必须包含大小写字母和数字',
     example: '@Qwer123456',
@@ -43,6 +63,11 @@ export class RegisterDto {
   })
   password: string;
 
+  /**
+   * 邮箱验证码
+   * @type {string}
+   * @description 6位数字验证码
+   */
   @ApiProperty({
     description: '邮箱验证码',
     example: '123456',

@@ -1,27 +1,40 @@
+import { MailerModule } from '@nestjs-modules/mailer';
+import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
+import { RedisModule } from '@nestjs-redis/client';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { RedisModule } from '@nestjs-redis/client';
-import { MailerModule } from '@nestjs-modules/mailer';
 import * as path from 'path';
-import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
-import { GlobalInterceptor } from './global.interceptor';
 import { GlobalFilter } from './global.filter';
+import { GlobalInterceptor } from './global.interceptor';
 
 // 环境配置文件路径数组
 const envFilePath: string[] = ['.env'];
-// 是否为开发环境
+
+/**
+ * 开发环境标识
+ * @constant {boolean} IS_DEV
+ * @description 判断当前是否为开发环境，用于区分开发和生产环境配置
+ */
 export const IS_DEV: boolean = process.env.RUNNING_ENV !== 'prod';
 
 // 根据环境加载对应的配置文件
 if (IS_DEV) {
+  // 开发环境优先加载.env.dev配置文件
   envFilePath.unshift('.env.dev');
 } else {
+  // 生产环境优先加载.env.prod配置文件
   envFilePath.unshift('.env.prod');
 }
 
+/**
+ * 全局模块
+ * @class GlobalModule
+ * @description 配置应用的全局服务，包括数据库连接、缓存、邮件服务和全局拦截器/过滤器
+ */
 @Module({
   imports: [
+    // 全局配置模块
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: envFilePath,
@@ -77,10 +90,12 @@ if (IS_DEV) {
     }),
   ],
   providers: [
+    // 全局响应拦截器提供者
     {
       provide: 'APP_INTERCEPTOR',
       useClass: GlobalInterceptor,
     },
+    // 全局异常过滤器提供者
     {
       provide: 'APP_FILTER',
       useClass: GlobalFilter,

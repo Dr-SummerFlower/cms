@@ -1,10 +1,14 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
+import * as bcrypt from 'bcrypt';
 import { Model } from 'mongoose';
 import { User } from '../users/entities/user.entity';
-import * as bcrypt from 'bcrypt';
-import { ConfigService } from '@nestjs/config';
 
+/**
+ * 初始化服务类
+ * @description 应用启动时的初始化服务，负责创建默认管理员账户等初始化操作
+ */
 @Injectable()
 export class InitService implements OnModuleInit {
   private readonly logger: Logger = new Logger(InitService.name);
@@ -14,10 +18,21 @@ export class InitService implements OnModuleInit {
     private readonly configService: ConfigService,
   ) {}
 
+  /**
+   * 模块初始化钩子
+   * @description 在模块初始化时自动执行，创建默认管理员账户
+   * @returns void
+   */
   async onModuleInit(): Promise<void> {
     await this.createDefaultAdmin();
   }
 
+  /**
+   * 创建默认管理员账户
+   * @description 检查系统中是否存在管理员账户，如果不存在则创建默认管理员
+   * @returns void
+   * @private
+   */
   private async createDefaultAdmin(): Promise<void> {
     try {
       const existingAdmin: User = (await this.userModel.findOne({

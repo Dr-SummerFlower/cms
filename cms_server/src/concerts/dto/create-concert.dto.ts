@@ -1,3 +1,4 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsDateString,
   IsNotEmpty,
@@ -6,9 +7,18 @@ import {
   IsString,
   Min,
 } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
+/**
+ * 创建演唱会数据传输对象
+ * @class CreateConcertDto
+ * @description 定义创建演唱会时需要提供的数据结构
+ */
 export class CreateConcertDto {
+  /**
+   * 演唱会名称
+   * @type {string}
+   * @description 演唱会的名称
+   */
   @ApiProperty({
     description: '演唱会名称',
     example: '周杰伦演唱会',
@@ -17,6 +27,11 @@ export class CreateConcertDto {
   @IsNotEmpty({ message: '演唱会名称不能为空' })
   name: string;
 
+  /**
+   * 演唱会日期
+   * @type {Date}
+   * @description 演唱会举办的日期和时间
+   */
   @ApiProperty({
     description: '演唱会日期',
     example: '2024-12-31T20:00:00.000Z',
@@ -25,6 +40,11 @@ export class CreateConcertDto {
   @IsDateString({}, { message: '请输入有效的日期格式' })
   date: Date;
 
+  /**
+   * 演出场馆
+   * @type {string}
+   * @description 演唱会举办的场馆名称
+   */
   @ApiProperty({
     description: '演出场馆',
     example: '北京鸟巢体育场',
@@ -33,6 +53,11 @@ export class CreateConcertDto {
   @IsNotEmpty({ message: '演出场馆不能为空' })
   venue: string;
 
+  /**
+   * 成人票价格
+   * @type {number}
+   * @description 成人票的价格，不能为负数
+   */
   @ApiProperty({
     description: '成人票价格',
     example: 299,
@@ -42,6 +67,11 @@ export class CreateConcertDto {
   @Min(0, { message: '成人票价格不能为负数' })
   adultPrice: number;
 
+  /**
+   * 儿童票价格
+   * @type {number}
+   * @description 儿童票的价格，不能为负数
+   */
   @ApiProperty({
     description: '儿童票价格',
     example: 199,
@@ -51,6 +81,11 @@ export class CreateConcertDto {
   @Min(0, { message: '儿童票价格不能为负数' })
   childPrice: number;
 
+  /**
+   * 总票数
+   * @type {number}
+   * @description 演唱会的总票数，至少为1
+   */
   @ApiProperty({
     description: '总票数',
     example: 1000,
@@ -60,6 +95,11 @@ export class CreateConcertDto {
   @Min(1, { message: '总票数至少为1' })
   totalTickets: number;
 
+  /**
+   * 演唱会描述
+   * @type {string}
+   * @description 演唱会的详细描述信息，可选字段
+   */
   @ApiPropertyOptional({
     description: '演唱会描述',
     example: '周杰伦2024世界巡回演唱会北京站',

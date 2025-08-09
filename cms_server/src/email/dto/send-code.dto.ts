@@ -1,7 +1,17 @@
-import { IsEmail, IsIn, IsNotEmpty, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsIn, IsNotEmpty, IsString } from 'class-validator';
 
+/**
+ * 发送验证码数据传输对象
+ * @class SendCodeDto
+ * @description 定义发送邮箱验证码时需要提供的数据结构
+ */
 export class SendCodeDto {
+  /**
+   * 邮箱地址
+   * @type {string}
+   * @description 接收验证码的邮箱地址
+   */
   @ApiProperty({
     description: '接收验证码的邮箱地址',
     example: '3606006150@qq.com',
@@ -11,6 +21,11 @@ export class SendCodeDto {
   @IsNotEmpty({ message: '邮箱不能为空' })
   email: string;
 
+  /**
+   * 验证码类型
+   * @type {'register' | 'update'}
+   * @description 验证码的使用类型，注册或更新
+   */
   @ApiProperty({
     description: '验证码类型',
     example: 'register',

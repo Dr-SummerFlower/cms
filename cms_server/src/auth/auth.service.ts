@@ -5,14 +5,19 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { JwtPayload, TokenResponse } from '../types';
+import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
-import { User } from '../users/entities/user.entity';
-import { JwtPayload, TokenResponse } from '../types';
 
+/**
+ * 认证服务
+ * @class AuthService
+ * @description 处理用户认证相关业务逻辑，包括登录、注册、令牌生成和验证
+ */
 @Injectable()
 export class AuthService {
   constructor(
@@ -21,6 +26,13 @@ export class AuthService {
     private configService: ConfigService,
   ) {}
 
+  /**
+   * 用户登录
+   * @param {LoginDto} dto - 登录数据传输对象
+   * @returns {Promise<TokenResponse>} 包含访问令牌和刷新令牌的响应
+   * @throws {BadRequestException} 当用户名或密码错误时抛出
+   * @description 验证用户邮箱和密码，成功后生成JWT令牌
+   */
   async login(dto: LoginDto): Promise<TokenResponse> {
     const { email, password } = dto;
     const user: User = await this.usersService.findOne(email);
@@ -40,6 +52,17 @@ export class AuthService {
     return this.generateToken(payload);
   }
 
+  /**
+   * 用户注册
+   * @param {Object} userData - 用户注册数据
+   * @param {string} userData.username - 用户名
+   * @param {string} userData.email - 邮箱地址
+   * @param {string} userData.password - 密码
+   * @returns {Promise<TokenResponse>} 包含访问令牌和刷新令牌的响应
+   * @throws {ConflictException} 当邮箱已被注册时抛出
+   * @throws {InternalServerErrorException} 当注册过程中发生错误时抛出
+   * @description 创建新用户账户并生成JWT令牌
+   */
   async register(userData: {
     username: string;
     email: string;
@@ -68,6 +91,13 @@ export class AuthService {
     }
   }
 
+  /**
+   * 刷新访问令牌
+   * @param {string} refreshToken - 刷新令牌
+   * @returns {Promise<TokenResponse>} 新的访问令牌和刷新令牌
+   * @throws {UnauthorizedException} 当刷新令牌无效或用户不存在时抛出
+   * @description 使用刷新令牌生成新的访问令牌和刷新令牌
+   */
   async refreshToken(refreshToken: string): Promise<TokenResponse> {
     try {
       const payload: {
@@ -91,6 +121,13 @@ export class AuthService {
     }
   }
 
+  /**
+   * 验证刷新令牌
+   * @param {string} refreshToken - 刷新令牌
+   * @returns {Promise<JwtPayload>} JWT载荷信息
+   * @throws {UnauthorizedException} 当刷新令牌无效时抛出
+   * @description 验证刷新令牌的有效性并返回载荷信息
+   */
   async validateRefreshToken(refreshToken: string): Promise<JwtPayload> {
     try {
       return await this.jwtService.verifyAsync<JwtPayload>(refreshToken);
@@ -99,6 +136,15 @@ export class AuthService {
     }
   }
 
+  /**
+   * 生成JWT令牌
+   * @param {Object} payload - JWT载荷
+   * @param {string} payload.sub - 用户ID
+   * @param {string} payload.username - 用户名
+   * @returns {Promise<TokenResponse>} 包含访问令牌和刷新令牌的响应
+   * @private
+   * @description 生成访问令牌和刷新令牌
+   */
   private async generateToken(payload: {
     sub: string;
     username: string;

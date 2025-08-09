@@ -8,13 +8,18 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { TokenResponse } from '../types';
 import { AuthService } from './auth.service';
-import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { RegisterDto } from './dto/register.dto';
 import { ValidationService } from './validation.service';
-import { TokenResponse } from '../types';
 
+/**
+ * 认证控制器
+ * @class AuthController
+ * @description 处理用户认证相关的HTTP请求，包括登录、注册和令牌刷新
+ */
 @ApiTags('认证管理')
 @Controller('auth')
 export class AuthController {
@@ -93,6 +98,12 @@ export class AuthController {
       },
     },
   })
+  /**
+   * 用户登录接口
+   * @param {LoginDto} loginDto - 登录数据传输对象
+   * @returns {Promise<TokenResponse>} 登录成功后的令牌响应
+   * @description 处理用户登录请求，验证邮箱和密码后返回JWT令牌
+   */
   login(@Body() loginDto: LoginDto): Promise<TokenResponse> {
     return this.authService.login(loginDto);
   }
@@ -172,6 +183,12 @@ export class AuthController {
       },
     },
   })
+  /**
+   * 用户注册接口
+   * @param {RegisterDto} registerDto - 注册数据传输对象
+   * @returns {Promise<TokenResponse>} 注册成功后的令牌响应
+   * @description 处理用户注册请求，验证邮箱验证码后创建新用户并返回JWT令牌
+   */
   async register(@Body() registerDto: RegisterDto): Promise<TokenResponse> {
     await this.validationService.validateCode(
       registerDto.email,
@@ -243,6 +260,12 @@ export class AuthController {
       },
     },
   })
+  /**
+   * 刷新访问令牌接口
+   * @param {RefreshTokenDto} refreshTokenDto - 刷新令牌数据传输对象
+   * @returns {Promise<TokenResponse>} 刷新成功后的新令牌响应
+   * @description 使用refresh token获取新的access token和refresh token
+   */
   async refresh(
     @Body() refreshTokenDto: RefreshTokenDto,
   ): Promise<TokenResponse> {

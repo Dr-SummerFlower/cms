@@ -21,16 +21,20 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { ConcertsService } from './concerts.service';
-import { CreateConcertDto } from './dto/create-concert.dto';
-import { UpdateConcertDto } from './dto/update-concert.dto';
-import { ConcertQueryDto } from './dto/concert-query.dto';
-import { ConcertListResponseDto } from './dto/concert-list-response.dto';
-import { Concert } from './entities/concert.entity';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { ConcertsService } from './concerts.service';
+import { ConcertListResponseDto } from './dto/concert-list-response.dto';
+import { ConcertQueryDto } from './dto/concert-query.dto';
+import { CreateConcertDto } from './dto/create-concert.dto';
+import { UpdateConcertDto } from './dto/update-concert.dto';
+import { Concert } from './entities/concert.entity';
 
+/**
+ * 演唱会控制器
+ * @description 处理演唱会相关的HTTP请求，包括创建、查询、更新和删除演唱会的API接口
+ */
 @ApiTags('演唱会管理')
 @Controller('concerts')
 export class ConcertsController {
@@ -119,6 +123,12 @@ export class ConcertsController {
       },
     },
   })
+  /**
+   * 创建演唱会接口
+   * @description 管理员创建新的演唱会
+   * @param createConcertDto 创建演唱会的数据传输对象
+   * @returns 返回创建的演唱会信息
+   */
   async create(@Body() createConcertDto: CreateConcertDto): Promise<Concert> {
     return await this.concertsService.create(createConcertDto);
   }
@@ -205,6 +215,12 @@ export class ConcertsController {
       },
     },
   })
+  /**
+   * 获取演唱会列表接口
+   * @description 分页获取演唱会列表，支持按状态和名称搜索
+   * @param queryDto 查询参数对象
+   * @returns 返回包含演唱会列表和分页信息的响应对象
+   */
   async findAll(
     @Query() queryDto: ConcertQueryDto,
   ): Promise<ConcertListResponseDto> {
@@ -268,6 +284,12 @@ export class ConcertsController {
       },
     },
   })
+  /**
+   * 获取演唱会详情接口
+   * @description 根据ID获取演唱会详细信息
+   * @param id 演唱会的唯一标识符
+   * @returns 返回演唱会详细信息
+   */
   async findOne(@Param('id') id: string): Promise<Concert> {
     return await this.concertsService.findOne(id);
   }
@@ -365,6 +387,13 @@ export class ConcertsController {
       },
     },
   })
+  /**
+   * 更新演唱会信息接口
+   * @description 管理员更新演唱会信息
+   * @param id 演唱会的唯一标识符
+   * @param updateConcertDto 更新演唱会的数据传输对象
+   * @returns 返回更新后的演唱会信息
+   */
   async update(
     @Param('id') id: string,
     @Body() updateConcertDto: UpdateConcertDto,
@@ -429,6 +458,12 @@ export class ConcertsController {
       },
     },
   })
+  /**
+   * 删除演唱会接口
+   * @description 管理员删除演唱会
+   * @param id 演唱会的唯一标识符
+   * @returns void
+   */
   async remove(@Param('id') id: string): Promise<void> {
     return await this.concertsService.remove(id);
   }

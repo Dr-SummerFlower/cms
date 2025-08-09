@@ -11,16 +11,6 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { UsersService } from './users.service';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { UpdateRoleDto } from './dto/update-role.dto';
-import { PaginationDto } from './dto/pagination.dto';
-import { ValidationService } from '../auth/validation.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import bcrypt from 'bcrypt';
-import { User } from './entities/user.entity';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -30,8 +20,22 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import bcrypt from 'bcrypt';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { ValidationService } from '../auth/validation.service';
+import { PaginationDto } from './dto/pagination.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { UserListResponseDto } from './dto/user-list-response.dto';
+import { User } from './entities/user.entity';
+import { UsersService } from './users.service';
 
+/**
+ * 用户控制器
+ * @description 处理用户相关的HTTP请求，包括用户的查询、更新、删除和角色管理等API接口
+ */
 @ApiTags('用户管理')
 @ApiBearerAuth()
 @Controller('users')
@@ -137,6 +141,12 @@ export class UsersController {
   })
   @Get()
   @Roles('ADMIN', 'INSPECTOR')
+  /**
+   * 获取用户列表接口
+   * @description 分页获取用户列表，支持搜索功能
+   * @param paginationDto 分页查询参数
+   * @returns 返回包含用户列表和分页信息的响应对象
+   */
   async findAll(
     @Query() paginationDto: PaginationDto,
   ): Promise<UserListResponseDto> {
@@ -191,6 +201,12 @@ export class UsersController {
   })
   @Get(':id')
   @Roles('ADMIN', 'INSPECTOR', 'USER')
+  /**
+   * 获取用户详情接口
+   * @description 根据用户ID获取用户详细信息
+   * @param id 用户的唯一标识符
+   * @returns 返回用户详细信息
+   */
   async findOne(@Param('id') id: string): Promise<User> {
     return await this.usersService.findOneById(id);
   }
@@ -258,6 +274,14 @@ export class UsersController {
   })
   @Patch(':id')
   @Roles('ADMIN', 'USER')
+  /**
+   * 更新用户信息接口
+   * @description 更新用户的基本信息，如用户名、邮箱、密码等
+   * @param id 用户的唯一标识符
+   * @param updateUserDto 更新用户的数据传输对象
+   * @param req 请求对象，包含当前用户信息
+   * @returns 返回更新后的用户信息
+   */
   async update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
@@ -370,6 +394,13 @@ export class UsersController {
   })
   @Patch(':id/role')
   @Roles('ADMIN')
+  /**
+   * 更新用户角色接口
+   * @description 管理员更新用户的角色权限
+   * @param id 用户的唯一标识符
+   * @param updateRoleDto 更新角色的数据传输对象
+   * @returns 返回更新后的用户信息
+   */
   async updateRole(
     @Param('id') id: string,
     @Body() updateRoleDto: UpdateRoleDto,
@@ -426,6 +457,12 @@ export class UsersController {
   })
   @Delete(':id')
   @Roles('ADMIN')
+  /**
+   * 删除用户接口
+   * @description 管理员删除指定用户
+   * @param id 用户的唯一标识符
+   * @returns void
+   */
   async remove(@Param('id') id: string): Promise<void> {
     return await this.usersService.remove(id);
   }

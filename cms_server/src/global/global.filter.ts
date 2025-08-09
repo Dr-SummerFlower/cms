@@ -6,14 +6,7 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { HttpArgumentsHost } from '@nestjs/common/interfaces';
-
-interface ErrorResponse {
-  code: number;
-  message: string;
-  data: unknown;
-  timestamp: string;
-  path: string;
-}
+import { ErrorResponse } from '../types';
 
 @Catch(HttpException)
 export class GlobalFilter implements ExceptionFilter {

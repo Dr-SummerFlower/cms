@@ -12,18 +12,21 @@ import { UpdateData, UserData } from '../types';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private readonly dbModel: Model<User>) {}
+  constructor(
+    @InjectModel(User.name) private readonly userModel: Model<User>,
+  ) {}
 
   async create(userData: UserData): Promise<User> {
-    return (await this.dbModel.create(userData)) as User;
+    const user = new this.userModel(userData);
+    return user.save();
   }
 
   async findOne(email: string): Promise<User> {
-    return (await this.dbModel.findOne({ email })) as User;
+    return (await this.userModel.findOne({ email })) as User;
   }
 
   async findOneById(id: string): Promise<User> {
-    const user: User = (await this.dbModel.findById(id)) as User;
+    const user: User = (await this.userModel.findById(id)) as User;
     if (!user) {
       throw new NotFoundException('用户不存在');
     }
@@ -32,7 +35,7 @@ export class UsersService {
 
   async findAll(paginationDto: PaginationDto): Promise<UserListResponseDto> {
     const { page = 1, limit = 10, search } = paginationDto;
-    const skip = (page - 1) * limit;
+    const skip: number = (page - 1) * limit;
 
     const query: FilterQuery<UserDocument> = {};
     if (search) {
@@ -43,11 +46,11 @@ export class UsersService {
     }
 
     const [data, total] = await Promise.all([
-      this.dbModel.find(query).skip(skip).limit(limit).exec(),
-      this.dbModel.countDocuments(query).exec(),
+      this.userModel.find(query).skip(skip).limit(limit).exec(),
+      this.userModel.countDocuments(query).exec(),
     ]);
 
-    const totalPages = Math.ceil(total / limit);
+    const totalPages: number = Math.ceil(total / limit);
 
     return {
       users: data as User[],
@@ -59,7 +62,7 @@ export class UsersService {
   }
 
   async update(id: string, updateData: UpdateData): Promise<User> {
-    const user = (await this.dbModel.findById(id)) as User;
+    const user = (await this.userModel.findById(id)) as User;
     if (!user) {
       throw new NotFoundException('用户不存在');
     }
@@ -68,7 +71,7 @@ export class UsersService {
       user.username = updateData.username;
     }
     if (updateData.email) {
-      const existingUser = (await this.dbModel.findOne({
+      const existingUser = (await this.userModel.findOne({
         email: updateData.email,
         _id: { $ne: id },
       })) as User;
@@ -88,7 +91,7 @@ export class UsersService {
   }
 
   async updateRole(id: string, role: string): Promise<User> {
-    const user: User = (await this.dbModel.findById(id)) as User;
+    const user: User = (await this.userModel.findById(id)) as User;
     if (!user) {
       throw new NotFoundException('用户不存在');
     }
@@ -98,11 +101,10 @@ export class UsersService {
     return user;
   }
 
-  async remove(id: string): Promise<User> {
-    const user: User = (await this.dbModel.findByIdAndDelete(id)) as User;
+  async remove(id: string): Promise<void> {
+    const user: User = (await this.userModel.findByIdAndDelete(id)) as User;
     if (!user) {
       throw new NotFoundException('用户不存在');
     }
-    return user;
   }
 }

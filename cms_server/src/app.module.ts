@@ -9,6 +9,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { EmailModule } from './email/email.module';
 import { InitModule } from './init/init.module';
+import { ConcertsModule } from './concerts/concerts.module';
 
 const envFilePath = ['.env'];
 const IS_DEV = process.env.RUNNING_ENV !== 'prod';
@@ -47,6 +48,7 @@ if (IS_DEV) {
     AuthModule,
     EmailModule,
     InitModule,
+    ConcertsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

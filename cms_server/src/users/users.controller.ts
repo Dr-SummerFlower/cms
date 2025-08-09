@@ -426,7 +426,7 @@ export class UsersController {
   })
   @Delete(':id')
   @Roles('ADMIN')
-  async remove(@Param('id') id: string): Promise<User> {
+  async remove(@Param('id') id: string): Promise<void> {
     return await this.usersService.remove(id);
   }
 }

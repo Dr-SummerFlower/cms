@@ -47,6 +47,9 @@ if (IS_DEV) {
           'DB_URI',
           'mongodb://localhost:27017/cms_default', // 默认数据库连接字符串
         ),
+        maxPoolSize: 50,
+        connectTimeoutMS: 30000,
+        serverSelectionTimeoutMS: 5000,
       }),
     }),
     // Redis缓存配置
@@ -99,6 +102,17 @@ if (IS_DEV) {
     {
       provide: 'APP_FILTER',
       useClass: GlobalFilter,
+    },
+    // 密钥提供者
+    {
+      provide: 'ENCRYPTION_KEY',
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        return config.get<string>(
+          'ENCRYPTION_KEY',
+          'default-key-32-characters-long!',
+        );
+      },
     },
   ],
 })

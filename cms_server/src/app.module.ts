@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { ConcertsModule } from './concerts/concerts.module';
+import { EcdsaModule } from './ecdsa/ecdsa.module';
 import { EmailModule } from './email/email.module';
 import { GlobalModule } from './global/global.module';
 import { InitModule } from './init/init.module';
@@ -49,6 +50,7 @@ if (IS_DEV) {
     EmailModule,
     InitModule,
     ConcertsModule,
+    EcdsaModule,
   ],
   controllers: [AppController],
   providers: [AppService],

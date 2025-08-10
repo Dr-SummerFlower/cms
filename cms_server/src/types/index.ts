@@ -9,3 +9,6 @@ export * from './user';
 
 // 演唱会相关接口
 export * from './concert';
+
+// ECDSA签名相关接口
+export * from './ecdsa';

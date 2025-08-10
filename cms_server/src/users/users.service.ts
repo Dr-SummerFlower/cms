@@ -27,18 +27,19 @@ export class UsersService {
    * @returns 返回创建的用户信息
    */
   async create(userData: UserData): Promise<User> {
-    const user = new this.userModel(userData);
-    return user.save();
+    return (await this.userModel.create(userData)) as User;
   }
 
   /**
    * 根据邮箱查找用户
-   * @description 通过邮箱地址查找用户
+   * @description 通过邮箱地址查找用户，包含密码字段用于登录验证
    * @param email 用户邮箱地址
    * @returns 返回用户信息，如果不存在则返回null
    */
   async findOne(email: string): Promise<User> {
-    return (await this.userModel.findOne({ email })) as User;
+    return (await this.userModel
+      .findOne({ email })
+      .select('+password')) as User;
   }
 
   /**
@@ -125,7 +126,8 @@ export class UsersService {
     }
 
     await user.save();
-    return user;
+
+    return (await this.userModel.findById(user._id).exec()) as User;
   }
 
   /**

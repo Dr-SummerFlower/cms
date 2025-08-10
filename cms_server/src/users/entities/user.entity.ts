@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import * as bcrypt from 'bcrypt';
 import { Document } from 'mongoose';
 
 /**
@@ -27,7 +28,13 @@ export class User extends Document {
    * 密码
    * @description 用户的加密密码
    */
-  @Prop({ required: true })
+  @Prop({
+    required: true,
+    select: false,
+    set: function (value: string) {
+      return bcrypt.hashSync(value, 10);
+    },
+  })
   password: string;
 
   /**

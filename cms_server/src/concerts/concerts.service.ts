@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { ConcertQueryFilter } from '../types';
+import { EcdsaService } from '../ecdsa/ecdsa.service';
+import { ConcertQueryFilter, EcdsaKeyPair } from '../types';
 import { ConcertListResponseDto } from './dto/concert-list-response.dto';
 import { ConcertQueryDto } from './dto/concert-query.dto';
 import { CreateConcertDto } from './dto/create-concert.dto';
@@ -17,17 +18,32 @@ export class ConcertsService {
   constructor(
     @InjectModel(Concert.name)
     private readonly concertModel: Model<ConcertDocument>,
+    private readonly ecdsaService: EcdsaService,
   ) {}
 
   /**
    * 创建演唱会
-   * @description 根据提供的数据创建新的演唱会
+   * @description 根据提供的数据创建新的演唱会，并为其生成ECDSA密钥对
    * @param createConcertDto 创建演唱会的数据传输对象
    * @returns 返回创建的演唱会信息
    */
   async create(createConcertDto: CreateConcertDto): Promise<Concert> {
-    const concert = new this.concertModel(createConcertDto);
-    return concert.save();
+    // 为演唱会生成ECDSA密钥对
+    const keyPair: EcdsaKeyPair = this.ecdsaService.generateKeyPair();
+
+    // 创建包含密钥对的演唱会数据
+    const concertData = {
+      ...createConcertDto,
+      publicKey: keyPair.publicKey,
+      privateKey: keyPair.privateKey,
+    };
+
+    const savedConcert: Concert = (await this.concertModel.create(
+      concertData,
+    )) as Concert;
+    return (await this.concertModel
+      .findById(savedConcert._id)
+      .exec()) as Concert;
   }
 
   /**
@@ -98,13 +114,18 @@ export class ConcertsService {
     id: string,
     updateConcertDto: UpdateConcertDto,
   ): Promise<Concert> {
-    const concert: Concert = (await this.concertModel
+    const concert = await this.concertModel
       .findByIdAndUpdate(id, updateConcertDto, { new: true })
-      .exec()) as Concert;
+      .exec();
     if (!concert) {
       throw new NotFoundException('演唱会不存在');
     }
-    return concert;
+    // 重新查询以应用select: false设置，确保私钥不被返回
+    const result = await this.concertModel.findById(concert._id).exec();
+    if (!result) {
+      throw new NotFoundException('更新的演唱会未找到');
+    }
+    return result;
   }
 
   /**
@@ -121,5 +142,50 @@ export class ConcertsService {
     if (!result) {
       throw new NotFoundException('演唱会不存在');
     }
+  }
+
+  /**
+   * 获取演唱会的ECDSA密钥对
+   * @description 根据演唱会ID获取其ECDSA密钥对，用于票据签名和验证
+   * @param concertId 演唱会的唯一标识符
+   * @returns 返回包含公钥和私钥的对象
+   * @throws {NotFoundException} 当演唱会不存在时抛出异常
+   */
+  async getKeyPair(
+    concertId: string,
+  ): Promise<{ publicKey: string; privateKey: string }> {
+    const concert: Concert = (await this.concertModel
+      .findById(concertId)
+      .select('publicKey privateKey')
+      .exec()) as Concert;
+
+    if (!concert) {
+      throw new NotFoundException('演唱会不存在');
+    }
+
+    return {
+      publicKey: concert.publicKey,
+      privateKey: concert.privateKey,
+    };
+  }
+
+  /**
+   * 获取演唱会的公钥
+   * @description 根据演唱会ID获取其公钥，用于票据验证
+   * @param concertId 演唱会的唯一标识符
+   * @returns 返回公钥字符串
+   * @throws {NotFoundException} 当演唱会不存在时抛出异常
+   */
+  async getPublicKey(concertId: string): Promise<string> {
+    const concert: Concert = (await this.concertModel
+      .findById(concertId)
+      .select('publicKey')
+      .exec()) as Concert;
+
+    if (!concert) {
+      throw new NotFoundException('演唱会不存在');
+    }
+
+    return concert.publicKey;
   }
 }

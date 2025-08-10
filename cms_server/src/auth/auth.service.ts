@@ -77,7 +77,7 @@ export class AuthService {
       const user: User = await this.usersService.create({
         username: userData.username,
         email: userData.email,
-        password: await bcrypt.hash(userData.password, 10),
+        password: userData.password,
       });
 
       const id: string = String(user.id);

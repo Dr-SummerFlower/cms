@@ -20,7 +20,6 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import bcrypt from 'bcrypt';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -176,7 +175,6 @@ export class UsersController {
             _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
             username: { type: 'string', example: 'summer' },
             email: { type: 'string', example: 'test@example.com' },
-            password: { type: 'string', example: '123456' },
             role: { type: 'string', example: 'USER' },
             createdAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
             updatedAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
@@ -235,7 +233,6 @@ export class UsersController {
             _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
             username: { type: 'string', example: 'newusername' },
             email: { type: 'string', example: 'newemail@example.com' },
-            password: { type: 'string', example: 'newpassword' },
             role: { type: 'string', example: 'USER' },
             createdAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
             updatedAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
@@ -309,10 +306,6 @@ export class UsersController {
       );
     }
 
-    if (updateData.password) {
-      updateData.password = await bcrypt.hash(updateData.password, 10);
-    }
-
     const result = await this.usersService.update(id, updateData);
 
     if (needVerification && emailCode) {
@@ -346,7 +339,6 @@ export class UsersController {
             _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
             username: { type: 'string', example: 'summer' },
             email: { type: 'string', example: 'test@example.com' },
-            password: { type: 'string', example: '123456' },
             role: { type: 'string', example: 'ADMIN' },
             createdAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
             updatedAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
@@ -428,11 +420,6 @@ export class UsersController {
             _id: { type: 'string', example: '6893a2b83b1ecd33fea26024' },
             username: { type: 'string', example: 'summer' },
             email: { type: 'string', example: '3606006150@qq.com' },
-            password: {
-              type: 'string',
-              example:
-                '$2b$10$aaNq32WDFNxgAKkhORnxTOf2Kf0CozUiM2Lo05DOdnvsxjThDnlWi',
-            },
             role: { type: 'string', example: 'USER' },
             createdAt: { type: 'string', example: '2025-08-06T18:45:12.844Z' },
             updatedAt: { type: 'string', example: '2025-08-06T18:45:12.844Z' },

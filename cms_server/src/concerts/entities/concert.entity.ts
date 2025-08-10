@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
 import { Document } from 'mongoose';
 
 /**
@@ -8,7 +9,7 @@ import { Document } from 'mongoose';
 @Schema({
   timestamps: true,
 })
-export class Concert {
+export class Concert extends Document {
   /**
    * 演唱会名称
    * @description 演唱会的标题名称
@@ -71,6 +72,62 @@ export class Concert {
    */
   @Prop()
   description: string;
+
+  /**
+   * ECDSA公钥
+   * @description 用于验证票据签名的公钥
+   */
+  @Prop({ required: true })
+  publicKey: string;
+
+  /**
+   * ECDSA私钥
+   * @description 用于生成票据签名的私钥（加密存储，不会在查询中返回）
+   */
+  @Prop({
+    required: true,
+    select: false,
+    get: function (value: string) {
+      if (!value) return value;
+      try {
+        const encryptionKey =
+          process.env.ENCRYPTION_KEY || 'default-key-32-characters-long!';
+        const parts = value.split(':');
+        if (parts.length !== 2) return value;
+        const iv = Buffer.from(parts[0], 'hex');
+        const encryptedText = parts[1];
+        const decipher = createDecipheriv(
+          'aes-256-cbc',
+          Buffer.from(encryptionKey.slice(0, 32)),
+          iv,
+        );
+        let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        return decrypted;
+      } catch {
+        return value;
+      }
+    },
+    set: function (value: string) {
+      if (!value) return value;
+      try {
+        const encryptionKey =
+          process.env.ENCRYPTION_KEY || 'default-key-32-characters-long!';
+        const iv = randomBytes(16);
+        const cipher = createCipheriv(
+          'aes-256-cbc',
+          Buffer.from(encryptionKey.slice(0, 32)),
+          iv,
+        );
+        let encrypted = cipher.update(value, 'utf8', 'hex');
+        encrypted += cipher.final('hex');
+        return iv.toString('hex') + ':' + encrypted;
+      } catch {
+        return value;
+      }
+    },
+  })
+  privateKey: string;
 }
 
 export type ConcertDocument = Concert & Document;

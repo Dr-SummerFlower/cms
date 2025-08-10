@@ -1,7 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
-import * as bcrypt from 'bcrypt';
 import { Model } from 'mongoose';
 import { User } from '../users/entities/user.entity';
 
@@ -56,7 +55,7 @@ export class InitService implements OnModuleInit {
       const defaultAdmin = {
         username: adminConfig.username,
         email: adminConfig.email,
-        password: await bcrypt.hash(adminConfig.password, 10),
+        password: adminConfig.password,
         role: adminConfig.role,
       };
 

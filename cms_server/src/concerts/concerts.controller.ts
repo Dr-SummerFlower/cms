@@ -90,6 +90,10 @@ export class ConcertsController {
               type: 'string',
               example: '周杰伦2024世界巡回演唱会北京站',
             },
+            publicKey: {
+              type: 'string',
+              example: 'MFYwEAYHKoZIzj0CAQYFK4E...',
+            },
             createdAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
             updatedAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
           },

@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
 /**
@@ -10,6 +11,11 @@ export class RefundTicketDto {
    * @type {string}
    * @description 用户申请退票的原因说明
    */
+  @ApiProperty({
+    description: '退票原因',
+    example: '因个人原因无法参加演唱会',
+    maxLength: 500,
+  })
   @IsString({ message: '退票原因必须是字符串' })
   @IsNotEmpty({ message: '退票原因不能为空' })
   @MaxLength(500, { message: '退票原因最多500个字符' })

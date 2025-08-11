@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString } from 'class-validator';
 
 /**
@@ -11,6 +12,10 @@ export class RefreshTokenDto {
    * @type {string}
    * @description 用于刷新访问令牌的刷新令牌
    */
+  @ApiProperty({
+    description: '刷新令牌',
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+  })
   @IsNotEmpty({ message: 'refresh token不能为空' })
   @IsString({ message: 'refresh token必须是字符串' })
   refresh_token: string;

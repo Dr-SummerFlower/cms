@@ -96,6 +96,38 @@ export class CreateConcertDto {
   totalTickets: number;
 
   /**
+   * 每个用户最多可购买的成人票数量
+   * @type {number}
+   * @description 单个用户最多可以购买的成人票数量，可选字段，默认为2
+   */
+  @ApiPropertyOptional({
+    description: '每个用户最多可购买的成人票数量',
+    example: 2,
+    minimum: 1,
+    default: 2,
+  })
+  @IsOptional()
+  @IsNumber({}, { message: '成人票购买限制必须是数字' })
+  @Min(1, { message: '成人票购买限制至少为1' })
+  maxAdultTicketsPerUser?: number;
+
+  /**
+   * 每个用户最多可购买的儿童票数量
+   * @type {number}
+   * @description 单个用户最多可以购买的儿童票数量，可选字段，默认为1
+   */
+  @ApiPropertyOptional({
+    description: '每个用户最多可购买的儿童票数量',
+    example: 1,
+    minimum: 1,
+    default: 1,
+  })
+  @IsOptional()
+  @IsNumber({}, { message: '儿童票购买限制必须是数字' })
+  @Min(1, { message: '儿童票购买限制至少为1' })
+  maxChildTicketsPerUser?: number;
+
+  /**
    * 演唱会描述
    * @type {string}
    * @description 演唱会的详细描述信息，可选字段

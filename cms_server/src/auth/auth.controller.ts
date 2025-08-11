@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBody,
@@ -98,6 +98,7 @@ export class AuthController {
       },
     },
   })
+  @HttpCode(200)
   /**
    * 用户登录接口
    * @param {LoginDto} loginDto - 登录数据传输对象
@@ -260,6 +261,7 @@ export class AuthController {
       },
     },
   })
+  @HttpCode(200)
   /**
    * 刷新访问令牌接口
    * @param {RefreshTokenDto} refreshTokenDto - 刷新令牌数据传输对象

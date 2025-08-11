@@ -10,6 +10,7 @@ import { EcdsaModule } from './ecdsa/ecdsa.module';
 import { EmailModule } from './email/email.module';
 import { GlobalModule } from './global/global.module';
 import { InitModule } from './init/init.module';
+import { TicketsModule } from './tickets/tickets.module';
 import { UsersModule } from './users/users.module';
 
 const envFilePath = ['.env'];
@@ -51,6 +52,7 @@ if (IS_DEV) {
     InitModule,
     ConcertsModule,
     EcdsaModule,
+    TicketsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

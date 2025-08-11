@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { createSign, createVerify, generateKeyPairSync } from 'crypto';
+import {
+  createSign,
+  createVerify,
+  generateKeyPairSync,
+  Sign,
+  Verify,
+} from 'crypto';
 import { EcdsaKeyPair, EcdsaSignature, TicketQRData } from '../types';
 
 /**
@@ -40,11 +46,11 @@ export class EcdsaService {
    * @returns 返回签名结果
    */
   sign(data: string, privateKey: string): EcdsaSignature {
-    const sign = createSign('SHA256');
+    const sign: Sign = createSign('SHA256');
     sign.update(data);
     sign.end();
 
-    const signature = sign.sign(privateKey, 'hex');
+    const signature: string = sign.sign(privateKey, 'hex');
 
     return {
       signature,
@@ -62,7 +68,7 @@ export class EcdsaService {
    */
   verify(data: string, signature: string, publicKey: string): boolean {
     try {
-      const verify = createVerify('SHA256');
+      const verify: Verify = createVerify('SHA256');
       verify.update(data);
       verify.end();
 
@@ -118,7 +124,7 @@ export class EcdsaService {
    */
   parseQRCodeData(qrData: string): TicketQRData | null {
     try {
-      const parsed = JSON.parse(qrData);
+      const parsed: TicketQRData = JSON.parse(qrData) as TicketQRData;
       if (parsed.ticketId && parsed.signature && parsed.timestamp) {
         return parsed;
       }

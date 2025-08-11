@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SendCodeDto } from './dto/send-code.dto';
 import { EmailService } from './email.service';
@@ -64,6 +64,7 @@ export class EmailController {
     },
   })
   @Post()
+  @HttpCode(200)
   /**
    * 发送邮箱验证码接口
    * @description 发送邮箱验证码，用于用户注册、密码重置等场景

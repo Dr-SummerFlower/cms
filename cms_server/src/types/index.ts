@@ -12,3 +12,6 @@ export * from './concert';
 
 // ECDSA签名相关接口
 export * from './ecdsa';
+
+// 票据相关接口
+export * from './ticket';

@@ -38,6 +38,7 @@
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
+    "qrcode": "^1.5.4",
     "redis": "^5.7.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
@@ -56,6 +57,7 @@
     "@types/node": "^22.10.7",
     "@types/passport-jwt": "^4.0.1",
     "@types/passport-local": "^1.0.38",
+    "@types/qrcode": "^1.5.5",
     "@types/supertest": "^6.0.2",
     "cross-env": "^7.0.3",
     "eslint": "^9.18.0",

@@ -143,49 +143,4 @@ export class ConcertsService {
       throw new NotFoundException('演唱会不存在');
     }
   }
-
-  /**
-   * 获取演唱会的ECDSA密钥对
-   * @description 根据演唱会ID获取其ECDSA密钥对，用于票据签名和验证
-   * @param concertId 演唱会的唯一标识符
-   * @returns 返回包含公钥和私钥的对象
-   * @throws {NotFoundException} 当演唱会不存在时抛出异常
-   */
-  async getKeyPair(
-    concertId: string,
-  ): Promise<{ publicKey: string; privateKey: string }> {
-    const concert: Concert = (await this.concertModel
-      .findById(concertId)
-      .select('publicKey privateKey')
-      .exec()) as Concert;
-
-    if (!concert) {
-      throw new NotFoundException('演唱会不存在');
-    }
-
-    return {
-      publicKey: concert.publicKey,
-      privateKey: concert.privateKey,
-    };
-  }
-
-  /**
-   * 获取演唱会的公钥
-   * @description 根据演唱会ID获取其公钥，用于票据验证
-   * @param concertId 演唱会的唯一标识符
-   * @returns 返回公钥字符串
-   * @throws {NotFoundException} 当演唱会不存在时抛出异常
-   */
-  async getPublicKey(concertId: string): Promise<string> {
-    const concert: Concert = (await this.concertModel
-      .findById(concertId)
-      .select('publicKey')
-      .exec()) as Concert;
-
-    if (!concert) {
-      throw new NotFoundException('演唱会不存在');
-    }
-
-    return concert.publicKey;
-  }
 }

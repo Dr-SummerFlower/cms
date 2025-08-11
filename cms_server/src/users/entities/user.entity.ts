@@ -12,6 +12,7 @@ import { Document } from 'mongoose';
 export class User extends Document {
   /**
    * 用户名
+   * @type {string}
    * @description 用户的唯一标识名称
    */
   @Prop({ required: true, unique: true })
@@ -19,6 +20,7 @@ export class User extends Document {
 
   /**
    * 邮箱地址
+   * @type {string}
    * @description 用户的邮箱地址，用于登录和接收通知
    */
   @Prop({ required: true, unique: true })
@@ -26,6 +28,7 @@ export class User extends Document {
 
   /**
    * 密码
+   * @type {string}
    * @description 用户的加密密码
    */
   @Prop({
@@ -39,6 +42,7 @@ export class User extends Document {
 
   /**
    * 用户角色
+   * @type {string}
    * @description 用户的权限角色，决定用户可以访问的功能
    */
   @Prop({ enum: ['GUEST', 'USER', 'ADMIN', 'INSPECTOR'], default: 'USER' })

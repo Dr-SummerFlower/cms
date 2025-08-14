@@ -16,14 +16,14 @@ export interface Response<T> {
  * @interface
  * @property {number} code - 错误状态码
  * @property {string} message - 错误信息
- * @property {unknown} data - 错误数据
+ * @property {null} data - 错误数据
  * @property {string} timestamp - 时间戳
  * @property {string} path - 请求路径
  */
 export interface ErrorResponse {
   code: number;
   message: string;
-  data: unknown;
+  data: null;
   timestamp: string;
   path: string;
 }

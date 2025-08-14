@@ -19,6 +19,14 @@ export class User extends Document {
   username: string;
 
   /**
+   * 用户头像
+   * @type {string}
+   * @description 用户头像的base64编码，不大于2MB
+   */
+  @Prop({ required: false })
+  avatar: string;
+
+  /**
    * 邮箱地址
    * @type {string}
    * @description 用户的邮箱地址，用于登录和接收通知

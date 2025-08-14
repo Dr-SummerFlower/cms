@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
+  IsOptional,
   IsString,
   Matches,
   MaxLength,
@@ -30,6 +31,20 @@ export class RegisterDto {
   @MinLength(4, { message: '用户名至少4个字符' })
   @MaxLength(20, { message: '用户名最多20个字符' })
   username: string;
+
+  /**
+   * 用户头像
+   * @type {string}
+   * @description 用户头像的base64编码，可选字段，不大于2MB
+   */
+  @ApiProperty({
+    description: '用户头像的base64编码',
+    example: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...',
+    required: false,
+  })
+  @IsOptional()
+  @IsString({ message: '头像必须是base64字符串' })
+  avatar: string;
 
   /**
    * 用户邮箱

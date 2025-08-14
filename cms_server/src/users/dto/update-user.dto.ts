@@ -33,6 +33,19 @@ export class UpdateUserDto {
   username?: string;
 
   /**
+   * 用户头像
+   * @type {string}
+   * @description 用户头像的base64编码，可选字段，不大于2MB
+   */
+  @ApiPropertyOptional({
+    description: '用户头像的base64编码',
+    example: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...',
+  })
+  @IsOptional()
+  @IsString({ message: '头像必须是base64字符串' })
+  avatar?: string;
+
+  /**
    * 邮箱地址
    * @type {string}
    * @description 用户的邮箱地址，必须是有效的邮箱格式，可选字段

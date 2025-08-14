@@ -8,7 +8,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { TokenResponse } from '../types';
+import { AuthResponse, TokenResponse } from '../types';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -67,8 +67,24 @@ export class AuthController {
               example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
               description: 'JWT刷新令牌',
             },
+            user: {
+              type: 'object',
+              properties: {
+                userId: { type: 'string', example: '507f1f77bcf86cd799439011' },
+                username: { type: 'string', example: 'summer' },
+                email: { type: 'string', example: '3606006150@qq.com' },
+                role: { type: 'string', example: 'USER' },
+                avatar: {
+                  type: 'string',
+                  example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...',
+                  description: '用户头像base64编码',
+                },
+              },
+            },
           },
         },
+        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
+        path: { type: 'string', example: '/api/auth/login' },
       },
     },
   })
@@ -102,10 +118,10 @@ export class AuthController {
   /**
    * 用户登录接口
    * @param {LoginDto} loginDto - 登录数据传输对象
-   * @returns {Promise<TokenResponse>} 登录成功后的令牌响应
+   * @returns {Promise<AuthResponse>} 登录成功后的令牌响应
    * @description 处理用户登录请求，验证邮箱和密码后返回JWT令牌
    */
-  login(@Body() loginDto: LoginDto): Promise<TokenResponse> {
+  async login(@Body() loginDto: LoginDto): Promise<AuthResponse> {
     return this.authService.login(loginDto);
   }
 
@@ -150,8 +166,24 @@ export class AuthController {
               example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
               description: 'JWT刷新令牌',
             },
+            user: {
+              type: 'object',
+              properties: {
+                userId: { type: 'string', example: '507f1f77bcf86cd799439011' },
+                username: { type: 'string', example: 'summer' },
+                email: { type: 'string', example: '3606006150@qq.com' },
+                role: { type: 'string', example: 'USER' },
+                avatar: {
+                  type: 'string',
+                  example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...',
+                  description: '用户头像base64编码',
+                },
+              },
+            },
           },
         },
+        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
+        path: { type: 'string', example: '/api/auth/register' },
       },
     },
   })
@@ -187,19 +219,20 @@ export class AuthController {
   /**
    * 用户注册接口
    * @param {RegisterDto} registerDto - 注册数据传输对象
-   * @returns {Promise<TokenResponse>} 注册成功后的令牌响应
+   * @returns {Promise<AuthResponse>} 注册成功后的令牌响应
    * @description 处理用户注册请求，验证邮箱验证码后创建新用户并返回JWT令牌
    */
-  async register(@Body() registerDto: RegisterDto): Promise<TokenResponse> {
+  async register(@Body() registerDto: RegisterDto): Promise<AuthResponse> {
     await this.validationService.validateCode(
       registerDto.email,
       registerDto.code,
       'register',
     );
-    const result: TokenResponse = await this.authService.register({
+    const result: AuthResponse = await this.authService.register({
       username: registerDto.username,
       email: registerDto.email,
       password: registerDto.password,
+      avatar: registerDto.avatar,
     });
     await this.validationService.clearCode(registerDto.email, 'register');
     return result;

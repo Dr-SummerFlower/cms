@@ -36,10 +36,8 @@ export class ConcertsService {
    */
   async create(createConcertDto: CreateConcertDto): Promise<Concert> {
     try {
-      // 为演唱会生成ECDSA密钥对
       const keyPair: EcdsaKeyPair = this.ecdsaService.generateKeyPair();
 
-      // 创建包含密钥对的演唱会数据
       const concertData = {
         ...createConcertDto,
         publicKey: keyPair.publicKey,

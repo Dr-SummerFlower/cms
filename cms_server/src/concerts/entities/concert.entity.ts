@@ -19,6 +19,14 @@ export class Concert extends Document {
   name: string;
 
   /**
+   * 演唱会海报
+   * @type {string}
+   * @description 演唱会海报图片的base64编码
+   */
+  @Prop({ required: false })
+  poster: string;
+
+  /**
    * 演唱会日期
    * @type {Date}
    * @description 演唱会举办的日期和时间

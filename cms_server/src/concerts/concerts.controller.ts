@@ -79,6 +79,11 @@ export class ConcertsController {
           properties: {
             _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
             name: { type: 'string', example: '周杰伦演唱会' },
+            poster: {
+              type: 'string',
+              example: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...',
+              description: '演唱会海报base64编码',
+            },
             date: { type: 'string', example: '2024-12-31T20:00:00.000Z' },
             venue: { type: 'string', example: '北京鸟巢体育场' },
             adultPrice: { type: 'number', example: 299 },
@@ -98,6 +103,8 @@ export class ConcertsController {
             updatedAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
           },
         },
+        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
+        path: { type: 'string', example: '/api/concerts' },
       },
     },
   })
@@ -188,6 +195,12 @@ export class ConcertsController {
                 properties: {
                   _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
                   name: { type: 'string', example: '周杰伦演唱会' },
+                  poster: {
+                    type: 'string',
+                    example:
+                      'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...',
+                    description: '演唱会海报base64编码',
+                  },
                   date: { type: 'string', example: '2024-12-31T20:00:00.000Z' },
                   venue: { type: 'string', example: '北京鸟巢体育场' },
                   adultPrice: { type: 'number', example: 299 },
@@ -216,6 +229,8 @@ export class ConcertsController {
             totalPages: { type: 'number', example: 10 },
           },
         },
+        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
+        path: { type: 'string', example: '/api/concerts' },
       },
     },
   })
@@ -254,6 +269,11 @@ export class ConcertsController {
           properties: {
             _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
             name: { type: 'string', example: '周杰伦演唱会' },
+            poster: {
+              type: 'string',
+              example: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...',
+              description: '演唱会海报base64编码',
+            },
             date: { type: 'string', example: '2024-12-31T20:00:00.000Z' },
             venue: { type: 'string', example: '北京鸟巢体育场' },
             adultPrice: { type: 'number', example: 299 },
@@ -268,6 +288,11 @@ export class ConcertsController {
             createdAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
             updatedAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
           },
+        },
+        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
+        path: {
+          type: 'string',
+          example: '/api/concerts/507f1f77bcf86cd799439011',
         },
       },
     },
@@ -325,6 +350,11 @@ export class ConcertsController {
           properties: {
             _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
             name: { type: 'string', example: '周杰伦演唱会（已更新）' },
+            poster: {
+              type: 'string',
+              example: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...',
+              description: '演唱会海报base64编码',
+            },
             date: { type: 'string', example: '2024-12-31T20:00:00.000Z' },
             venue: { type: 'string', example: '北京鸟巢体育场' },
             adultPrice: { type: 'number', example: 399 },
@@ -339,6 +369,11 @@ export class ConcertsController {
             createdAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
             updatedAt: { type: 'string', example: '2024-01-15T10:30:00.000Z' },
           },
+        },
+        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
+        path: {
+          type: 'string',
+          example: '/api/concerts/507f1f77bcf86cd799439011',
         },
       },
     },
@@ -427,6 +462,11 @@ export class ConcertsController {
         code: { type: 'number', example: 200 },
         message: { type: 'string', example: 'success' },
         data: { type: 'null' },
+        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
+        path: {
+          type: 'string',
+          example: '/api/concerts/507f1f77bcf86cd799439011',
+        },
       },
     },
   })

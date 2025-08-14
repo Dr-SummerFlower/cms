@@ -88,6 +88,12 @@ export class UsersController {
                 properties: {
                   _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
                   username: { type: 'string', example: 'summer' },
+                  avatar: {
+                    type: 'string',
+                    example:
+                      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...',
+                    description: '用户头像base64编码',
+                  },
                   email: { type: 'string', example: 'test@example.com' },
                   role: { type: 'string', example: 'USER' },
                   createdAt: {
@@ -107,6 +113,8 @@ export class UsersController {
             totalPages: { type: 'number', example: 10 },
           },
         },
+        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
+        path: { type: 'string', example: '/api/users' },
       },
     },
   })
@@ -174,11 +182,21 @@ export class UsersController {
           properties: {
             _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
             username: { type: 'string', example: 'summer' },
+            avatar: {
+              type: 'string',
+              example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...',
+              description: '用户头像base64编码',
+            },
             email: { type: 'string', example: 'test@example.com' },
             role: { type: 'string', example: 'USER' },
             createdAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
             updatedAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
           },
+        },
+        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
+        path: {
+          type: 'string',
+          example: '/api/users/507f1f77bcf86cd799439011',
         },
       },
     },
@@ -232,11 +250,21 @@ export class UsersController {
           properties: {
             _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
             username: { type: 'string', example: 'newusername' },
+            avatar: {
+              type: 'string',
+              example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...',
+              description: '用户头像base64编码',
+            },
             email: { type: 'string', example: 'newemail@example.com' },
             role: { type: 'string', example: 'USER' },
             createdAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
             updatedAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
           },
+        },
+        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
+        path: {
+          type: 'string',
+          example: '/api/users/507f1f77bcf86cd799439011',
         },
       },
     },
@@ -338,11 +366,21 @@ export class UsersController {
           properties: {
             _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
             username: { type: 'string', example: 'summer' },
+            avatar: {
+              type: 'string',
+              example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...',
+              description: '用户头像base64编码',
+            },
             email: { type: 'string', example: 'test@example.com' },
             role: { type: 'string', example: 'ADMIN' },
             createdAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
             updatedAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
           },
+        },
+        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
+        path: {
+          type: 'string',
+          example: '/api/users/507f1f77bcf86cd799439011/role',
         },
       },
     },
@@ -419,11 +457,21 @@ export class UsersController {
           properties: {
             _id: { type: 'string', example: '6893a2b83b1ecd33fea26024' },
             username: { type: 'string', example: 'summer' },
+            avatar: {
+              type: 'string',
+              example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...',
+              description: '用户头像base64编码',
+            },
             email: { type: 'string', example: '3606006150@qq.com' },
             role: { type: 'string', example: 'USER' },
             createdAt: { type: 'string', example: '2025-08-06T18:45:12.844Z' },
             updatedAt: { type: 'string', example: '2025-08-06T18:45:12.844Z' },
           },
+        },
+        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
+        path: {
+          type: 'string',
+          example: '/api/users/507f1f77bcf86cd799439011',
         },
       },
     },

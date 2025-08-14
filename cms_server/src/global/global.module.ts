@@ -4,6 +4,7 @@ import { RedisModule } from '@nestjs-redis/client';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ScheduleModule } from '@nestjs/schedule';
 import * as path from 'path';
 import { GlobalFilter } from './global.filter';
 import { GlobalInterceptor } from './global.interceptor';
@@ -91,6 +92,7 @@ if (IS_DEV) {
         },
       }),
     }),
+    ScheduleModule.forRoot(),
   ],
   providers: [
     // 全局响应拦截器提供者

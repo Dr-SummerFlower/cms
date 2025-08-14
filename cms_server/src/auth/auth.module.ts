@@ -5,7 +5,6 @@ import { PassportModule } from '@nestjs/passport';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { ValidationService } from './validation.service';
 
@@ -24,7 +23,7 @@ import { ValidationService } from './validation.service';
     forwardRef(() => UsersModule),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtRefreshStrategy, ValidationService],
+  providers: [AuthService, JwtStrategy, ValidationService],
   exports: [AuthService, ValidationService],
 })
 export class AuthModule {}

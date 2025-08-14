@@ -28,6 +28,19 @@ export class CreateConcertDto {
   name: string;
 
   /**
+   * 演唱会海报
+   * @type {string}
+   * @description 演唱会海报图片的base64编码，可选字段，不大于5MB
+   */
+  @ApiPropertyOptional({
+    description: '演唱会海报的base64编码',
+    example: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...',
+  })
+  @IsOptional()
+  @IsString({ message: '海报必须是base64字符串' })
+  poster: string;
+
+  /**
    * 演唱会日期
    * @type {Date}
    * @description 演唱会举办的日期和时间

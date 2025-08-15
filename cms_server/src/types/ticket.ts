@@ -94,3 +94,30 @@ export interface VerifyTicketResponse {
   };
   verifiedAt: Date;
 }
+
+export interface RefundRequest {
+  ticketId: string;
+  userId: string;
+  concertId: string;
+  reason: string;
+  status: 'pending' | 'approved' | 'rejected';
+  requestTime: string;
+  ticketInfo: TicketInfo;
+  userInfo: UserInfo;
+  reviewTime?: string;
+  reviewNote?: string;
+  adminId?: string;
+}
+
+export interface TicketInfo {
+  type: TicketType;
+  price: number;
+  concertName: string;
+  concertDate: Date;
+  venue: string;
+}
+
+export interface UserInfo {
+  email: string;
+  username: string;
+}

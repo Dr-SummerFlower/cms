@@ -1,3 +1,4 @@
+import { InjectRedis, Redis } from '@nestjs-redis/client';
 import {
   BadRequestException,
   ForbiddenException,
@@ -10,19 +11,24 @@ import { Model } from 'mongoose';
 import * as QRCode from 'qrcode';
 import { Concert } from '../concerts/entities/concert.entity';
 import { EcdsaService } from '../ecdsa/ecdsa.service';
+import { EmailService } from '../email/email.service';
 import {
+  RefundRequest,
   TicketCreateData,
   TicketOrderItem,
+  TicketQRData,
   TicketQRResponse,
   TicketQueryFilter,
   VerificationRecordData,
   VerifyTicketResponse,
 } from '../types';
 import { User } from '../users/entities/user.entity';
+import { AdminReviewRefundDto } from './dto/admin-review-refund.dto';
 import {
   CreateTicketOrderDto,
   TicketOrderItemDto,
 } from './dto/create-ticket-order.dto';
+import { RefundRequestQueryDto } from './dto/refund-request-query.dto';
 import { RefundTicketDto } from './dto/refund-ticket.dto';
 import { TicketQueryDto } from './dto/ticket-query.dto';
 import { VerificationHistoryQueryDto } from './dto/verification-history-query.dto';
@@ -46,7 +52,11 @@ export class TicketsService {
     private readonly verificationRecordModel: Model<VerificationRecordDocument>,
     @InjectModel(Concert.name)
     private readonly concertModel: Model<Concert>,
+    @InjectModel(User.name)
+    private readonly userModel: Model<User>,
     private readonly ecdsaService: EcdsaService,
+    private readonly emailService: EmailService,
+    @InjectRedis() private readonly redisService: Redis,
   ) {}
 
   /**
@@ -230,22 +240,18 @@ export class TicketsService {
   }
 
   /**
-   * 退票处理
-   * @description 处理用户的退票请求，包括权限验证、状态检查和退票逻辑
+   * 申请退票
+   * @description 用户申请退票，创建退票申请记录到Redis等待管理员审核
    * @param ticketId 票据ID
    * @param userId 用户ID
-   * @param refundDto 退票数据传输对象
-   * @returns 返回更新后的票据信息
-   * @throws {BadRequestException} 当票据ID或用户ID格式无效、票据状态不允许退票或演唱会已开始时抛出
-   * @throws {NotFoundException} 当票据不存在时抛出
-   * @throws {ForbiddenException} 当用户无权操作该票据时抛出
-   * @throws {InternalServerErrorException} 当数据库操作失败时抛出
+   * @param refundDto 退票申请数据
+   * @returns 返回申请结果
    */
-  async refundTicket(
+  async requestRefund(
     ticketId: string,
     userId: string,
     refundDto: RefundTicketDto,
-  ): Promise<Ticket> {
+  ): Promise<{ success: boolean; message: string }> {
     try {
       if (!ticketId || !ticketId.match(/^[0-9a-fA-F]{24}$/)) {
         throw new BadRequestException('无效的票据ID格式');
@@ -258,6 +264,7 @@ export class TicketsService {
       const ticket: Ticket = (await this.ticketModel
         .findById(ticketId)
         .populate('concert')
+        .populate('user')
         .exec()) as Ticket;
 
       if (!ticket) {
@@ -277,36 +284,231 @@ export class TicketsService {
         throw new BadRequestException('演唱会已开始，无法退票');
       }
 
-      const updatedTicket: Ticket = (await this.ticketModel
-        .findByIdAndUpdate(
-          ticketId,
-          {
-            status: 'refunded',
-            refundReason: refundDto.reason,
-          },
-          { new: true },
-        )
-        .populate('concert', 'name date venue')) as Ticket;
-
-      if (!updatedTicket) {
-        throw new InternalServerErrorException('退票操作失败');
+      const existingRequest: string | null = await this.redisService.get(
+        `refund_request:${ticketId}`,
+      );
+      if (existingRequest) {
+        throw new BadRequestException('该票据已有待审核的退票申请');
       }
 
-      await this.concertModel.findByIdAndUpdate(concert._id, {
-        $inc: { soldTickets: -1 },
-      });
+      const refundRequest: RefundRequest = {
+        ticketId,
+        userId,
+        concertId: String(concert._id),
+        reason: refundDto.reason,
+        status: 'pending',
+        requestTime: new Date().toISOString(),
+        ticketInfo: {
+          type: ticket.type,
+          price: ticket.price,
+          concertName: concert.name,
+          concertDate: concert.date,
+          venue: concert.venue,
+        },
+        userInfo: {
+          email: ticket.user.email,
+          username: ticket.user.username,
+        },
+      };
 
-      return updatedTicket;
+      await this.redisService.setEx(
+        `refund_request:${ticketId}`,
+        60 * 60 * 24 * 30,
+        JSON.stringify(refundRequest),
+      );
+
+      await this.redisService.lPush(
+        'pending_refund_requests',
+        `refund_request:${ticketId}`,
+      );
+
+      return {
+        success: true,
+        message: '退票申请已提交，请等待管理员审核',
+      };
     } catch (error) {
       if (
         error instanceof BadRequestException ||
         error instanceof NotFoundException ||
-        error instanceof ForbiddenException ||
-        error instanceof InternalServerErrorException
+        error instanceof ForbiddenException
       ) {
         throw error;
       }
-      throw new InternalServerErrorException('退票处理时发生错误');
+      throw new InternalServerErrorException('退票申请提交失败');
+    }
+  }
+
+  /**
+   * 获取待审核的退票申请列表
+   * @description 管理员获取所有待审核的退票申请
+   * @param queryDto 查询参数
+   * @returns 返回退票申请列表
+   */
+  async getPendingRefundRequests(
+    queryDto: RefundRequestQueryDto,
+  ): Promise<RefundRequest[]> {
+    try {
+      const { status = 'pending', concertId, userId } = queryDto;
+
+      let requestKeys: string[] = [];
+
+      if (status === 'pending') {
+        requestKeys = await this.redisService.lRange(
+          'pending_refund_requests',
+          0,
+          -1,
+        );
+      } else {
+        const processedKeys: string[] = await this.redisService.lRange(
+          `processed_refund_requests:${status}`,
+          0,
+          -1,
+        );
+        requestKeys = processedKeys;
+      }
+
+      const requests: RefundRequest[] = [];
+      for (const key of requestKeys) {
+        const requestData: string | null = await this.redisService.get(key);
+        if (requestData) {
+          const request: RefundRequest = JSON.parse(requestData);
+
+          if (concertId && request.concertId !== concertId) continue;
+          if (userId && request.userId !== userId) continue;
+
+          requests.push(request);
+        }
+      }
+
+      return requests.sort(
+        (a: RefundRequest, b: RefundRequest): number =>
+          new Date(b.requestTime).getTime() - new Date(a.requestTime).getTime(),
+      );
+    } catch (error) {
+      throw new InternalServerErrorException('获取退票申请列表失败');
+    }
+  }
+
+  /**
+   * 管理员审核退票申请
+   * @description 管理员审核退票申请，决定通过或拒绝
+   * @param ticketId 票据ID
+   * @param adminId 管理员ID
+   * @param reviewDto 审核数据
+   * @returns 返回审核结果
+   */
+  async reviewRefundRequest(
+    ticketId: string,
+    adminId: string,
+    reviewDto: AdminReviewRefundDto,
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      const requestKey = `refund_request:${ticketId}`;
+      const requestData: string | null =
+        await this.redisService.get(requestKey);
+
+      if (!requestData) {
+        throw new NotFoundException('退票申请不存在或已过期');
+      }
+
+      const request: RefundRequest = JSON.parse(requestData);
+
+      if (request.status !== 'pending') {
+        throw new BadRequestException('该申请已被处理');
+      }
+
+      const { approved, reviewNote } = reviewDto;
+
+      if (approved) {
+        const ticket = (await this.ticketModel.findById(ticketId)) as Ticket;
+        if (!ticket) {
+          throw new NotFoundException('票据不存在');
+        }
+
+        if (ticket.status !== 'valid') {
+          throw new BadRequestException('票据状态已变更，无法退票');
+        }
+
+        await this.ticketModel.findByIdAndUpdate(ticketId, {
+          status: 'refunded',
+          refundReason: request.reason,
+        });
+
+        await this.concertModel.findByIdAndUpdate(request.concertId, {
+          $inc: { soldTickets: -1 },
+        });
+
+        request.status = 'approved';
+        request.reviewTime = new Date().toISOString();
+        request.reviewNote = reviewNote;
+        request.adminId = adminId;
+
+        await this.redisService.lRem('pending_refund_requests', 1, requestKey);
+
+        await this.redisService.lPush(
+          'processed_refund_requests:approved',
+          requestKey,
+        );
+
+        return {
+          success: true,
+          message: '退票申请已通过，票据已退款',
+        };
+      } else {
+        if (!reviewNote) {
+          throw new BadRequestException('拒绝申请时必须提供审核备注');
+        }
+
+        request.status = 'rejected';
+        request.reviewTime = new Date().toISOString();
+        request.reviewNote = reviewNote;
+        request.adminId = adminId;
+
+        await this.redisService.lRem('pending_refund_requests', 1, requestKey);
+
+        await this.redisService.lPush(
+          'processed_refund_requests:rejected',
+          requestKey,
+        );
+
+        try {
+          await this.emailService.sendRefundRejectionNotice(
+            request.userInfo.email,
+            {
+              username: request.userInfo.username,
+              concertName: request.ticketInfo.concertName,
+              reason: reviewNote,
+            },
+          );
+        } catch (emailError) {
+          console.error('发送退票拒绝邮件失败:', emailError);
+        }
+
+        return {
+          success: true,
+          message: '退票申请已拒绝，已通知用户',
+        };
+      }
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('审核退票申请失败');
+    } finally {
+      const requestKey = `refund_request:${ticketId}`;
+      const requestData: string | null =
+        await this.redisService.get(requestKey);
+      if (requestData) {
+        const request: RefundRequest = JSON.parse(requestData);
+        await this.redisService.setEx(
+          requestKey,
+          30 * 24 * 60 * 60,
+          JSON.stringify(request),
+        );
+      }
     }
   }
 
@@ -332,7 +534,9 @@ export class TicketsService {
 
       const qrCodeImage: string = await QRCode.toDataURL(ticket.qrCodeData);
 
-      const qrData = this.ecdsaService.parseQRCodeData(ticket.qrCodeData);
+      const qrData: TicketQRData | null = this.ecdsaService.parseQRCodeData(
+        ticket.qrCodeData,
+      );
       if (!qrData) {
         throw new BadRequestException('无效的二维码数据');
       }

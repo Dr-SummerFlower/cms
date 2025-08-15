@@ -7,7 +7,9 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { EcdsaService } from '../ecdsa/ecdsa.service';
-import { ConcertQueryFilter, EcdsaKeyPair } from '../types';
+import { Ticket, TicketDocument } from '../tickets/entities/ticket.entity';
+import { ConcertQueryFilter, ConcertsReminder, EcdsaKeyPair } from '../types';
+import { User, UserDocument } from '../users/entities/user.entity';
 import { ConcertListResponseDto } from './dto/concert-list-response.dto';
 import { ConcertQueryDto } from './dto/concert-query.dto';
 import { CreateConcertDto } from './dto/create-concert.dto';
@@ -23,6 +25,10 @@ export class ConcertsService {
   constructor(
     @InjectModel(Concert.name)
     private readonly concertModel: Model<ConcertDocument>,
+    @InjectModel(Ticket.name)
+    private readonly ticketModel: Model<TicketDocument>,
+    @InjectModel(User.name)
+    private readonly userModel: Model<UserDocument>,
     private readonly ecdsaService: EcdsaService,
   ) {}
 
@@ -240,6 +246,106 @@ export class ConcertsService {
         throw error;
       }
       throw new InternalServerErrorException('删除演唱会时发生错误');
+    }
+  }
+
+  /**
+   * 更新演唱会状态
+   * @description 根据当前时间自动更新演唱会状态
+   * - upcoming: 演唱会开始时间未到
+   * - ongoing: 演唱会正在进行中（开始时间已到但未超过24小时）
+   * - completed: 演唱会已结束（超过开始时间24小时）
+   */
+  async updateConcertStatuses(): Promise<void> {
+    try {
+      const now = new Date();
+      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+      // 更新状态为 ongoing：开始时间已到但未超过24小时的演唱会
+      await this.concertModel
+        .updateMany(
+          {
+            date: { $lte: now, $gt: oneDayAgo },
+            status: 'upcoming',
+          },
+          { $set: { status: 'ongoing' } },
+        )
+        .exec();
+
+      // 更新状态为 completed：开始时间超过24小时的演唱会
+      await this.concertModel
+        .updateMany(
+          {
+            date: { $lte: oneDayAgo },
+            status: { $in: ['upcoming', 'ongoing'] },
+          },
+          { $set: { status: 'completed' } },
+        )
+        .exec();
+
+      console.log('演唱会状态更新完成');
+    } catch (error) {
+      console.error('更新演唱会状态失败:', error.message);
+      throw new InternalServerErrorException(
+        `更新演唱会状态失败: ${error.message}`,
+      );
+    }
+  }
+
+  /**
+   * 获取需要发送提醒邮件的演唱会和用户信息
+   * @description 获取12小时后开始的演唱会及其购票用户的邮箱信息
+   * @returns 返回需要提醒的演唱会和用户邮箱列表
+   */
+  async getConcertsForReminder(): Promise<ConcertsReminder[]> {
+    try {
+      const now = new Date();
+      const twelveHoursLater = new Date(now.getTime() + 12 * 60 * 60 * 1000);
+      const thirteenHoursLater = new Date(now.getTime() + 13 * 60 * 60 * 1000);
+
+      const concerts: Concert[] = (await this.concertModel
+        .find({
+          date: {
+            $gte: twelveHoursLater,
+            $lt: thirteenHoursLater,
+          },
+          status: 'upcoming',
+        })
+        .exec()) as Concert[];
+
+      const result: ConcertsReminder[] = [];
+
+      for (const concert of concerts) {
+        const tickets: Ticket[] = (await this.ticketModel
+          .find({
+            concert: concert._id,
+            status: 'valid',
+          })
+          .populate('user')
+          .exec()) as Ticket[];
+
+        const userEmails: string[] = [
+          ...new Set(
+            tickets
+              .map((ticket: Ticket): string => ticket.user?.email)
+              .filter((email: string): string => email),
+          ),
+        ];
+
+        if (userEmails.length > 0) {
+          result.push({
+            concert: concert.toObject() as Concert,
+            userEmails,
+          });
+        }
+      }
+
+      return result;
+    } catch (error) {
+      console.error('获取需要提醒的演唱会失败:', error.message);
+      throw new InternalServerErrorException(
+        `获取需要提醒的演唱会失败: ${error.message}`,
+      );
     }
   }
 }

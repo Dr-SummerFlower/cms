@@ -31,7 +31,7 @@ export class EmailService {
 
       const redisKey = `${type}:code:${email}`;
 
-      await this.redisService.setEx(redisKey, 300, code);
+      await this.redisService.setEx(redisKey, 60 * 5, code);
       await this.emailService.sendMail({
         to: email,
         subject: '演唱会管理组',
@@ -46,6 +46,95 @@ export class EmailService {
       return { success: true };
     } catch {
       throw new InternalServerErrorException('邮件发送失败，请稍后重试');
+    }
+  }
+
+  /**
+   * 发送演唱会提醒邮件
+   * @description 向用户发送演唱会开始前的提醒邮件
+   * @param email 用户邮箱地址
+   * @param concertInfo 演唱会信息
+   * @returns 返回发送结果
+   * @throws {InternalServerErrorException} 当邮件发送失败时抛出异常
+   */
+  async sendConcertReminder(
+    email: string,
+    concertInfo: {
+      name: string;
+      date: Date;
+      venue: string;
+      description?: string;
+    },
+  ): Promise<{ success: boolean }> {
+    try {
+      await this.emailService.sendMail({
+        to: email,
+        subject: `演唱会提醒 - ${concertInfo.name}`,
+        template: './concert-reminder',
+        context: {
+          concertName: concertInfo.name,
+          concertDate: concertInfo.date.toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZone: 'Asia/Shanghai',
+          }),
+          venue: concertInfo.venue,
+          description: concertInfo.description,
+        },
+      });
+
+      return { success: true };
+    } catch {
+      throw new InternalServerErrorException(
+        '演唱会提醒邮件发送失败，请稍后重试',
+      );
+    }
+  }
+
+  /**
+   * 发送退票拒绝通知邮件
+   * @description 向用户发送退票申请被拒绝的通知邮件
+   * @param email 用户邮箱地址
+   * @param refundInfo 退票信息
+   * @returns 返回发送结果
+   * @throws {InternalServerErrorException} 当邮件发送失败时抛出异常
+   */
+  async sendRefundRejectionNotice(
+    email: string,
+    refundInfo: {
+      username: string;
+      concertName: string;
+      reason: string;
+    },
+  ): Promise<{ success: boolean }> {
+    try {
+      await this.emailService.sendMail({
+        to: email,
+        subject: `退票申请结果通知 - ${refundInfo.concertName}`,
+        template: './refund-rejection',
+        context: {
+          username: refundInfo.username,
+          concertName: refundInfo.concertName,
+          rejectionReason: refundInfo.reason,
+          currentDate: new Date().toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZone: 'Asia/Shanghai',
+          }),
+        },
+      });
+
+      return { success: true };
+    } catch {
+      throw new InternalServerErrorException(
+        '退票拒绝通知邮件发送失败，请稍后重试',
+      );
     }
   }
 }

@@ -5,6 +5,7 @@ import {
   HttpCode,
   Param,
   Post,
+  Put,
   Query,
   Request,
   UseGuards,
@@ -24,8 +25,14 @@ import {
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { TicketQRResponse, VerifyTicketResponse } from '../types';
+import {
+  RefundRequest,
+  TicketQRResponse,
+  VerifyTicketResponse,
+} from '../types';
+import { AdminReviewRefundDto } from './dto/admin-review-refund.dto';
 import { CreateTicketOrderDto } from './dto/create-ticket-order.dto';
+import { RefundRequestQueryDto } from './dto/refund-request-query.dto';
 import { RefundTicketDto } from './dto/refund-ticket.dto';
 import { TicketQueryDto } from './dto/ticket-query.dto';
 import { VerificationHistoryQueryDto } from './dto/verification-history-query.dto';
@@ -304,7 +311,7 @@ export class TicketsController {
   @Roles('USER', 'ADMIN')
   @ApiOperation({
     summary: '申请退票',
-    description: '用户申请退票，需要提供退票原因',
+    description: '用户申请退票，提交退票申请等待管理员审核，需要提供退票原因',
   })
   @ApiParam({
     name: 'id',
@@ -325,7 +332,7 @@ export class TicketsController {
   })
   @ApiResponse({
     status: 200,
-    description: '退票成功',
+    description: '退票申请提交成功',
     schema: {
       type: 'object',
       properties: {
@@ -334,28 +341,23 @@ export class TicketsController {
         data: {
           type: 'object',
           properties: {
-            _id: { type: 'string', example: '507f1f77bcf86cd799439012' },
-            concertId: { type: 'string', example: '507f1f77bcf86cd799439011' },
-            userId: { type: 'string', example: '507f1f77bcf86cd799439013' },
-            type: { type: 'string', example: 'adult' },
-            price: { type: 'number', example: 299 },
-            status: { type: 'string', example: 'refunded' },
-            refundReason: { type: 'string', example: '临时有事无法参加' },
-            refundedAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-            createdAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-            updatedAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
+            success: { type: 'boolean', example: true },
+            message: {
+              type: 'string',
+              example: '退票申请已提交，请等待管理员审核',
+            },
           },
         },
       },
     },
   })
   @ApiBadRequestResponse({
-    description: '退票失败',
+    description: '退票申请失败',
     schema: {
       type: 'object',
       properties: {
         code: { type: 'number', example: 400 },
-        message: { type: 'string', example: '票务已使用，无法退票' },
+        message: { type: 'string', example: '票务已使用，无法申请退票' },
         data: { type: 'null' },
         timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
         path: {
@@ -382,12 +384,12 @@ export class TicketsController {
     },
   })
   @HttpCode(200)
-  async refundTicket(
+  async requestRefund(
     @Param('id') ticketId: string,
     @Body() refundDto: RefundTicketDto,
     @Request() req: { user: { userId: string } },
-  ) {
-    return await this.ticketsService.refundTicket(
+  ): Promise<{ success: boolean; message: string }> {
+    return await this.ticketsService.requestRefund(
       ticketId,
       req.user.userId,
       refundDto,
@@ -471,6 +473,194 @@ export class TicketsController {
     @Request() req: { user: { userId: string } },
   ): Promise<TicketQRResponse> {
     return await this.ticketsService.generateQRCode(ticketId, req.user.userId);
+  }
+
+  /**
+   * 获取退票申请列表
+   * @description 管理员获取退票申请列表，支持按状态筛选
+   * @param queryDto 查询参数
+   * @returns 返回退票申请列表
+   */
+  @Get('refund-requests')
+  @Roles('ADMIN')
+  @ApiOperation({
+    summary: '获取退票申请列表',
+    description: '管理员获取退票申请列表，支持按状态筛选',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['pending', 'approved', 'rejected'],
+    description: '申请状态',
+    example: 'pending',
+  })
+  @ApiQuery({
+    name: 'concertId',
+    required: false,
+    type: String,
+    description: '演唱会ID',
+    example: '507f1f77bcf86cd799439011',
+  })
+  @ApiQuery({
+    name: 'userId',
+    required: false,
+    type: String,
+    description: '用户ID',
+    example: '507f1f77bcf86cd799439013',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '成功获取退票申请列表',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: 'success' },
+        data: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              ticketId: { type: 'string', example: '507f1f77bcf86cd799439012' },
+              userId: { type: 'string', example: '507f1f77bcf86cd799439013' },
+              concertId: {
+                type: 'string',
+                example: '507f1f77bcf86cd799439011',
+              },
+              reason: { type: 'string', example: '临时有事无法参加' },
+              status: { type: 'string', example: 'pending' },
+              requestTime: {
+                type: 'string',
+                example: '2024-01-01T00:00:00.000Z',
+              },
+              ticketInfo: {
+                type: 'object',
+                properties: {
+                  type: { type: 'string', example: 'adult' },
+                  price: { type: 'number', example: 299 },
+                  concertName: { type: 'string', example: '演唱会名称' },
+                  venue: { type: 'string', example: '演出场地' },
+                },
+              },
+              userInfo: {
+                type: 'object',
+                properties: {
+                  email: { type: 'string', example: 'user@example.com' },
+                  username: { type: 'string', example: '用户名' },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+  async getRefundRequests(
+    @Query() queryDto: RefundRequestQueryDto,
+  ): Promise<RefundRequest[]> {
+    return await this.ticketsService.getPendingRefundRequests(queryDto);
+  }
+
+  /**
+   * 审核退票申请
+   * @description 管理员审核退票申请，决定通过或拒绝
+   * @param ticketId 票据ID
+   * @param reviewDto 审核数据
+   * @param req 请求对象，包含管理员信息
+   * @returns 返回审核结果
+   */
+  @Put('refund-requests/:ticketId/review')
+  @Roles('ADMIN')
+  @ApiOperation({
+    summary: '审核退票申请',
+    description: '管理员审核退票申请，决定通过或拒绝',
+  })
+  @ApiParam({
+    name: 'ticketId',
+    description: '票据ID',
+    example: '507f1f77bcf86cd799439012',
+  })
+  @ApiBody({
+    type: AdminReviewRefundDto,
+    description: '审核信息',
+    examples: {
+      approve: {
+        summary: '通过申请示例',
+        value: {
+          approved: true,
+          reviewNote: '符合退票条件，同意退票',
+        },
+      },
+      reject: {
+        summary: '拒绝申请示例',
+        value: {
+          approved: false,
+          reviewNote: '不符合退票政策，拒绝退票',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: '审核成功',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: 'success' },
+        data: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: '退票申请已通过，票据已退款' },
+          },
+        },
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: '审核失败',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 400 },
+        message: { type: 'string', example: '该申请已被处理' },
+        data: { type: 'null' },
+        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
+        path: {
+          type: 'string',
+          example: '/tickets/refund-requests/507f1f77bcf86cd799439012/review',
+        },
+      },
+    },
+  })
+  @ApiNotFoundResponse({
+    description: '退票申请不存在',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 404 },
+        message: { type: 'string', example: '退票申请不存在或已过期' },
+        data: { type: 'null' },
+        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
+        path: {
+          type: 'string',
+          example: '/tickets/refund-requests/507f1f77bcf86cd799439012/review',
+        },
+      },
+    },
+  })
+  @HttpCode(200)
+  async reviewRefundRequest(
+    @Param('ticketId') ticketId: string,
+    @Body() reviewDto: AdminReviewRefundDto,
+    @Request() req: { user: { userId: string } },
+  ): Promise<{ success: boolean; message: string }> {
+    return await this.ticketsService.reviewRefundRequest(
+      ticketId,
+      req.user.userId,
+      reviewDto,
+    );
   }
 }
 

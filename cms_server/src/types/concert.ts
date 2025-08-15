@@ -1,3 +1,5 @@
+import { Concert } from '../concerts/entities/concert.entity';
+
 /**
  * @interface
  * @property {string} status - 演唱会状态
@@ -18,4 +20,9 @@ export interface ConcertQueryFilter {
         $regex: string;
         $options: string;
       };
+}
+
+export interface ConcertsReminder {
+  concert: Concert;
+  userEmails: string[];
 }

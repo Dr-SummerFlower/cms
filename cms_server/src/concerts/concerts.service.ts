@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -9,7 +10,6 @@ import { Model } from 'mongoose';
 import { EcdsaService } from '../ecdsa/ecdsa.service';
 import { Ticket, TicketDocument } from '../tickets/entities/ticket.entity';
 import { ConcertQueryFilter, ConcertsReminder, EcdsaKeyPair } from '../types';
-import { User, UserDocument } from '../users/entities/user.entity';
 import { ConcertListResponseDto } from './dto/concert-list-response.dto';
 import { ConcertQueryDto } from './dto/concert-query.dto';
 import { CreateConcertDto } from './dto/create-concert.dto';
@@ -22,13 +22,12 @@ import { Concert, ConcertDocument } from './entities/concert.entity';
  */
 @Injectable()
 export class ConcertsService {
+  private readonly logger = new Logger(ConcertsService.name);
   constructor(
     @InjectModel(Concert.name)
     private readonly concertModel: Model<ConcertDocument>,
     @InjectModel(Ticket.name)
     private readonly ticketModel: Model<TicketDocument>,
-    @InjectModel(User.name)
-    private readonly userModel: Model<UserDocument>,
     private readonly ecdsaService: EcdsaService,
   ) {}
 
@@ -283,9 +282,9 @@ export class ConcertsService {
         )
         .exec();
 
-      console.log('演唱会状态更新完成');
+      this.logger.log('演唱会状态更新完成');
     } catch (error) {
-      console.error('更新演唱会状态失败:', error.message);
+      this.logger.error('更新演唱会状态失败:', error.message);
       throw new InternalServerErrorException(
         `更新演唱会状态失败: ${error.message}`,
       );
@@ -342,7 +341,7 @@ export class ConcertsService {
 
       return result;
     } catch (error) {
-      console.error('获取需要提醒的演唱会失败:', error.message);
+      this.logger.error('获取需要提醒的演唱会失败:', error.message);
       throw new InternalServerErrorException(
         `获取需要提醒的演唱会失败: ${error.message}`,
       );

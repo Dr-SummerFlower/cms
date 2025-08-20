@@ -5,29 +5,10 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 
-/**
- * 验证码验证服务
- * @class ValidationService
- * @description 提供验证码验证和清理功能
- */
 @Injectable()
 export class ValidationService {
-  /**
-   * 构造函数
-   * @param {Redis} redisService - Redis客户端服务
-   */
   constructor(@InjectRedis() private readonly redisService: Redis) {}
 
-  /**
-   * 验证邮箱验证码
-   * @async
-   * @param {string} email - 邮箱地址
-   * @param {string} code - 验证码
-   * @param {'register' | 'update'} type - 验证码类型
-   * @returns {Promise<void>}
-   * @throws {BadRequestException} 验证码过期、不存在、错误或参数无效时抛出异常
-   * @throws {InternalServerErrorException} 当Redis操作失败时抛出
-   */
   async validateCode(
     email: string,
     code: string,
@@ -64,15 +45,6 @@ export class ValidationService {
     }
   }
 
-  /**
-   * 清除邮箱验证码
-   * @async
-   * @param {string} email - 邮箱地址
-   * @param {'register' | 'update'} type - 验证码类型
-   * @returns {Promise<void>}
-   * @throws {BadRequestException} 当参数无效时抛出
-   * @throws {InternalServerErrorException} 当Redis操作失败时抛出
-   */
   async clearCode(email: string, type: 'register' | 'update'): Promise<void> {
     try {
       if (!email || !email.includes('@')) {

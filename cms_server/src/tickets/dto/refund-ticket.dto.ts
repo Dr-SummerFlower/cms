@@ -1,20 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
-/**
- * 退票数据传输对象
- * @description 定义退票操作所需的数据结构
- */
 export class RefundTicketDto {
-  /**
-   * 退票原因
-   * @type {string}
-   * @description 用户申请退票的原因说明
-   */
   @ApiProperty({
-    description: '退票原因',
-    example: '因个人原因无法参加演唱会',
-    maxLength: 500,
+    description: '退票原因（最多500字符）',
+    example: '临时有事无法参加',
   })
   @IsString({ message: '退票原因必须是字符串' })
   @IsNotEmpty({ message: '退票原因不能为空' })

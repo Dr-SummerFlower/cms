@@ -1,4 +1,4 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
@@ -9,20 +9,11 @@ import {
   MinLength,
 } from 'class-validator';
 
-/**
- * 更新用户信息数据传输对象
- * @class UpdateUserDto
- * @description 定义更新用户信息时需要提供的数据结构
- */
 export class UpdateUserDto {
-  /**
-   * 用户名
-   * @type {string}
-   * @description 用户的用户名，长度必须在4-20个字符之间，可选字段
-   */
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: '用户名',
-    example: 'newusername',
+    required: false,
+    example: 'new_name',
     minLength: 4,
     maxLength: 20,
   })
@@ -32,43 +23,20 @@ export class UpdateUserDto {
   @MaxLength(20, { message: '用户名最多20个字符' })
   username?: string;
 
-  /**
-   * 用户头像
-   * @type {string}
-   * @description 用户头像的base64编码，可选字段，不大于2MB
-   */
-  @ApiPropertyOptional({
-    description: '用户头像的base64编码',
-    example: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...',
-  })
-  @IsOptional()
-  @IsString({ message: '头像必须是base64字符串' })
-  avatar?: string;
-
-  /**
-   * 邮箱地址
-   * @type {string}
-   * @description 用户的邮箱地址，必须是有效的邮箱格式，可选字段
-   */
-  @ApiPropertyOptional({
-    description: '用户邮箱',
-    example: 'newemail@example.com',
-    format: 'email',
+  @ApiProperty({
+    description: '邮箱',
+    required: false,
+    example: 'new_mail@example.com',
   })
   @IsOptional()
   @IsEmail({}, { message: '请输入有效的邮箱地址' })
   email?: string;
 
-  /**
-   * 密码
-   * @type {string}
-   * @description 用户的密码，至少8个字符，必须包含大小写字母和数字，可选字段
-   */
-  @ApiPropertyOptional({
-    description: '新密码，必须包含大小写字母和数字',
-    example: 'NewPassword123',
+  @ApiProperty({
+    description: '密码',
+    required: false,
+    example: '@User123456',
     minLength: 8,
-    pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).*$',
   })
   @IsOptional()
   @IsString({ message: '密码必须是字符串' })
@@ -78,13 +46,9 @@ export class UpdateUserDto {
   })
   password?: string;
 
-  /**
-   * 邮箱验证码
-   * @type {string}
-   * @description 邮箱验证码，更新邮箱或密码时必需，可选字段
-   */
-  @ApiPropertyOptional({
-    description: '邮箱验证码（更新邮箱或密码时必需）',
+  @ApiProperty({
+    description: '邮箱验证码',
+    required: false,
     example: '123456',
   })
   @IsOptional()

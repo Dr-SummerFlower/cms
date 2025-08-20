@@ -2,27 +2,16 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
-  IsOptional,
   IsString,
   Matches,
   MaxLength,
   MinLength,
 } from 'class-validator';
 
-/**
- * 用户注册数据传输对象
- * @class RegisterDto
- * @description 定义用户注册时需要提供的数据结构
- */
 export class RegisterDto {
-  /**
-   * 用户名
-   * @type {string}
-   * @description 用户注册用户名，长度4-20个字符
-   */
   @ApiProperty({
     description: '用户名',
-    example: 'summer',
+    example: 'user001',
     minLength: 4,
     maxLength: 20,
   })
@@ -32,44 +21,11 @@ export class RegisterDto {
   @MaxLength(20, { message: '用户名最多20个字符' })
   username: string;
 
-  /**
-   * 用户头像
-   * @type {string}
-   * @description 用户头像的base64编码，可选字段，不大于2MB
-   */
-  @ApiProperty({
-    description: '用户头像的base64编码',
-    example: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...',
-    required: false,
-  })
-  @IsOptional()
-  @IsString({ message: '头像必须是base64字符串' })
-  avatar: string;
-
-  /**
-   * 用户邮箱
-   * @type {string}
-   * @description 用户注册邮箱地址
-   */
-  @ApiProperty({
-    description: '用户邮箱',
-    example: '3606006150@qq.com',
-    format: 'email',
-  })
+  @ApiProperty({ description: '邮箱', example: 'user@user.com' })
   @IsEmail({}, { message: '请输入有效的邮箱地址' })
   email: string;
 
-  /**
-   * 用户密码
-   * @type {string}
-   * @description 用户注册密码，至少8个字符，必须包含大小写字母和数字
-   */
-  @ApiProperty({
-    description: '用户密码，必须包含大小写字母和数字',
-    example: '@Qwer123456',
-    minLength: 8,
-    pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).*$',
-  })
+  @ApiProperty({ description: '密码', example: '@User123456', minLength: 8 })
   @IsString({ message: '密码必须是字符串' })
   @IsNotEmpty({ message: '密码不能为空' })
   @MinLength(8, { message: '密码至少8个字符' })
@@ -78,11 +34,6 @@ export class RegisterDto {
   })
   password: string;
 
-  /**
-   * 邮箱验证码
-   * @type {string}
-   * @description 6位数字验证码
-   */
   @ApiProperty({
     description: '邮箱验证码',
     example: '123456',

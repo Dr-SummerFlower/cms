@@ -1,13 +1,21 @@
-import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import {
-  ApiBadRequestResponse,
+  Body,
+  Controller,
+  HttpCode,
+  Post,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
   ApiBody,
-  ApiConflictResponse,
+  ApiConsumes,
+  ApiCreatedResponse,
+  ApiOkResponse,
   ApiOperation,
-  ApiResponse,
   ApiTags,
-  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { StoragesService } from '../storages/storages.service';
 import { AuthResponse, TokenResponse } from '../types';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -15,214 +23,114 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ValidationService } from './validation.service';
 
-/**
- * 认证控制器
- * @class AuthController
- * @description 处理用户认证相关的HTTP请求，包括登录、注册和令牌刷新
- */
-@ApiTags('认证管理')
+@ApiTags('认证')
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly validationService: ValidationService,
+    private readonly storagesService: StoragesService,
   ) {}
 
-  @Post('login')
-  @ApiOperation({
-    summary: '用户登录',
-    description: '用户通过邮箱和密码登录系统，成功后返回JWT访问令牌',
-  })
+  @ApiOperation({ summary: '用户登录', description: '使用邮箱和密码登录' })
   @ApiBody({
+    description: '登录请求体',
     type: LoginDto,
-    description: '登录信息',
     examples: {
-      example1: {
-        summary: '登录示例',
+      admin: {
+        summary: '管理员登录',
         value: {
-          email: '3606006150@qq.com',
-          password: '@Qwer123456',
+          email: 'admin@admin.com',
+          password: '@Admin123456',
+        },
+      },
+      user: {
+        summary: '普通用户登录',
+        value: {
+          email: 'user@user.com',
+          password: '@User123456',
         },
       },
     },
   })
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     description: '登录成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: 'success' },
-        data: {
-          type: 'object',
-          properties: {
-            access_token: {
-              type: 'string',
-              example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-              description: 'JWT访问令牌',
-            },
-            refresh_token: {
-              type: 'string',
-              example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-              description: 'JWT刷新令牌',
-            },
+    content: {
+      'application/json': {
+        example: {
+          code: 200,
+          message: 'success',
+          data: {
+            access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+            refresh_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVF9SZWZyZXNo...',
             user: {
-              type: 'object',
-              properties: {
-                userId: { type: 'string', example: '507f1f77bcf86cd799439011' },
-                username: { type: 'string', example: 'summer' },
-                email: { type: 'string', example: '3606006150@qq.com' },
-                role: { type: 'string', example: 'USER' },
-                avatar: {
-                  type: 'string',
-                  example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...',
-                  description: '用户头像base64编码',
-                },
-              },
+              userId: '66c1234567890abcdef0123',
+              username: 'admin',
+              avatar:
+                'http://localhost:9000/assets/avatar/2025-08-19/2823d126-0441-4635-859f-9eee37a1c281.png',
+              email: 'admin@admin.com',
+              role: 'ADMIN',
             },
           },
+          timestamp: '2025-08-20T10:00:00.000Z',
+          path: '/api/auth/login',
         },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: { type: 'string', example: '/api/auth/login' },
       },
     },
   })
-  @ApiBadRequestResponse({
-    description: '请求参数错误',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 400 },
-        message: { type: 'string', example: '请输入有效的邮箱地址' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: { type: 'string', example: '/api/auth/login' },
-      },
-    },
-  })
-  @ApiUnauthorizedResponse({
-    description: '认证失败',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 401 },
-        message: { type: 'string', example: '邮箱或密码错误' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: { type: 'string', example: '/api/auth/login' },
-      },
-    },
-  })
+  @Post('login')
   @HttpCode(200)
-  /**
-   * 用户登录接口
-   * @param {LoginDto} loginDto - 登录数据传输对象
-   * @returns {Promise<AuthResponse>} 登录成功后的令牌响应
-   * @description 处理用户登录请求，验证邮箱和密码后返回JWT令牌
-   */
   async login(@Body() loginDto: LoginDto): Promise<AuthResponse> {
     return this.authService.login(loginDto);
   }
 
-  @Post('register')
-  @ApiOperation({
-    summary: '用户注册',
-    description: '用户注册新账户，需要提供用户名、邮箱、密码和邮箱验证码',
-  })
+  @ApiOperation({ summary: '用户注册', description: '提交资料与头像注册账号' })
+  @ApiConsumes('multipart/form-data')
   @ApiBody({
-    type: RegisterDto,
-    description: '注册信息',
-    examples: {
-      example1: {
-        summary: '注册示例',
-        value: {
-          username: 'summer',
-          email: '3606006150@qq.com',
-          password: '@Qwer123456',
-          code: '123456',
-        },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 201,
-    description: '注册成功',
+    description: '注册请求体（multipart/form-data）',
     schema: {
       type: 'object',
       properties: {
-        code: { type: 'number', example: 201 },
-        message: { type: 'string', example: 'success' },
-        data: {
-          type: 'object',
-          properties: {
-            access_token: {
-              type: 'string',
-              example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-              description: 'JWT访问令牌',
-            },
-            refresh_token: {
-              type: 'string',
-              example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-              description: 'JWT刷新令牌',
-            },
+        username: { type: 'string', example: 'user001' },
+        email: { type: 'string', example: 'user@user.com' },
+        password: { type: 'string', example: '@User123456' },
+        code: { type: 'string', example: '123456' },
+        avatar: { type: 'string', format: 'binary' },
+      },
+      required: ['username', 'email', 'password', 'code', 'avatar'],
+    },
+  })
+  @ApiCreatedResponse({
+    description: '注册成功',
+    content: {
+      'application/json': {
+        example: {
+          code: 201,
+          message: 'success',
+          data: {
+            access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+            refresh_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVF9SZWZyZXNo...',
             user: {
-              type: 'object',
-              properties: {
-                userId: { type: 'string', example: '507f1f77bcf86cd799439011' },
-                username: { type: 'string', example: 'summer' },
-                email: { type: 'string', example: '3606006150@qq.com' },
-                role: { type: 'string', example: 'USER' },
-                avatar: {
-                  type: 'string',
-                  example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...',
-                  description: '用户头像base64编码',
-                },
-              },
+              userId: '66cabcdef01234567890abcd',
+              username: 'user001',
+              avatar:
+                'http://localhost:9000/assets/avatar/2025-08-19/2823d126-0441-4635-859f-9eee37a1c281.png',
+              email: 'user@user.com',
+              role: 'USER',
             },
           },
+          timestamp: '2025-08-20T10:00:00.000Z',
+          path: '/api/auth/register',
         },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: { type: 'string', example: '/api/auth/register' },
       },
     },
   })
-  @ApiBadRequestResponse({
-    description: '请求参数错误或验证码无效',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 400 },
-        message: {
-          type: 'string',
-          example: '验证码错误或已过期',
-        },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: { type: 'string', example: '/api/auth/register' },
-      },
-    },
-  })
-  @ApiConflictResponse({
-    description: '用户已存在',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 409 },
-        message: { type: 'string', example: '用户名或邮箱已存在' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: { type: 'string', example: '/api/auth/register' },
-      },
-    },
-  })
-  /**
-   * 用户注册接口
-   * @param {RegisterDto} registerDto - 注册数据传输对象
-   * @returns {Promise<AuthResponse>} 注册成功后的令牌响应
-   * @description 处理用户注册请求，验证邮箱验证码后创建新用户并返回JWT令牌
-   */
-  async register(@Body() registerDto: RegisterDto): Promise<AuthResponse> {
+  @Post('register')
+  @UseInterceptors(FileInterceptor('avatar'))
+  async register(
+    @Body() registerDto: RegisterDto,
+    @UploadedFile() avatar: Express.Multer.File,
+  ): Promise<AuthResponse> {
     await this.validationService.validateCode(
       registerDto.email,
       registerDto.code,
@@ -232,75 +140,47 @@ export class AuthController {
       username: registerDto.username,
       email: registerDto.email,
       password: registerDto.password,
-      avatar: registerDto.avatar,
+      avatar: await this.storagesService.uploadFile(avatar, 'avatar'),
     });
     await this.validationService.clearCode(registerDto.email, 'register');
     return result;
   }
 
-  @Post('refresh')
   @ApiOperation({
-    summary: '刷新访问令牌',
-    description: '使用refresh token获取新的access token和refresh token',
+    summary: '刷新令牌',
+    description: '使用刷新令牌获取新的访问令牌',
   })
   @ApiBody({
+    description: '刷新令牌请求体',
     type: RefreshTokenDto,
-    description: 'Refresh Token信息',
     examples: {
-      example1: {
-        summary: '刷新令牌示例',
+      default: {
+        summary: '示例',
         value: {
-          refresh_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+          refresh_token: 'refresh_token_example',
         },
       },
     },
   })
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     description: '刷新成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: 'success' },
-        data: {
-          type: 'object',
-          properties: {
-            access_token: {
-              type: 'string',
-              example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-              description: '新的JWT访问令牌',
-            },
-            refresh_token: {
-              type: 'string',
-              example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-              description: '新的JWT刷新令牌',
-            },
+    content: {
+      'application/json': {
+        example: {
+          code: 200,
+          message: 'success',
+          data: {
+            access_token: 'new_access_token_example',
+            refresh_token: 'new_refresh_token_example',
           },
+          timestamp: '2025-08-20T10:00:00.000Z',
+          path: '/api/auth/refresh',
         },
       },
     },
   })
-  @ApiUnauthorizedResponse({
-    description: 'Refresh Token无效或已过期',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 401 },
-        message: { type: 'string', example: '无效的refresh token' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: { type: 'string', example: '/api/auth/refresh' },
-      },
-    },
-  })
+  @Post('refresh')
   @HttpCode(200)
-  /**
-   * 刷新访问令牌接口
-   * @param {RefreshTokenDto} refreshTokenDto - 刷新令牌数据传输对象
-   * @returns {Promise<TokenResponse>} 刷新成功后的新令牌响应
-   * @description 使用refresh token获取新的access token和refresh token
-   */
   async refresh(
     @Body() refreshTokenDto: RefreshTokenDto,
   ): Promise<TokenResponse> {

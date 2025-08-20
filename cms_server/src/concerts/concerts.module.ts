@@ -4,10 +4,11 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from '../auth/auth.module';
 import { EcdsaModule } from '../ecdsa/ecdsa.module';
 import { EmailModule } from '../email/email.module';
+import { StoragesModule } from '../storages/storages.module';
 import { Ticket, TicketSchema } from '../tickets/entities/ticket.entity';
 import { User, UserSchema } from '../users/entities/user.entity';
-import { ConcertsController } from './concerts.controller';
 import { ConcertsSchedulerService } from './concerts-scheduler.service';
+import { ConcertsController } from './concerts.controller';
 import { ConcertsService } from './concerts.service';
 import { Concert, ConcertSchema } from './entities/concert.entity';
 
@@ -22,6 +23,7 @@ import { Concert, ConcertSchema } from './entities/concert.entity';
     forwardRef(() => AuthModule),
     EcdsaModule,
     EmailModule,
+    StoragesModule,
   ],
   controllers: [ConcertsController],
   providers: [ConcertsService, ConcertsSchedulerService],

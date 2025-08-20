@@ -1,9 +1,9 @@
 import {
   BadRequestException,
-  Injectable,
-  NotFoundException,
-  InternalServerErrorException,
   ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
@@ -12,25 +12,12 @@ import { PaginationDto } from './dto/pagination.dto';
 import { UserListResponseDto } from './dto/user-list-response.dto';
 import { User, UserDocument } from './entities/user.entity';
 
-/**
- * 用户服务类
- * @description 处理用户相关的业务逻辑，包括用户的创建、查询、更新和删除操作
- */
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
   ) {}
 
-  /**
-   * 创建用户
-   * @description 根据提供的用户数据创建新用户
-   * @param userData 用户数据对象
-   * @returns 返回创建的用户信息
-   * @throws {ConflictException} 当邮箱已被使用时抛出
-   * @throws {BadRequestException} 当用户数据验证失败时抛出
-   * @throws {InternalServerErrorException} 当数据库操作失败时抛出
-   */
   async create(userData: UserData): Promise<User> {
     try {
       return (await this.userModel.create(userData)) as User;
@@ -45,14 +32,6 @@ export class UsersService {
     }
   }
 
-  /**
-   * 根据邮箱查找用户
-   * @description 通过邮箱地址查找用户，包含密码字段用于登录验证
-   * @param email 用户邮箱地址
-   * @returns 返回用户信息，如果不存在则返回null
-   * @throws {BadRequestException} 当邮箱格式无效时抛出
-   * @throws {InternalServerErrorException} 当数据库查询失败时抛出
-   */
   async findOne(email: string): Promise<User> {
     try {
       if (!email || !email.includes('@')) {
@@ -70,15 +49,6 @@ export class UsersService {
     }
   }
 
-  /**
-   * 根据ID查找用户
-   * @description 通过用户ID查找用户详细信息
-   * @param id 用户的唯一标识符
-   * @returns 返回用户详细信息
-   * @throws {BadRequestException} 当ID格式无效时抛出
-   * @throws {NotFoundException} 当用户不存在时抛出异常
-   * @throws {InternalServerErrorException} 当数据库查询失败时抛出
-   */
   async findOneById(id: string): Promise<User> {
     try {
       if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
@@ -101,14 +71,6 @@ export class UsersService {
     }
   }
 
-  /**
-   * 获取用户列表
-   * @description 分页获取用户列表，支持按用户名或邮箱搜索
-   * @param paginationDto 分页查询参数对象
-   * @returns 返回包含用户列表和分页信息的响应对象
-   * @throws {BadRequestException} 当分页参数无效时抛出
-   * @throws {InternalServerErrorException} 当数据库查询失败时抛出
-   */
   async findAll(paginationDto: PaginationDto): Promise<UserListResponseDto> {
     try {
       const { page = 1, limit = 10, search } = paginationDto;
@@ -151,16 +113,6 @@ export class UsersService {
     }
   }
 
-  /**
-   * 更新用户信息
-   * @description 根据ID更新用户的基本信息，包括用户名、邮箱和密码
-   * @param id 用户的唯一标识符
-   * @param updateData 更新数据对象
-   * @returns 返回更新后的用户信息
-   * @throws {BadRequestException} 当ID格式无效或邮箱已被其他用户使用时抛出异常
-   * @throws {NotFoundException} 当用户不存在时抛出异常
-   * @throws {InternalServerErrorException} 当数据库操作失败时抛出
-   */
   async update(id: string, updateData: UpdateData): Promise<User> {
     try {
       if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
@@ -214,16 +166,6 @@ export class UsersService {
     }
   }
 
-  /**
-   * 更新用户角色
-   * @description 更新指定用户的角色权限
-   * @param id 用户的唯一标识符
-   * @param role 新的用户角色
-   * @returns 返回更新后的用户信息
-   * @throws {BadRequestException} 当ID格式无效或角色无效时抛出
-   * @throws {NotFoundException} 当用户不存在时抛出异常
-   * @throws {InternalServerErrorException} 当数据库操作失败时抛出
-   */
   async updateRole(id: string, role: string): Promise<User> {
     try {
       if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
@@ -257,16 +199,7 @@ export class UsersService {
     }
   }
 
-  /**
-   * 删除用户
-   * @description 根据ID删除指定用户
-   * @param id 用户的唯一标识符
-   * @returns void
-   * @throws {BadRequestException} 当ID格式无效时抛出
-   * @throws {NotFoundException} 当用户不存在时抛出异常
-   * @throws {InternalServerErrorException} 当数据库操作失败时抛出
-   */
-  async remove(id: string): Promise<void> {
+  async remove(id: string): Promise<null> {
     try {
       if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
         throw new BadRequestException('无效的用户ID格式');
@@ -276,6 +209,7 @@ export class UsersService {
       if (!user) {
         throw new NotFoundException('用户不存在');
       }
+      return null;
     } catch (error) {
       if (
         error instanceof BadRequestException ||
@@ -284,6 +218,28 @@ export class UsersService {
         throw error;
       }
       throw new InternalServerErrorException('删除用户时发生错误');
+    }
+  }
+
+  async updateAvatar(id: string, avatarUrl: string): Promise<User> {
+    try {
+      if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
+        throw new BadRequestException('无效的用户ID格式');
+      }
+      const user = (await this.userModel.findById(id)) as User;
+      if (!user) throw new NotFoundException('用户不存在');
+
+      user.avatar = avatarUrl;
+      await user.save();
+      return user;
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('更新用户头像时发生错误');
     }
   }
 }

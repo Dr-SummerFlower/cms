@@ -3,10 +3,6 @@ import { InjectRedis, Redis } from '@nestjs-redis/client';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { SendCodeDto } from './dto/send-code.dto';
 
-/**
- * 邮件服务类
- * @description 处理邮件发送相关的业务逻辑，包括发送验证码邮件
- */
 @Injectable()
 export class EmailService {
   constructor(
@@ -14,13 +10,6 @@ export class EmailService {
     private readonly emailService: MailerService,
   ) {}
 
-  /**
-   * 发送邮箱验证码
-   * @description 生成6位数字验证码并发送到指定邮箱，验证码有效期为5分钟
-   * @param dto 发送验证码的数据传输对象，包含邮箱地址和验证码类型
-   * @returns 返回发送结果，包含成功状态
-   * @throws {InternalServerErrorException} 当邮件发送失败时抛出异常
-   */
   async sendCode(dto: SendCodeDto): Promise<{ success: boolean }> {
     const { email, type } = dto;
 
@@ -49,14 +38,6 @@ export class EmailService {
     }
   }
 
-  /**
-   * 发送演唱会提醒邮件
-   * @description 向用户发送演唱会开始前的提醒邮件
-   * @param email 用户邮箱地址
-   * @param concertInfo 演唱会信息
-   * @returns 返回发送结果
-   * @throws {InternalServerErrorException} 当邮件发送失败时抛出异常
-   */
   async sendConcertReminder(
     email: string,
     concertInfo: {
@@ -94,14 +75,6 @@ export class EmailService {
     }
   }
 
-  /**
-   * 发送退票拒绝通知邮件
-   * @description 向用户发送退票申请被拒绝的通知邮件
-   * @param email 用户邮箱地址
-   * @param refundInfo 退票信息
-   * @returns 返回发送结果
-   * @throws {InternalServerErrorException} 当邮件发送失败时抛出异常
-   */
   async sendRefundRejectionNotice(
     email: string,
     refundInfo: {

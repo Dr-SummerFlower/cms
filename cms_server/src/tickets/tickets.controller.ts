@@ -11,15 +11,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
-  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiBody,
-  ApiForbiddenResponse,
-  ApiNotFoundResponse,
+  ApiCreatedResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiQuery,
-  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -40,115 +38,82 @@ import { VerifyTicketDto } from './dto/verify-ticket.dto';
 import { VerificationRecord } from './entities/verification-record.entity';
 import { TicketsService } from './tickets.service';
 
-/**
- * 票务控制器
- * @description 处理票务相关的HTTP请求，包括购票、查询、退票、生成二维码等API接口
- */
-@ApiTags('票务管理')
-@ApiBearerAuth()
+@ApiTags('票务')
+@ApiBearerAuth('bearer')
 @Controller('tickets')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TicketsController {
   constructor(private readonly ticketsService: TicketsService) {}
 
-  /**
-   * 创建票务订单
-   * @description 用户购买演唱会门票，支持购买多种类型和数量的票
-   * @param createTicketOrderDto 订单创建数据
-   * @param req 请求对象，包含用户信息
-   * @returns 返回创建的票务列表
-   */
-  @Post('orders')
-  @Roles('USER', 'ADMIN')
-  @ApiOperation({
-    summary: '创建票务订单',
-    description: '用户购买演唱会门票，支持购买多种类型和数量的票',
-  })
+  @ApiOperation({ summary: '创建票务订单' })
   @ApiBody({
+    description: '创建订单请求体',
     type: CreateTicketOrderDto,
-    description: '订单信息',
     examples: {
-      example1: {
-        summary: '购票示例',
+      mix: {
+        summary: '成人+儿童组合',
         value: {
-          concertId: '507f1f77bcf86cd799439011',
+          concertId: '66c1234567890abcdef0456',
           tickets: [
-            {
-              type: 'adult',
-              quantity: 2,
-            },
-            {
-              type: 'child',
-              quantity: 1,
-            },
+            { type: 'adult', quantity: 2 },
+            { type: 'child', quantity: 1 },
           ],
         },
       },
-    },
-  })
-  @ApiResponse({
-    status: 201,
-    description: '订单创建成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 201 },
-        message: { type: 'string', example: 'success' },
-        data: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              _id: { type: 'string', example: '507f1f77bcf86cd799439012' },
-              concertId: {
-                type: 'string',
-                example: '507f1f77bcf86cd799439011',
-              },
-              userId: { type: 'string', example: '507f1f77bcf86cd799439013' },
-              type: { type: 'string', example: 'adult' },
-              price: { type: 'number', example: 299 },
-              status: { type: 'string', example: 'valid' },
-              signature: { type: 'string', example: 'MEUCIQDxxx...' },
-              createdAt: {
-                type: 'string',
-                example: '2024-01-01T00:00:00.000Z',
-              },
-              updatedAt: {
-                type: 'string',
-                example: '2024-01-01T00:00:00.000Z',
-              },
-            },
-          },
+      adultOnly: {
+        summary: '仅成人票',
+        value: {
+          concertId: '66c1234567890abcdef0456',
+          tickets: [{ type: 'adult', quantity: 1 }],
         },
       },
     },
   })
-  @ApiBadRequestResponse({
-    description: '请求参数错误',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 400 },
-        message: { type: 'string', example: '票数不足' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: { type: 'string', example: '/tickets/orders' },
+  @ApiCreatedResponse({
+    description: '创建成功',
+    content: {
+      'application/json': {
+        example: {
+          code: 201,
+          message: 'success',
+          data: [
+            {
+              _id: '66d111111111111111111111',
+              concert: '66c1234567890abcdef0456',
+              user: '66u000000000000000000001',
+              type: 'adult',
+              price: 680,
+              status: 'valid',
+              signature: '3045022100abc123...',
+              publicKey: '-----BEGIN PUBLIC KEY-----MIIBIjANBgkqh...',
+              qrCodeData:
+                '{"ticketId":"66d111111111111111111111","signature":"3045022100abc123...","timestamp":1724155200000}',
+              createdAt: '2025-08-20T12:00:00.000Z',
+              updatedAt: '2025-08-20T12:00:00.000Z',
+            },
+            {
+              _id: '66d111111111111111111112',
+              concert: '66c1234567890abcdef0456',
+              user: '66u000000000000000000001',
+              type: 'child',
+              price: 380,
+              status: 'valid',
+              signature: '3045022100def456...',
+              publicKey: '-----BEGIN PUBLIC KEY-----MIIBIjANBgkqh...',
+              qrCodeData:
+                '{"ticketId":"66d111111111111111111112","signature":"3045022100def456...","timestamp":1724155200001}',
+              createdAt: '2025-08-20T12:00:00.000Z',
+              updatedAt: '2025-08-20T12:00:00.000Z',
+            },
+          ],
+          timestamp: '2025-08-20T12:00:00.000Z',
+          path: '/api/tickets/orders',
+        },
       },
     },
   })
-  @ApiNotFoundResponse({
-    description: '演唱会不存在',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 404 },
-        message: { type: 'string', example: '演唱会不存在' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: { type: 'string', example: '/tickets/orders' },
-      },
-    },
-  })
+  @Post('orders')
+  @Roles('USER', 'ADMIN')
   async createOrder(
     @Body() createTicketOrderDto: CreateTicketOrderDto,
     @Request() req: { user: { userId: string } },
@@ -159,63 +124,56 @@ export class TicketsController {
     );
   }
 
-  /**
-   * 获取我的票务列表
-   * @description 用户查询自己购买的所有票务，支持按状态筛选
-   * @param queryDto 查询参数
-   * @param req 请求对象，包含用户信息
-   * @returns 返回用户的票务列表
-   */
-  @Get('my')
-  @Roles('USER', 'ADMIN')
-  @ApiOperation({
-    summary: '获取我的票务列表',
-    description: '用户查询自己购买的所有票务，支持按状态筛选',
-  })
+  @ApiOperation({ summary: '获取我的票据列表' })
   @ApiQuery({
     name: 'status',
     required: false,
+    description: '票据状态',
     enum: ['valid', 'used', 'refunded'],
-    description: '票务状态',
     example: 'valid',
   })
-  @ApiResponse({
-    status: 200,
-    description: '成功获取票务列表',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: 'success' },
-        data: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              _id: { type: 'string', example: '507f1f77bcf86cd799439012' },
-              concertId: {
-                type: 'string',
-                example: '507f1f77bcf86cd799439011',
+  @ApiQuery({
+    name: 'concertId',
+    required: false,
+    description: '演唱会ID',
+    example: '66c1234567890abcdef0456',
+  })
+  @ApiOkResponse({
+    description: '获取成功',
+    content: {
+      'application/json': {
+        example: {
+          code: 200,
+          message: 'success',
+          data: [
+            {
+              _id: '66d111111111111111111111',
+              concert: {
+                _id: '66c1234567890abcdef0456',
+                name: '周杰伦2025世界巡回演唱会-北京站',
+                date: '2025-09-01T19:30:00.000Z',
+                venue: '北京国家体育场（鸟巢）',
               },
-              userId: { type: 'string', example: '507f1f77bcf86cd799439013' },
-              type: { type: 'string', example: 'adult' },
-              price: { type: 'number', example: 299 },
-              status: { type: 'string', example: 'valid' },
-              signature: { type: 'string', example: 'MEUCIQDxxx...' },
-              createdAt: {
-                type: 'string',
-                example: '2024-01-01T00:00:00.000Z',
-              },
-              updatedAt: {
-                type: 'string',
-                example: '2024-01-01T00:00:00.000Z',
-              },
+              user: '66u000000000000000000001',
+              type: 'adult',
+              price: 680,
+              status: 'valid',
+              signature: '3045022100abc123...',
+              publicKey: '-----BEGIN PUBLIC KEY-----MIIBIjANBgkqh...',
+              qrCodeData:
+                '{"ticketId":"66d111111111111111111111","signature":"3045022100abc123...","timestamp":1724155200000}',
+              createdAt: '2025-08-20T12:00:00.000Z',
+              updatedAt: '2025-08-20T12:00:00.000Z',
             },
-          },
+          ],
+          timestamp: '2025-08-20T12:00:00.000Z',
+          path: '/api/tickets/my',
         },
       },
     },
   })
+  @Get('my')
+  @Roles('USER', 'ADMIN')
   async getMyTickets(
     @Query() queryDto: TicketQueryDto,
     @Request() req: { user: { userId: string } },
@@ -223,75 +181,50 @@ export class TicketsController {
     return await this.ticketsService.findMyTickets(req.user.userId, queryDto);
   }
 
-  /**
-   * 获取票务详情
-   * @description 根据票务ID获取票务详细信息
-   * @param ticketId 票务ID
-   * @param req 请求对象，包含用户信息
-   * @returns 返回票务详细信息
-   */
-  @Get(':id')
-  @Roles('USER', 'ADMIN')
-  @ApiOperation({
-    summary: '获取票务详情',
-    description: '根据票务ID获取票务详细信息',
-  })
+  @ApiOperation({ summary: '获取票据详情' })
   @ApiParam({
     name: 'id',
-    description: '票务ID',
-    example: '507f1f77bcf86cd799439012',
+    description: '票据ID',
+    example: '66d111111111111111111111',
   })
-  @ApiResponse({
-    status: 200,
-    description: '成功获取票务详情',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: 'success' },
-        data: {
-          type: 'object',
-          properties: {
-            _id: { type: 'string', example: '507f1f77bcf86cd799439012' },
-            concertId: { type: 'string', example: '507f1f77bcf86cd799439011' },
-            userId: { type: 'string', example: '507f1f77bcf86cd799439013' },
-            type: { type: 'string', example: 'adult' },
-            price: { type: 'number', example: 299 },
-            status: { type: 'string', example: 'valid' },
-            signature: { type: 'string', example: 'MEUCIQDxxx...' },
-            createdAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-            updatedAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
+  @ApiOkResponse({
+    description: '获取成功',
+    content: {
+      'application/json': {
+        example: {
+          code: 200,
+          message: 'success',
+          data: {
+            _id: '66d111111111111111111111',
+            concert: {
+              _id: '66c1234567890abcdef0456',
+              name: '周杰伦2025世界巡回演唱会-北京站',
+              date: '2025-09-01T19:30:00.000Z',
+              venue: '北京国家体育场（鸟巢）',
+            },
+            user: {
+              _id: '66u000000000000000000001',
+              username: '普通用户',
+              email: 'user@user.com',
+            },
+            type: 'adult',
+            price: 680,
+            status: 'valid',
+            signature: '3045022100abc123...',
+            publicKey: '-----BEGIN PUBLIC KEY-----MIIBIjANBgkqh...',
+            qrCodeData:
+              '{"ticketId":"66d111111111111111111111","signature":"3045022100abc123...","timestamp":1724155200000}',
+            createdAt: '2025-08-20T12:00:00.000Z',
+            updatedAt: '2025-08-20T12:00:00.000Z',
           },
+          timestamp: '2025-08-20T12:00:00.000Z',
+          path: '/api/tickets/66d111111111111111111111',
         },
       },
     },
   })
-  @ApiNotFoundResponse({
-    description: '票务不存在',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 404 },
-        message: { type: 'string', example: '票务不存在' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: { type: 'string', example: '/tickets/507f1f77bcf86cd799439012' },
-      },
-    },
-  })
-  @ApiForbiddenResponse({
-    description: '无权访问此票务',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 403 },
-        message: { type: 'string', example: '无权访问此票务' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: { type: 'string', example: '/tickets/507f1f77bcf86cd799439012' },
-      },
-    },
-  })
+  @Get(':id')
+  @Roles('USER', 'ADMIN')
   async getTicketDetail(
     @Param('id') ticketId: string,
     @Request() req: { user: { userId: string } },
@@ -299,91 +232,42 @@ export class TicketsController {
     return await this.ticketsService.findOne(ticketId, req.user.userId);
   }
 
-  /**
-   * 申请退票
-   * @description 用户申请退票，需要提供退票原因
-   * @param ticketId 票务ID
-   * @param refundDto 退票申请数据
-   * @param req 请求对象，包含用户信息
-   * @returns 返回退票后的票务信息
-   */
-  @Post(':id/refund')
-  @Roles('USER', 'ADMIN')
-  @ApiOperation({
-    summary: '申请退票',
-    description: '用户申请退票，提交退票申请等待管理员审核，需要提供退票原因',
-  })
+  @ApiOperation({ summary: '提交退票申请' })
   @ApiParam({
     name: 'id',
-    description: '票务ID',
-    example: '507f1f77bcf86cd799439012',
+    description: '票据ID',
+    example: '66d111111111111111111111',
   })
   @ApiBody({
+    description: '退票申请请求体',
     type: RefundTicketDto,
-    description: '退票申请信息',
     examples: {
-      example1: {
-        summary: '退票申请示例',
-        value: {
-          reason: '临时有事无法参加',
-        },
+      default: {
+        summary: '退票原因示例',
+        value: { reason: '临时有事无法参加' },
       },
     },
   })
-  @ApiResponse({
-    status: 200,
-    description: '退票申请提交成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: 'success' },
-        data: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean', example: true },
-            message: {
-              type: 'string',
-              example: '退票申请已提交，请等待管理员审核',
-            },
+  @ApiCreatedResponse({
+    description: '提交成功',
+    content: {
+      'application/json': {
+        example: {
+          code: 201,
+          message: 'success',
+          data: {
+            success: true,
+            message: '退票申请已提交，请等待管理员审核',
           },
+          timestamp: '2025-08-20T12:00:00.000Z',
+          path: '/api/tickets/66d111111111111111111111/refund',
         },
       },
     },
   })
-  @ApiBadRequestResponse({
-    description: '退票申请失败',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 400 },
-        message: { type: 'string', example: '票务已使用，无法申请退票' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: {
-          type: 'string',
-          example: '/tickets/507f1f77bcf86cd799439012/refund',
-        },
-      },
-    },
-  })
-  @ApiNotFoundResponse({
-    description: '票务不存在',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 404 },
-        message: { type: 'string', example: '票务不存在' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: {
-          type: 'string',
-          example: '/tickets/507f1f77bcf86cd799439012/refund',
-        },
-      },
-    },
-  })
-  @HttpCode(200)
+  @Post(':id/refund')
+  @Roles('USER', 'ADMIN')
+  @HttpCode(201)
   async requestRefund(
     @Param('id') ticketId: string,
     @Body() refundDto: RefundTicketDto,
@@ -396,78 +280,35 @@ export class TicketsController {
     );
   }
 
-  /**
-   * 生成票务二维码
-   * @description 为有效票务生成二维码，用于入场验证
-   * @param ticketId 票务ID
-   * @param req 请求对象，包含用户信息
-   * @returns 返回包含二维码的响应数据
-   */
-  @Get(':id/qr')
-  @Roles('USER', 'ADMIN')
-  @ApiOperation({
-    summary: '生成票务二维码',
-    description: '为有效票务生成二维码，用于入场验证',
-  })
+  @ApiOperation({ summary: '生成票据二维码' })
   @ApiParam({
     name: 'id',
-    description: '票务ID',
-    example: '507f1f77bcf86cd799439012',
+    description: '票据ID',
+    example: '66d111111111111111111111',
   })
-  @ApiResponse({
-    status: 200,
-    description: '成功生成二维码',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: 'success' },
-        data: {
-          type: 'object',
-          properties: {
-            qrCode: {
-              type: 'string',
-              example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...',
+  @ApiOkResponse({
+    description: '生成成功',
+    content: {
+      'application/json': {
+        example: {
+          code: 200,
+          message: 'success',
+          data: {
+            qrCode: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...',
+            data: {
+              ticketId: '66d111111111111111111111',
+              signature: '3045022100abc123...',
+              timestamp: 1724155200000,
             },
-            ticketId: { type: 'string', example: '507f1f77bcf86cd799439012' },
-            signature: { type: 'string', example: 'MEUCIQDxxx...' },
           },
+          timestamp: '2025-08-20T12:00:00.000Z',
+          path: '/api/tickets/66d111111111111111111111/qr',
         },
       },
     },
   })
-  @ApiBadRequestResponse({
-    description: '无法生成二维码',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 400 },
-        message: { type: 'string', example: '票务状态无效，无法生成二维码' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: {
-          type: 'string',
-          example: '/tickets/507f1f77bcf86cd799439012/qr',
-        },
-      },
-    },
-  })
-  @ApiNotFoundResponse({
-    description: '票务不存在',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 404 },
-        message: { type: 'string', example: '票务不存在' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: {
-          type: 'string',
-          example: '/tickets/507f1f77bcf86cd799439012/qr',
-        },
-      },
-    },
-  })
+  @Get(':id/qr')
+  @Roles('USER', 'ADMIN')
   async generateQRCode(
     @Param('id') ticketId: string,
     @Request() req: { user: { userId: string } },
@@ -475,181 +316,104 @@ export class TicketsController {
     return await this.ticketsService.generateQRCode(ticketId, req.user.userId);
   }
 
-  /**
-   * 获取退票申请列表
-   * @description 管理员获取退票申请列表，支持按状态筛选
-   * @param queryDto 查询参数
-   * @returns 返回退票申请列表
-   */
-  @Get('refund-requests')
-  @Roles('ADMIN')
-  @ApiOperation({
-    summary: '获取退票申请列表',
-    description: '管理员获取退票申请列表，支持按状态筛选',
-  })
+  @ApiOperation({ summary: '获取退票申请列表' })
   @ApiQuery({
     name: 'status',
     required: false,
-    enum: ['pending', 'approved', 'rejected'],
     description: '申请状态',
+    enum: ['pending', 'approved', 'rejected'],
     example: 'pending',
   })
   @ApiQuery({
     name: 'concertId',
     required: false,
-    type: String,
     description: '演唱会ID',
-    example: '507f1f77bcf86cd799439011',
+    example: '66c1234567890abcdef0456',
   })
   @ApiQuery({
     name: 'userId',
     required: false,
-    type: String,
     description: '用户ID',
-    example: '507f1f77bcf86cd799439013',
+    example: '66u000000000000000000001',
   })
-  @ApiResponse({
-    status: 200,
-    description: '成功获取退票申请列表',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: 'success' },
-        data: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              ticketId: { type: 'string', example: '507f1f77bcf86cd799439012' },
-              userId: { type: 'string', example: '507f1f77bcf86cd799439013' },
-              concertId: {
-                type: 'string',
-                example: '507f1f77bcf86cd799439011',
-              },
-              reason: { type: 'string', example: '临时有事无法参加' },
-              status: { type: 'string', example: 'pending' },
-              requestTime: {
-                type: 'string',
-                example: '2024-01-01T00:00:00.000Z',
-              },
+  @ApiOkResponse({
+    description: '获取成功',
+    content: {
+      'application/json': {
+        example: {
+          code: 200,
+          message: 'success',
+          data: [
+            {
+              ticketId: '66d111111111111111111111',
+              userId: '66u000000000000000000001',
+              concertId: '66c1234567890abcdef0456',
+              reason: '临时有事无法参加',
+              status: 'pending',
+              requestTime: '2025-08-20T12:00:00.000Z',
               ticketInfo: {
-                type: 'object',
-                properties: {
-                  type: { type: 'string', example: 'adult' },
-                  price: { type: 'number', example: 299 },
-                  concertName: { type: 'string', example: '演唱会名称' },
-                  venue: { type: 'string', example: '演出场地' },
-                },
+                type: 'adult',
+                price: 680,
+                concertName: '周杰伦2025世界巡回演唱会-北京站',
+                concertDate: '2025-09-01T19:30:00.000Z',
+                venue: '北京国家体育场（鸟巢）',
               },
               userInfo: {
-                type: 'object',
-                properties: {
-                  email: { type: 'string', example: 'user@example.com' },
-                  username: { type: 'string', example: '用户名' },
-                },
+                email: 'user@user.com',
+                username: '普通用户',
               },
             },
-          },
+          ],
+          timestamp: '2025-08-20T12:00:00.000Z',
+          path: '/api/tickets/refund-requests',
         },
       },
     },
   })
+  @Get('refund-requests')
+  @Roles('ADMIN')
   async getRefundRequests(
     @Query() queryDto: RefundRequestQueryDto,
   ): Promise<RefundRequest[]> {
     return await this.ticketsService.getPendingRefundRequests(queryDto);
   }
 
-  /**
-   * 审核退票申请
-   * @description 管理员审核退票申请，决定通过或拒绝
-   * @param ticketId 票据ID
-   * @param reviewDto 审核数据
-   * @param req 请求对象，包含管理员信息
-   * @returns 返回审核结果
-   */
-  @Put('refund-requests/:ticketId/review')
-  @Roles('ADMIN')
-  @ApiOperation({
-    summary: '审核退票申请',
-    description: '管理员审核退票申请，决定通过或拒绝',
-  })
+  @ApiOperation({ summary: '管理员审核退票申请' })
   @ApiParam({
     name: 'ticketId',
     description: '票据ID',
-    example: '507f1f77bcf86cd799439012',
+    example: '66d111111111111111111111',
   })
   @ApiBody({
+    description: '审核请求体',
     type: AdminReviewRefundDto,
-    description: '审核信息',
     examples: {
       approve: {
-        summary: '通过申请示例',
-        value: {
-          approved: true,
-          reviewNote: '符合退票条件，同意退票',
-        },
+        summary: '同意',
+        value: { approved: true, reviewNote: '同意退款' },
       },
       reject: {
-        summary: '拒绝申请示例',
-        value: {
-          approved: false,
-          reviewNote: '不符合退票政策，拒绝退票',
-        },
+        summary: '拒绝',
+        value: { approved: false, reviewNote: '不满足退款条件' },
       },
     },
   })
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     description: '审核成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: 'success' },
-        data: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean', example: true },
-            message: { type: 'string', example: '退票申请已通过，票据已退款' },
-          },
+    content: {
+      'application/json': {
+        example: {
+          code: 200,
+          message: 'success',
+          data: { success: true, message: '退票申请已通过，票据已退款' },
+          timestamp: '2025-08-20T12:00:00.000Z',
+          path: '/api/tickets/refund-requests/66d111111111111111111111/review',
         },
       },
     },
   })
-  @ApiBadRequestResponse({
-    description: '审核失败',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 400 },
-        message: { type: 'string', example: '该申请已被处理' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: {
-          type: 'string',
-          example: '/tickets/refund-requests/507f1f77bcf86cd799439012/review',
-        },
-      },
-    },
-  })
-  @ApiNotFoundResponse({
-    description: '退票申请不存在',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 404 },
-        message: { type: 'string', example: '退票申请不存在或已过期' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: {
-          type: 'string',
-          example: '/tickets/refund-requests/507f1f77bcf86cd799439012/review',
-        },
-      },
-    },
-  })
+  @Put('refund-requests/:ticketId/review')
+  @Roles('ADMIN')
   @HttpCode(200)
   async reviewRefundRequest(
     @Param('ticketId') ticketId: string,
@@ -664,119 +428,54 @@ export class TicketsController {
   }
 }
 
-/**
- * 票务验证控制器
- * @description 处理票务验证相关的HTTP请求，包括验票和查询验证历史等API接口
- */
-@ApiTags('票务验证')
-@ApiBearerAuth()
+@ApiTags('验票')
+@ApiBearerAuth('bearer')
 @Controller('verify')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class VerifyController {
   constructor(private readonly ticketsService: TicketsService) {}
 
-  /**
-   * 验证票务
-   * @description 检票员验证票务的有效性和真实性
-   * @param verifyDto 验证数据，包含票务ID和签名
-   * @param req 请求对象，包含检票员信息
-   * @returns 返回验证结果
-   */
+  @ApiOperation({ summary: '验票' })
+  @ApiBody({
+    description: '验票请求体',
+    type: VerifyTicketDto,
+    examples: {
+      default: {
+        summary: '扫码验票',
+        value: {
+          qrData:
+            'eyJ0aWNrZXRJZCI6IjY2ZDExMTExMTExMTExMTExMTExMTExMSIsInNpZ25hdHVyZSI6IjMwNDUwMjIxMDBhYmMxMjMiLCJ0aW1lc3RhbXAiOjE3MjQxNTUyMDAwfQ==',
+          location: '北京国家体育场 检票口A',
+        },
+      },
+    },
+  })
+  @ApiOkResponse({
+    description: '验票成功',
+    content: {
+      'application/json': {
+        example: {
+          code: 200,
+          message: 'success',
+          data: {
+            valid: true,
+            ticket: {
+              id: '66d111111111111111111111',
+              concertName: '周杰伦2025世界巡回演唱会-北京站',
+              type: 'adult',
+              status: 'valid',
+              userName: '普通用户',
+            },
+            verifiedAt: '2025-08-20T12:05:00.000Z',
+          },
+          timestamp: '2025-08-20T12:05:00.000Z',
+          path: '/api/verify/ticket',
+        },
+      },
+    },
+  })
   @Post('ticket')
   @Roles('INSPECTOR', 'ADMIN')
-  @ApiOperation({
-    summary: '验证票务',
-    description: '检票员验证票务的有效性和真实性',
-  })
-  @ApiBody({
-    type: VerifyTicketDto,
-    description: '验证信息',
-    examples: {
-      example1: {
-        summary: '验票示例',
-        value: {
-          ticketId: '507f1f77bcf86cd799439012',
-          signature: 'MEUCIQDxxx...',
-        },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 200,
-    description: '验证成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: 'success' },
-        data: {
-          type: 'object',
-          properties: {
-            valid: { type: 'boolean', example: true },
-            ticket: {
-              type: 'object',
-              properties: {
-                _id: { type: 'string', example: '507f1f77bcf86cd799439012' },
-                concertId: {
-                  type: 'string',
-                  example: '507f1f77bcf86cd799439011',
-                },
-                userId: { type: 'string', example: '507f1f77bcf86cd799439013' },
-                type: { type: 'string', example: 'adult' },
-                price: { type: 'number', example: 299 },
-                status: { type: 'string', example: 'used' },
-              },
-            },
-            verificationRecord: {
-              type: 'object',
-              properties: {
-                _id: { type: 'string', example: '507f1f77bcf86cd799439014' },
-                ticketId: {
-                  type: 'string',
-                  example: '507f1f77bcf86cd799439012',
-                },
-                inspectorId: {
-                  type: 'string',
-                  example: '507f1f77bcf86cd799439015',
-                },
-                verifiedAt: {
-                  type: 'string',
-                  example: '2024-01-01T00:00:00.000Z',
-                },
-                result: { type: 'string', example: 'valid' },
-              },
-            },
-          },
-        },
-      },
-    },
-  })
-  @ApiBadRequestResponse({
-    description: '验证失败',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 400 },
-        message: { type: 'string', example: '票务签名无效' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: { type: 'string', example: '/verify/ticket' },
-      },
-    },
-  })
-  @ApiNotFoundResponse({
-    description: '票务不存在',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 404 },
-        message: { type: 'string', example: '票务不存在' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: { type: 'string', example: '/verify/ticket' },
-      },
-    },
-  })
   @HttpCode(200)
   async verifyTicket(
     @Body() verifyDto: VerifyTicketDto,
@@ -785,70 +484,59 @@ export class VerifyController {
     return await this.ticketsService.verifyTicket(verifyDto, req.user.userId);
   }
 
-  /**
-   * 获取验证历史记录
-   * @description 查询票务验证的历史记录，支持按时间范围和检票员筛选
-   * @param queryDto 查询参数
-   * @returns 返回验证历史记录列表
-   */
-  @Get('history')
-  @Roles('INSPECTOR', 'ADMIN')
-  @ApiOperation({
-    summary: '获取验证历史记录',
-    description: '查询票务验证的历史记录，支持按时间范围和检票员筛选',
+  @ApiOperation({ summary: '获取验票记录' })
+  @ApiQuery({
+    name: 'concertId',
+    required: false,
+    description: '演唱会ID',
+    example: '66c1234567890abcdef0456',
   })
   @ApiQuery({
     name: 'startDate',
     required: false,
-    type: String,
-    description: '开始日期',
-    example: '2024-01-01',
+    description: '开始日期(ISO字符串)',
+    example: '2025-08-01T00:00:00.000Z',
   })
   @ApiQuery({
     name: 'endDate',
     required: false,
-    type: String,
-    description: '结束日期',
-    example: '2024-01-31',
+    description: '结束日期(ISO字符串)',
+    example: '2025-08-31T23:59:59.000Z',
   })
   @ApiQuery({
     name: 'inspectorId',
     required: false,
-    type: String,
     description: '检票员ID',
-    example: '507f1f77bcf86cd799439015',
+    example: '66i000000000000000000001',
   })
-  @ApiResponse({
-    status: 200,
-    description: '成功获取验证历史记录',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: 'success' },
-        data: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              _id: { type: 'string', example: '507f1f77bcf86cd799439014' },
-              ticketId: { type: 'string', example: '507f1f77bcf86cd799439012' },
-              inspectorId: {
-                type: 'string',
-                example: '507f1f77bcf86cd799439015',
-              },
-              verifiedAt: {
-                type: 'string',
-                example: '2024-01-01T00:00:00.000Z',
-              },
-              result: { type: 'string', example: 'valid' },
-              notes: { type: 'string', example: '验证成功' },
+  @ApiOkResponse({
+    description: '获取成功',
+    content: {
+      'application/json': {
+        example: {
+          code: 200,
+          message: 'success',
+          data: [
+            {
+              _id: '66v111111111111111111111',
+              ticket: '66d111111111111111111111',
+              inspector: '66i000000000000000000001',
+              location: '北京国家体育场 检票口A',
+              verifiedAt: '2025-08-20T12:05:00.000Z',
+              signature: '3045022100abc123...',
+              result: true,
+              createdAt: '2025-08-20T12:05:10.000Z',
+              updatedAt: '2025-08-20T12:05:10.000Z',
             },
-          },
+          ],
+          timestamp: '2025-08-20T12:05:10.000Z',
+          path: '/api/verify/history',
         },
       },
     },
   })
+  @Get('history')
+  @Roles('INSPECTOR', 'ADMIN')
   async getVerificationHistory(
     @Query() queryDto: VerificationHistoryQueryDto,
   ): Promise<VerificationRecord[]> {

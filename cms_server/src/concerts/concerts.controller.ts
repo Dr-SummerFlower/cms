@@ -1,29 +1,35 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Param,
   Patch,
   Post,
   Query,
+  Request,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
-  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiBody,
-  ApiForbiddenResponse,
-  ApiNotFoundResponse,
+  ApiConsumes,
+  ApiCreatedResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiQuery,
-  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { StoragesService } from '../storages/storages.service';
 import { ConcertsService } from './concerts.service';
 import { ConcertListResponseDto } from './dto/concert-list-response.dto';
 import { ConcertQueryDto } from './dto/concert-query.dto';
@@ -31,222 +37,167 @@ import { CreateConcertDto } from './dto/create-concert.dto';
 import { UpdateConcertDto } from './dto/update-concert.dto';
 import { Concert } from './entities/concert.entity';
 
-/**
- * 演唱会控制器
- * @description 处理演唱会相关的HTTP请求，包括创建、查询、更新和删除演唱会的API接口
- */
-@ApiTags('演唱会管理')
+@ApiTags('演唱会')
 @Controller('concerts')
 export class ConcertsController {
-  constructor(private readonly concertsService: ConcertsService) {}
+  constructor(
+    private readonly concertsService: ConcertsService,
+    private storagesService: StoragesService,
+  ) {}
 
+  @ApiOperation({
+    summary: '创建演唱会',
+    description: '管理员创建演唱会并上传海报',
+  })
+  @ApiBearerAuth('bearer')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: '创建演唱会请求体（multipart/form-data）',
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', example: '周杰伦2025世界巡回演唱会-北京站' },
+        date: { type: 'string', example: '2025-09-01T19:30:00.000Z' },
+        venue: { type: 'string', example: '北京国家体育场（鸟巢）' },
+        adultPrice: { type: 'number', example: 680 },
+        childPrice: { type: 'number', example: 380 },
+        totalTickets: { type: 'number', example: 5000 },
+        maxAdultTicketsPerUser: { type: 'number', example: 2 },
+        maxChildTicketsPerUser: { type: 'number', example: 1 },
+        description: {
+          type: 'string',
+          example: '本次巡演将带来全新曲目与经典回顾',
+        },
+        poster: { type: 'string', format: 'binary' },
+      },
+      required: [
+        'name',
+        'date',
+        'venue',
+        'adultPrice',
+        'childPrice',
+        'totalTickets',
+        'poster',
+      ],
+    },
+  })
+  @ApiCreatedResponse({
+    description: '创建成功',
+    content: {
+      'application/json': {
+        example: {
+          code: 201,
+          message: 'success',
+          data: {
+            _id: '66c1234567890abcdef0456',
+            name: '周杰伦2025世界巡回演唱会-北京站',
+            poster:
+              'http://localhost:9000/assets/poster/2025-08-19/2ff59634-8a9f-4b0a-abbe-f514b9e255a3.png',
+            date: '2025-09-01T19:30:00.000Z',
+            venue: '北京国家体育场（鸟巢）',
+            adultPrice: 680,
+            childPrice: 380,
+            totalTickets: 5000,
+            soldTickets: 0,
+            maxAdultTicketsPerUser: 2,
+            maxChildTicketsPerUser: 1,
+            status: 'upcoming',
+            description: '本次巡演将带来全新曲目与经典回顾',
+            publicKey: '-----BEGIN PUBLIC KEY-----MIIBIjANBgkqh...',
+            createdAt: '2025-08-19T12:00:00.000Z',
+            updatedAt: '2025-08-19T12:00:00.000Z',
+          },
+          timestamp: '2025-08-20T10:00:00.000Z',
+          path: '/api/concerts',
+        },
+      },
+    },
+  })
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: '创建演唱会',
-    description: '管理员创建新的演唱会',
-  })
-  @ApiBody({
-    type: CreateConcertDto,
-    description: '演唱会信息',
-    examples: {
-      example1: {
-        summary: '创建演唱会示例',
-        value: {
-          name: '周杰伦演唱会',
-          date: '2024-12-31T20:00:00.000Z',
-          venue: '北京鸟巢体育场',
-          adultPrice: 299,
-          childPrice: 199,
-          totalTickets: 1000,
-          description: '周杰伦2024世界巡回演唱会北京站',
-        },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 201,
-    description: '演唱会创建成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 201 },
-        message: { type: 'string', example: 'success' },
-        data: {
-          type: 'object',
-          properties: {
-            _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
-            name: { type: 'string', example: '周杰伦演唱会' },
-            poster: {
-              type: 'string',
-              example: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...',
-              description: '演唱会海报base64编码',
-            },
-            date: { type: 'string', example: '2024-12-31T20:00:00.000Z' },
-            venue: { type: 'string', example: '北京鸟巢体育场' },
-            adultPrice: { type: 'number', example: 299 },
-            childPrice: { type: 'number', example: 199 },
-            totalTickets: { type: 'number', example: 1000 },
-            soldTickets: { type: 'number', example: 0 },
-            status: { type: 'string', example: 'upcoming' },
-            description: {
-              type: 'string',
-              example: '周杰伦2024世界巡回演唱会北京站',
-            },
-            publicKey: {
-              type: 'string',
-              example: 'MFYwEAYHKoZIzj0CAQYFK4E...',
-            },
-            createdAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-            updatedAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-          },
-        },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: { type: 'string', example: '/api/concerts' },
-      },
-    },
-  })
-  @ApiBadRequestResponse({
-    description: '请求参数错误',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 400 },
-        message: { type: 'string', example: '演唱会名称不能为空' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: { type: 'string', example: '/api/concerts' },
-      },
-    },
-  })
-  @ApiForbiddenResponse({
-    description: '权限不足',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 403 },
-        message: { type: 'string', example: '权限不足' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: { type: 'string', example: '/api/concerts' },
-      },
-    },
-  })
-  /**
-   * 创建演唱会接口
-   * @description 管理员创建新的演唱会
-   * @param createConcertDto 创建演唱会的数据传输对象
-   * @returns 返回创建的演唱会信息
-   */
-  async create(@Body() createConcertDto: CreateConcertDto): Promise<Concert> {
-    return await this.concertsService.create(createConcertDto);
+  @UseInterceptors(FileInterceptor('poster'))
+  async create(
+    @Body() createConcertDto: CreateConcertDto,
+    @UploadedFile() poster: Express.Multer.File,
+  ): Promise<Concert> {
+    return await this.concertsService.create(
+      createConcertDto,
+      await this.storagesService.uploadFile(poster, 'poster'),
+    );
   }
 
-  @Get()
   @ApiOperation({
     summary: '获取演唱会列表',
-    description: '分页获取演唱会列表，支持按状态和名称搜索',
+    description: '根据状态与关键词进行分页查询',
   })
   @ApiQuery({
     name: 'status',
     required: false,
-    enum: ['upcoming', 'ongoing', 'completed'],
-    description: '演唱会状态',
+    description: '状态筛选',
     example: 'upcoming',
+    enum: ['upcoming', 'ongoing', 'completed'],
   })
   @ApiQuery({
     name: 'search',
     required: false,
-    type: String,
-    description: '按名称搜索',
+    description: '搜索关键词',
     example: '周杰伦',
   })
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    type: Number,
-    description: '页码',
-    example: 1,
-  })
+  @ApiQuery({ name: 'page', required: false, description: '页码', example: 1 })
   @ApiQuery({
     name: 'limit',
     required: false,
-    type: Number,
     description: '每页数量',
     example: 10,
   })
-  @ApiResponse({
-    status: 200,
-    description: '成功获取演唱会列表',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: 'success' },
-        data: {
-          type: 'object',
-          properties: {
-            concerts: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
-                  name: { type: 'string', example: '周杰伦演唱会' },
-                  poster: {
-                    type: 'string',
-                    example:
-                      'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...',
-                    description: '演唱会海报base64编码',
-                  },
-                  date: { type: 'string', example: '2024-12-31T20:00:00.000Z' },
-                  venue: { type: 'string', example: '北京鸟巢体育场' },
-                  adultPrice: { type: 'number', example: 299 },
-                  childPrice: { type: 'number', example: 199 },
-                  totalTickets: { type: 'number', example: 1000 },
-                  soldTickets: { type: 'number', example: 0 },
-                  status: { type: 'string', example: 'upcoming' },
-                  description: {
-                    type: 'string',
-                    example: '周杰伦2024世界巡回演唱会北京站',
-                  },
-                  createdAt: {
-                    type: 'string',
-                    example: '2024-01-01T00:00:00.000Z',
-                  },
-                  updatedAt: {
-                    type: 'string',
-                    example: '2024-01-01T00:00:00.000Z',
-                  },
-                },
+  @ApiOkResponse({
+    description: '获取成功',
+    content: {
+      'application/json': {
+        example: {
+          code: 200,
+          message: 'success',
+          data: {
+            concerts: [
+              {
+                _id: '66c1234567890abcdef0456',
+                name: '周杰伦2025世界巡回演唱会-北京站',
+                poster:
+                  'http://localhost:9000/assets/poster/2025-08-19/2ff59634-8a9f-4b0a-abbe-f514b9e255a3.png',
+                date: '2025-09-01T19:30:00.000Z',
+                venue: '北京国家体育场（鸟巢）',
+                adultPrice: 680,
+                childPrice: 380,
+                totalTickets: 5000,
+                soldTickets: 1200,
+                maxAdultTicketsPerUser: 2,
+                maxChildTicketsPerUser: 1,
+                status: 'upcoming',
+                description: '本次巡演将带来全新曲目与经典回顾',
+                publicKey: '-----BEGIN PUBLIC KEY-----MIIBIjANBgkqh...',
+                createdAt: '2025-08-19T12:00:00.000Z',
+                updatedAt: '2025-08-19T12:00:00.000Z',
               },
-            },
-            total: { type: 'number', example: 100 },
-            page: { type: 'number', example: 1 },
-            limit: { type: 'number', example: 10 },
-            totalPages: { type: 'number', example: 10 },
+            ],
+            total: 1,
+            page: 1,
+            limit: 10,
+            totalPages: 1,
           },
+          timestamp: '2025-08-20T10:00:00.000Z',
+          path: '/api/concerts',
         },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: { type: 'string', example: '/api/concerts' },
       },
     },
   })
-  /**
-   * 获取演唱会列表接口
-   * @description 分页获取演唱会列表，支持按状态和名称搜索
-   * @param queryDto 查询参数对象
-   * @returns 返回包含演唱会列表和分页信息的响应对象
-   */
+  @Get()
   async findAll(
     @Query() queryDto: ConcertQueryDto,
   ): Promise<ConcertListResponseDto> {
     return await this.concertsService.findAll(queryDto);
   }
 
-  @Get(':id')
   @ApiOperation({
     summary: '获取演唱会详情',
     description: '根据ID获取演唱会详细信息',
@@ -254,185 +205,104 @@ export class ConcertsController {
   @ApiParam({
     name: 'id',
     description: '演唱会ID',
-    example: '507f1f77bcf86cd799439011',
+    example: '66c1234567890abcdef0456',
   })
-  @ApiResponse({
-    status: 200,
-    description: '成功获取演唱会详情',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: 'success' },
-        data: {
-          type: 'object',
-          properties: {
-            _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
-            name: { type: 'string', example: '周杰伦演唱会' },
-            poster: {
-              type: 'string',
-              example: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...',
-              description: '演唱会海报base64编码',
-            },
-            date: { type: 'string', example: '2024-12-31T20:00:00.000Z' },
-            venue: { type: 'string', example: '北京鸟巢体育场' },
-            adultPrice: { type: 'number', example: 299 },
-            childPrice: { type: 'number', example: 199 },
-            totalTickets: { type: 'number', example: 1000 },
-            soldTickets: { type: 'number', example: 0 },
-            status: { type: 'string', example: 'upcoming' },
-            description: {
-              type: 'string',
-              example: '周杰伦2024世界巡回演唱会北京站',
-            },
-            createdAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-            updatedAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
+  @ApiOkResponse({
+    description: '获取成功',
+    content: {
+      'application/json': {
+        example: {
+          code: 200,
+          message: 'success',
+          data: {
+            _id: '66c1234567890abcdef0456',
+            name: '周杰伦2025世界巡回演唱会-北京站',
+            poster:
+              'http://localhost:9000/assets/poster/2025-08-19/2ff59634-8a9f-4b0a-abbe-f514b9e255a3.png',
+            date: '2025-09-01T19:30:00.000Z',
+            venue: '北京国家体育场（鸟巢）',
+            adultPrice: 680,
+            childPrice: 380,
+            totalTickets: 5000,
+            soldTickets: 1200,
+            maxAdultTicketsPerUser: 2,
+            maxChildTicketsPerUser: 1,
+            status: 'upcoming',
+            description: '本次巡演将带来全新曲目与经典回顾',
+            publicKey: '-----BEGIN PUBLIC KEY-----MIIBIjANBgkqh...',
+            createdAt: '2025-08-19T12:00:00.000Z',
+            updatedAt: '2025-08-19T12:00:00.000Z',
           },
-        },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: {
-          type: 'string',
-          example: '/api/concerts/507f1f77bcf86cd799439011',
+          timestamp: '2025-08-20T10:00:00.000Z',
+          path: '/api/concerts/66c1234567890abcdef0456',
         },
       },
     },
   })
-  @ApiNotFoundResponse({
-    description: '演唱会不存在',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 404 },
-        message: { type: 'string', example: '演唱会不存在' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: {
-          type: 'string',
-          example: '/api/concerts/507f1f77bcf86cd799439011',
-        },
-      },
-    },
-  })
-  /**
-   * 获取演唱会详情接口
-   * @description 根据ID获取演唱会详细信息
-   * @param id 演唱会的唯一标识符
-   * @returns 返回演唱会详细信息
-   */
+  @Get(':id')
   async findOne(@Param('id') id: string): Promise<Concert> {
     return await this.concertsService.findOne(id);
   }
 
-  @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN')
-  @ApiBearerAuth()
   @ApiOperation({
     summary: '更新演唱会信息',
-    description: '管理员更新演唱会信息',
+    description: '管理员更新演唱会基本信息',
   })
   @ApiParam({
     name: 'id',
     description: '演唱会ID',
-    example: '507f1f77bcf86cd799439011',
+    example: '66c1234567890abcdef0456',
   })
-  @ApiBody({ type: UpdateConcertDto })
-  @ApiResponse({
-    status: 200,
-    description: '演唱会更新成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: 'success' },
-        data: {
-          type: 'object',
-          properties: {
-            _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
-            name: { type: 'string', example: '周杰伦演唱会（已更新）' },
-            poster: {
-              type: 'string',
-              example: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...',
-              description: '演唱会海报base64编码',
-            },
-            date: { type: 'string', example: '2024-12-31T20:00:00.000Z' },
-            venue: { type: 'string', example: '北京鸟巢体育场' },
-            adultPrice: { type: 'number', example: 399 },
-            childPrice: { type: 'number', example: 299 },
-            totalTickets: { type: 'number', example: 1200 },
-            soldTickets: { type: 'number', example: 50 },
-            status: { type: 'string', example: 'upcoming' },
-            description: {
-              type: 'string',
-              example: '周杰伦2024世界巡回演唱会北京站（更新版）',
-            },
-            createdAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-            updatedAt: { type: 'string', example: '2024-01-15T10:30:00.000Z' },
+  @ApiBearerAuth('bearer')
+  @ApiBody({
+    description: '更新演唱会请求体',
+    type: UpdateConcertDto,
+    examples: {
+      updateVenue: {
+        summary: '修改场馆',
+        value: { venue: '上海梅赛德斯-奔驰文化中心' },
+      },
+      updatePrices: {
+        summary: '修改票价',
+        value: { adultPrice: 780, childPrice: 420 },
+      },
+    },
+  })
+  @ApiOkResponse({
+    description: '更新成功',
+    content: {
+      'application/json': {
+        example: {
+          code: 200,
+          message: 'success',
+          data: {
+            _id: '66c1234567890abcdef0456',
+            name: '周杰伦2025世界巡回演唱会-北京站',
+            poster:
+              'http://localhost:9000/assets/poster/2025-08-19/2ff59634-8a9f-4b0a-abbe-f514b9e255a3.png',
+            date: '2025-09-01T19:30:00.000Z',
+            venue: '上海梅赛德斯-奔驰文化中心',
+            adultPrice: 780,
+            childPrice: 420,
+            totalTickets: 6000,
+            soldTickets: 1200,
+            maxAdultTicketsPerUser: 2,
+            maxChildTicketsPerUser: 1,
+            status: 'upcoming',
+            description: '更新描述：新增嘉宾与特别环节',
+            publicKey: '-----BEGIN PUBLIC KEY-----MIIBIjANBgkqh...',
+            createdAt: '2025-08-19T12:00:00.000Z',
+            updatedAt: '2025-08-20T12:00:00.000Z',
           },
-        },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: {
-          type: 'string',
-          example: '/api/concerts/507f1f77bcf86cd799439011',
+          timestamp: '2025-08-20T10:00:00.000Z',
+          path: '/api/concerts/66c1234567890abcdef0456',
         },
       },
     },
   })
-  @ApiBadRequestResponse({
-    description: '请求参数错误',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 400 },
-        message: { type: 'string', example: '演唱会名称不能为空' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: {
-          type: 'string',
-          example: '/api/concerts/507f1f77bcf86cd799439011',
-        },
-      },
-    },
-  })
-  @ApiNotFoundResponse({
-    description: '演唱会不存在',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 404 },
-        message: { type: 'string', example: '演唱会不存在' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: {
-          type: 'string',
-          example: '/api/concerts/507f1f77bcf86cd799439011',
-        },
-      },
-    },
-  })
-  @ApiForbiddenResponse({
-    description: '权限不足',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 403 },
-        message: { type: 'string', example: '权限不足' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: {
-          type: 'string',
-          example: '/api/concerts/507f1f77bcf86cd799439011',
-        },
-      },
-    },
-  })
-  /**
-   * 更新演唱会信息接口
-   * @description 管理员更新演唱会信息
-   * @param id 演唱会的唯一标识符
-   * @param updateConcertDto 更新演唱会的数据传输对象
-   * @returns 返回更新后的演唱会信息
-   */
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   async update(
     @Param('id') id: string,
     @Body() updateConcertDto: UpdateConcertDto,
@@ -440,75 +310,101 @@ export class ConcertsController {
     return await this.concertsService.update(id, updateConcertDto);
   }
 
+  @ApiOperation({ summary: '删除演唱会', description: '管理员删除演唱会' })
+  @ApiParam({
+    name: 'id',
+    description: '演唱会ID',
+    example: '66c1234567890abcdef0456',
+  })
+  @ApiBearerAuth('bearer')
+  @ApiOkResponse({
+    description: '删除成功',
+    content: {
+      'application/json': {
+        example: {
+          code: 200,
+          message: 'success',
+          data: null,
+          timestamp: '2025-08-20T10:00:00.000Z',
+          path: '/api/concerts/66c1234567890abcdef0456',
+        },
+      },
+    },
+  })
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  @ApiBearerAuth()
+  async remove(@Param('id') id: string): Promise<null> {
+    return await this.concertsService.remove(id);
+  }
+
   @ApiOperation({
-    summary: '删除演唱会',
-    description: '管理员删除演唱会',
+    summary: '上传/更新演唱会海报',
+    description: '管理员上传或更新演唱会海报',
   })
   @ApiParam({
     name: 'id',
     description: '演唱会ID',
-    example: '507f1f77bcf86cd799439011',
+    example: '66c1234567890abcdef0456',
   })
-  @ApiResponse({
-    status: 200,
-    description: '演唱会删除成功',
+  @ApiBearerAuth('bearer')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: '海报上传请求体（multipart/form-data）',
     schema: {
       type: 'object',
       properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: 'success' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: {
-          type: 'string',
-          example: '/api/concerts/507f1f77bcf86cd799439011',
+        poster: { type: 'string', format: 'binary' },
+      },
+      required: ['poster'],
+    },
+  })
+  @ApiOkResponse({
+    description: '上传成功',
+    content: {
+      'application/json': {
+        example: {
+          code: 200,
+          message: 'success',
+          data: {
+            _id: '66c1234567890abcdef0456',
+            name: '周杰伦2025世界巡回演唱会-北京站',
+            poster:
+              'http://localhost:9000/assets/poster/2025-08-19/2ff59634-8a9f-4b0a-abbe-f514b9e255a3.png',
+            date: '2025-09-01T19:30:00.000Z',
+            venue: '北京国家体育场（鸟巢）',
+            adultPrice: 680,
+            childPrice: 380,
+            totalTickets: 5000,
+            soldTickets: 1200,
+            maxAdultTicketsPerUser: 2,
+            maxChildTicketsPerUser: 1,
+            status: 'upcoming',
+            description: '本次巡演将带来全新曲目与经典回顾',
+            publicKey: '-----BEGIN PUBLIC KEY-----MIIBIjANBgkqh...',
+            createdAt: '2025-08-19T12:00:00.000Z',
+            updatedAt: '2025-08-20T12:00:00.000Z',
+          },
+          timestamp: '2025-08-20T10:00:00.000Z',
+          path: '/api/concerts/66c1234567890abcdef0456/poster',
         },
       },
     },
   })
-  @ApiNotFoundResponse({
-    description: '演唱会不存在',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 404 },
-        message: { type: 'string', example: '演唱会不存在' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: {
-          type: 'string',
-          example: '/api/concerts/507f1f77bcf86cd799439011',
-        },
-      },
-    },
-  })
-  @ApiForbiddenResponse({
-    description: '权限不足',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 403 },
-        message: { type: 'string', example: '权限不足' },
-        data: { type: 'null' },
-        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
-        path: {
-          type: 'string',
-          example: '/api/concerts/507f1f77bcf86cd799439011',
-        },
-      },
-    },
-  })
-  /**
-   * 删除演唱会接口
-   * @description 管理员删除演唱会
-   * @param id 演唱会的唯一标识符
-   * @returns void
-   */
-  async remove(@Param('id') id: string): Promise<void> {
-    return await this.concertsService.remove(id);
+  @Patch(':id/poster')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @UseInterceptors(FileInterceptor('poster'))
+  async uploadPoster(
+    @Param('id') id: string,
+    @UploadedFile() poster: Express.Multer.File,
+    @Request() req: { user: { userId: string; role: string } },
+  ): Promise<Concert> {
+    if (req.user.role !== 'ADMIN') {
+      throw new ForbiddenException('无权修改演唱会海报');
+    }
+    if (!poster) throw new BadRequestException('缺少文件');
+    const url: string = await this.storagesService.uploadFile(poster, 'poster');
+    return await this.concertsService.updatePoster(id, url);
   }
 }

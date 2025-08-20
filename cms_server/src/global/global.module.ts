@@ -11,14 +11,8 @@ import { GlobalInterceptor } from './global.interceptor';
 
 // 环境配置文件路径数组
 const envFilePath: string[] = ['.env'];
-
-/**
- * 开发环境标识
- * @constant {boolean} IS_DEV
- * @description 判断当前是否为开发环境，用于区分开发和生产环境配置
- */
+// 判断当前环境是否为开发环境
 export const IS_DEV: boolean = process.env.RUNNING_ENV !== 'prod';
-
 // 根据环境加载对应的配置文件
 if (IS_DEV) {
   // 开发环境优先加载.env.dev配置文件
@@ -28,11 +22,6 @@ if (IS_DEV) {
   envFilePath.unshift('.env.prod');
 }
 
-/**
- * 全局模块
- * @class GlobalModule
- * @description 配置应用的全局服务，包括数据库连接、缓存、邮件服务和全局拦截器/过滤器
- */
 @Module({
   imports: [
     // 全局配置模块

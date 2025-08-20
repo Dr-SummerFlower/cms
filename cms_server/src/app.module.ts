@@ -7,6 +7,7 @@ import { EcdsaModule } from './ecdsa/ecdsa.module';
 import { EmailModule } from './email/email.module';
 import { GlobalModule } from './global/global.module';
 import { InitModule } from './init/init.module';
+import { StoragesModule } from './storages/storages.module';
 import { TicketsModule } from './tickets/tickets.module';
 import { UsersModule } from './users/users.module';
 
@@ -28,6 +29,7 @@ if (IS_DEV) {
     ConcertsModule,
     EcdsaModule,
     TicketsModule,
+    StoragesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

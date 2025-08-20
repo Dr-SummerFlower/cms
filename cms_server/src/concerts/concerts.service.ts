@@ -16,13 +16,10 @@ import { CreateConcertDto } from './dto/create-concert.dto';
 import { UpdateConcertDto } from './dto/update-concert.dto';
 import { Concert, ConcertDocument } from './entities/concert.entity';
 
-/**
- * 演唱会服务类
- * @description 处理演唱会相关的业务逻辑，包括创建、查询、更新和删除演唱会信息
- */
 @Injectable()
 export class ConcertsService {
   private readonly logger = new Logger(ConcertsService.name);
+
   constructor(
     @InjectModel(Concert.name)
     private readonly concertModel: Model<ConcertDocument>,
@@ -31,20 +28,16 @@ export class ConcertsService {
     private readonly ecdsaService: EcdsaService,
   ) {}
 
-  /**
-   * 创建演唱会
-   * @description 根据提供的数据创建新的演唱会，并为其生成ECDSA密钥对
-   * @param createConcertDto 创建演唱会的数据传输对象
-   * @returns 返回创建的演唱会信息
-   * @throws {BadRequestException} 当演唱会数据无效时抛出
-   * @throws {InternalServerErrorException} 当数据库操作失败时抛出
-   */
-  async create(createConcertDto: CreateConcertDto): Promise<Concert> {
+  async create(
+    createConcertDto: CreateConcertDto,
+    poster: string,
+  ): Promise<Concert> {
     try {
       const keyPair: EcdsaKeyPair = this.ecdsaService.generateKeyPair();
 
       const concertData = {
         ...createConcertDto,
+        poster,
         publicKey: keyPair.publicKey,
         privateKey: keyPair.privateKey,
       };
@@ -78,14 +71,6 @@ export class ConcertsService {
     }
   }
 
-  /**
-   * 获取演唱会列表
-   * @description 分页获取演唱会列表，支持按状态和名称搜索
-   * @param queryDto 查询参数对象，包含状态、搜索关键词、页码和每页数量
-   * @returns 返回包含演唱会列表和分页信息的响应对象
-   * @throws {BadRequestException} 当查询参数无效时抛出
-   * @throws {InternalServerErrorException} 当数据库查询失败时抛出
-   */
   async findAll(queryDto: ConcertQueryDto): Promise<ConcertListResponseDto> {
     try {
       const { status, search, page = 1, limit = 10 } = queryDto;
@@ -133,15 +118,6 @@ export class ConcertsService {
     }
   }
 
-  /**
-   * 根据ID获取演唱会详情
-   * @description 通过演唱会ID查询单个演唱会的详细信息
-   * @param id 演唱会的唯一标识符
-   * @returns 返回演唱会详细信息
-   * @throws {BadRequestException} 当ID格式无效时抛出
-   * @throws {NotFoundException} 当演唱会不存在时抛出异常
-   * @throws {InternalServerErrorException} 当数据库查询失败时抛出
-   */
   async findOne(id: string): Promise<Concert> {
     try {
       if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
@@ -166,16 +142,6 @@ export class ConcertsService {
     }
   }
 
-  /**
-   * 更新演唱会信息
-   * @description 根据ID更新演唱会的信息
-   * @param id 演唱会的唯一标识符
-   * @param updateConcertDto 更新演唱会的数据传输对象
-   * @returns 返回更新后的演唱会信息
-   * @throws {BadRequestException} 当ID格式无效或更新数据无效时抛出
-   * @throws {NotFoundException} 当演唱会不存在时抛出异常
-   * @throws {InternalServerErrorException} 当数据库操作失败时抛出
-   */
   async update(
     id: string,
     updateConcertDto: UpdateConcertDto,
@@ -216,16 +182,7 @@ export class ConcertsService {
     }
   }
 
-  /**
-   * 删除演唱会
-   * @description 根据ID删除指定的演唱会
-   * @param id 演唱会的唯一标识符
-   * @returns void
-   * @throws {BadRequestException} 当ID格式无效时抛出
-   * @throws {NotFoundException} 当演唱会不存在时抛出异常
-   * @throws {InternalServerErrorException} 当数据库操作失败时抛出
-   */
-  async remove(id: string): Promise<void> {
+  async remove(id: string): Promise<null> {
     try {
       if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
         throw new BadRequestException('无效的演唱会ID格式');
@@ -237,6 +194,7 @@ export class ConcertsService {
       if (!result) {
         throw new NotFoundException('演唱会不存在');
       }
+      return null;
     } catch (error) {
       if (
         error instanceof BadRequestException ||
@@ -248,19 +206,11 @@ export class ConcertsService {
     }
   }
 
-  /**
-   * 更新演唱会状态
-   * @description 根据当前时间自动更新演唱会状态
-   * - upcoming: 演唱会开始时间未到
-   * - ongoing: 演唱会正在进行中（开始时间已到但未超过24小时）
-   * - completed: 演唱会已结束（超过开始时间24小时）
-   */
   async updateConcertStatuses(): Promise<void> {
     try {
       const now = new Date();
       const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-      // 更新状态为 ongoing：开始时间已到但未超过24小时的演唱会
       await this.concertModel
         .updateMany(
           {
@@ -271,7 +221,6 @@ export class ConcertsService {
         )
         .exec();
 
-      // 更新状态为 completed：开始时间超过24小时的演唱会
       await this.concertModel
         .updateMany(
           {
@@ -291,11 +240,6 @@ export class ConcertsService {
     }
   }
 
-  /**
-   * 获取需要发送提醒邮件的演唱会和用户信息
-   * @description 获取12小时后开始的演唱会及其购票用户的邮箱信息
-   * @returns 返回需要提醒的演唱会和用户邮箱列表
-   */
   async getConcertsForReminder(): Promise<ConcertsReminder[]> {
     try {
       const now = new Date();
@@ -345,6 +289,28 @@ export class ConcertsService {
       throw new InternalServerErrorException(
         `获取需要提醒的演唱会失败: ${error.message}`,
       );
+    }
+  }
+
+  async updatePoster(id: string, poster: string): Promise<Concert> {
+    try {
+      if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
+        throw new BadRequestException('无效的用户ID格式');
+      }
+      const concert = (await this.concertModel.findById(id)) as Concert;
+      if (!concert) throw new NotFoundException('演唱会不存在');
+
+      concert.poster = poster;
+      await concert.save();
+      return concert;
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('更新演唱会海报时发生错误');
     }
   }
 }

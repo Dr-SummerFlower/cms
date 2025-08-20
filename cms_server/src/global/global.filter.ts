@@ -8,20 +8,8 @@ import { HttpArgumentsHost } from '@nestjs/common/interfaces';
 import { Request, Response } from 'express';
 import { ErrorResponse } from '../types';
 
-/**
- * 全局异常过滤器
- * @class GlobalFilter
- * @implements {ExceptionFilter}
- * @description 捕获并处理应用中的HTTP异常，统一返回错误响应格式
- */
 @Catch(HttpException)
 export class GlobalFilter implements ExceptionFilter {
-  /**
-   * 捕获异常并处理
-   * @param {HttpException} exception - HTTP异常对象
-   * @param {ArgumentsHost} host - 参数主机对象
-   * @description 处理HTTP异常，格式化错误响应并返回给客户端
-   */
   catch(exception: HttpException, host: ArgumentsHost) {
     // 获取HTTP上下文
     const ctx: HttpArgumentsHost = host.switchToHttp();

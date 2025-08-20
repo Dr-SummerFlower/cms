@@ -12,10 +12,6 @@ import {
 import { TicketsController, VerifyController } from './tickets.controller';
 import { TicketsService } from './tickets.service';
 
-/**
- * 票务模块
- * @description 票务管理模块，提供票据的创建、查询、退票、验票等功能
- */
 @Module({
   imports: [
     MongooseModule.forFeature([

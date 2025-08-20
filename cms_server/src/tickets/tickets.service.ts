@@ -39,10 +39,6 @@ import {
   VerificationRecordDocument,
 } from './entities/verification-record.entity';
 
-/**
- * 票务服务类
- * @description 处理票务相关的业务逻辑，包括订单创建、票据查询、退票、二维码生成和验票等功能
- */
 @Injectable()
 export class TicketsService {
   constructor(
@@ -59,16 +55,6 @@ export class TicketsService {
     @InjectRedis() private readonly redisService: Redis,
   ) {}
 
-  /**
-   * 创建票务订单
-   * @description 为指定用户创建票务订单，包括验证演唱会信息、检查票数限制、生成票据等
-   * @param createTicketOrderDto 订单创建数据传输对象
-   * @param userId 用户ID
-   * @returns 返回创建的票据数组
-   * @throws {BadRequestException} 当用户ID或演唱会ID格式无效、票数不足或订单数据无效时抛出
-   * @throws {NotFoundException} 当演唱会不存在时抛出
-   * @throws {InternalServerErrorException} 当数据库操作失败时抛出
-   */
   async createOrder(
     createTicketOrderDto: CreateTicketOrderDto,
     userId: string,
@@ -147,15 +133,6 @@ export class TicketsService {
     }
   }
 
-  /**
-   * 查询用户的票据列表
-   * @description 根据用户ID和查询条件获取用户的票据列表，支持按状态和演唱会筛选
-   * @param userId 用户ID
-   * @param queryDto 查询条件数据传输对象
-   * @returns 返回用户的票据数组
-   * @throws {BadRequestException} 当用户ID格式无效时抛出
-   * @throws {InternalServerErrorException} 当数据库查询失败时抛出
-   */
   async findMyTickets(
     userId: string,
     queryDto: TicketQueryDto,
@@ -191,17 +168,6 @@ export class TicketsService {
     }
   }
 
-  /**
-   * 查询单个票据详情
-   * @description 根据票据ID和用户ID获取票据详情，包含权限验证
-   * @param ticketId 票据ID
-   * @param userId 用户ID
-   * @returns 返回票据详情
-   * @throws {BadRequestException} 当票据ID或用户ID格式无效时抛出
-   * @throws {NotFoundException} 当票据不存在时抛出
-   * @throws {ForbiddenException} 当用户无权访问该票据时抛出
-   * @throws {InternalServerErrorException} 当数据库查询失败时抛出
-   */
   async findOne(ticketId: string, userId: string): Promise<Ticket> {
     try {
       if (!ticketId || !ticketId.match(/^[0-9a-fA-F]{24}$/)) {
@@ -239,14 +205,6 @@ export class TicketsService {
     }
   }
 
-  /**
-   * 申请退票
-   * @description 用户申请退票，创建退票申请记录到Redis等待管理员审核
-   * @param ticketId 票据ID
-   * @param userId 用户ID
-   * @param refundDto 退票申请数据
-   * @returns 返回申请结果
-   */
   async requestRefund(
     ticketId: string,
     userId: string,
@@ -338,12 +296,6 @@ export class TicketsService {
     }
   }
 
-  /**
-   * 获取待审核的退票申请列表
-   * @description 管理员获取所有待审核的退票申请
-   * @param queryDto 查询参数
-   * @returns 返回退票申请列表
-   */
   async getPendingRefundRequests(
     queryDto: RefundRequestQueryDto,
   ): Promise<RefundRequest[]> {
@@ -389,14 +341,6 @@ export class TicketsService {
     }
   }
 
-  /**
-   * 管理员审核退票申请
-   * @description 管理员审核退票申请，决定通过或拒绝
-   * @param ticketId 票据ID
-   * @param adminId 管理员ID
-   * @param reviewDto 审核数据
-   * @returns 返回审核结果
-   */
   async reviewRefundRequest(
     ticketId: string,
     adminId: string,
@@ -512,15 +456,6 @@ export class TicketsService {
     }
   }
 
-  /**
-   * 生成票据二维码
-   * @description 为有效票据生成二维码图片和相关数据
-   * @param ticketId 票据ID
-   * @param userId 用户ID
-   * @returns 返回二维码图片和解析后的数据
-   * @throws {BadRequestException} 当票据状态不允许生成二维码或二维码数据无效时抛出
-   * @throws {InternalServerErrorException} 当二维码生成失败时抛出
-   */
   async generateQRCode(
     ticketId: string,
     userId: string,
@@ -557,16 +492,6 @@ export class TicketsService {
     }
   }
 
-  /**
-   * 验证票据
-   * @description 验证票据的有效性，包括二维码解析、数字签名验证和状态更新
-   * @param verifyDto 验票数据传输对象
-   * @param inspectorId 检票员ID
-   * @returns 返回验票结果和票据信息
-   * @throws {BadRequestException} 当二维码数据无效或检票员ID格式无效时抛出
-   * @throws {NotFoundException} 当票据不存在时抛出
-   * @throws {InternalServerErrorException} 当数据库操作失败时抛出
-   */
   async verifyTicket(
     verifyDto: VerifyTicketDto,
     inspectorId: string,
@@ -652,14 +577,6 @@ export class TicketsService {
     }
   }
 
-  /**
-   * 获取验证历史记录
-   * @description 根据查询条件获取票据验证的历史记录
-   * @param queryDto 验证历史查询数据传输对象
-   * @returns 返回验证记录数组
-   * @throws {BadRequestException} 当查询参数格式无效时抛出
-   * @throws {InternalServerErrorException} 当数据库查询失败时抛出
-   */
   async getVerificationHistory(
     queryDto: VerificationHistoryQueryDto,
   ): Promise<VerificationRecord[]> {
@@ -728,16 +645,6 @@ export class TicketsService {
     }
   }
 
-  /**
-   * 创建单个票据
-   * @description 为指定演唱会和用户创建单个票据，包括生成数字签名和二维码数据
-   * @param concert 演唱会信息
-   * @param userId 用户ID
-   * @param ticketItem 票据项目信息
-   * @param timestamp 时间戳
-   * @returns 返回票据创建数据
-   * @private
-   */
   private createSingleTicket(
     concert: Concert,
     userId: string,
@@ -782,13 +689,6 @@ export class TicketsService {
     };
   }
 
-  /**
-   * 生成临时票据ID
-   * @description 基于时间戳和随机字符串生成唯一的临时票据ID
-   * @param timestamp 时间戳
-   * @returns 返回生成的临时票据ID
-   * @private
-   */
   private generateTempTicketId(timestamp: number): string {
     const random: string = Math.random()
       .toString(36)
@@ -797,16 +697,6 @@ export class TicketsService {
     return `TEMP_${timestamp}_${random}`;
   }
 
-  /**
-   * 检查用户购买限制
-   * @description 检查用户是否超过了演唱会设定的购买限制
-   * @param userId 用户ID
-   * @param concertId 演唱会ID
-   * @param tickets 要购买的票务列表
-   * @param concert 演唱会信息
-   * @throws {BadRequestException} 当超过购买限制时抛出
-   * @private
-   */
   private async checkUserPurchaseLimit(
     userId: string,
     concertId: string,

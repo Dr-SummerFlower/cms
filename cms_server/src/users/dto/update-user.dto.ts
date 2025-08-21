@@ -33,7 +33,7 @@ export class UpdateUserDto {
   email?: string;
 
   @ApiProperty({
-    description: '密码',
+    description: '旧密码',
     required: false,
     example: '@User123456',
     minLength: 8,
@@ -45,6 +45,20 @@ export class UpdateUserDto {
     message: '密码必须包含大小写字母和数字',
   })
   password?: string;
+
+  @ApiProperty({
+    description: '新密码',
+    required: false,
+    example: '@User123456',
+    minLength: 8,
+  })
+  @IsOptional()
+  @IsString({ message: '新密码必须是字符串' })
+  @MinLength(8, { message: '新密码至少8个字符' })
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*$/, {
+    message: '新密码必须包含大小写字母和数字',
+  })
+  newPassword?: string;
 
   @ApiProperty({
     description: '邮箱验证码',

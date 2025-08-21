@@ -143,7 +143,7 @@ export class UsersController {
 
   @ApiOperation({
     summary: '更新用户信息',
-    description: '用户或管理员更新用户资料（更新邮箱或密码需验证码）',
+    description: '用户或管理员更新用户资料（更新邮箱需验证码，更新密码需旧密码验证）',
   })
   @ApiBody({
     description: '更新用户请求体',
@@ -158,8 +158,8 @@ export class UsersController {
         value: { email: 'new_mail@example.com', emailCode: '123456' },
       },
       updatePassword: {
-        summary: '修改密码（需验证码）',
-        value: { password: '@User123456', emailCode: '123456' },
+        summary: '修改密码（需旧密码验证）',
+        value: { password: '@OldPassword123', newPassword: '@NewPassword123' },
       },
     },
   })
@@ -203,12 +203,12 @@ export class UsersController {
     }
     const { emailCode, ...updateData } = updateUserDto;
 
-    const needVerification: string | undefined =
-      updateData.email || updateData.password;
+    // 只有邮箱更新需要验证码
+    const needEmailVerification = updateData.email;
 
-    if (needVerification) {
+    if (needEmailVerification) {
       if (!emailCode) {
-        throw new BadRequestException('更新邮箱或密码需要提供验证码');
+        throw new BadRequestException('更新邮箱需要提供验证码');
       }
 
       const currentUser: User = await this.usersService.findOneById(id);
@@ -222,7 +222,7 @@ export class UsersController {
 
     const result = await this.usersService.update(id, updateData);
 
-    if (needVerification && emailCode) {
+    if (needEmailVerification && emailCode) {
       await this.validationService.clearCode(result.email, 'update');
     }
 

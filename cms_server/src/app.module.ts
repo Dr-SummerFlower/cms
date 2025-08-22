@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import * as path from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -30,6 +32,17 @@ if (IS_DEV) {
     EcdsaModule,
     TicketsModule,
     StoragesModule,
+    ServeStaticModule.forRootAsync({
+      useFactory: () => {
+        return [
+          {
+            rootPath: path.join(path.resolve(), 'public'),
+            serveRoot: '/',
+            exclude: ['/api*'],
+          },
+        ];
+      },
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],

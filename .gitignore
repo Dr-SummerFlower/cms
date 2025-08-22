@@ -2,6 +2,9 @@
 dist/
 node_modules/
 
+# 静态资源文件
+public/
+
 # 日志文件
 logs
 *.log

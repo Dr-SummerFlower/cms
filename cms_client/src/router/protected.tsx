@@ -1,5 +1,5 @@
 import { Spin } from 'antd';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import type { Role } from '../types';
@@ -9,29 +9,33 @@ interface ProtectedProps {
   roles?: ReadonlyArray<Role>;
 }
 
-export default function Protected({ children, roles }: ProtectedProps): JSX.Element {
+export default function Protected({
+                                    children,
+                                    roles,
+                                  }: ProtectedProps): JSX.Element {
   const location = useLocation();
-  const { user, isAuthed, bootstrap } = useAuthStore((s) => ({
-    user: s.user,
-    isAuthed: s.isAuthed,
-    bootstrap: s.bootstrap,
-  }));
 
-  const [checking, setChecking] = useState(true);
+  const user = useAuthStore((s) => s.user);
+  const isAuthed = useAuthStore((s) => s.isAuthed);
+  const ready = useAuthStore((s) => s.ready);
+  const bootstrap = useAuthStore((s) => s.bootstrap);
 
   useEffect(() => {
-    (async () => {
-      try {
-        await bootstrap();
-      } finally {
-        setChecking(false);
-      }
-    })();
-  }, [bootstrap]);
+    if (!ready) {
+      void bootstrap();
+    }
+  }, [ready, bootstrap]);
 
-  if (checking) {
+  if (!ready) {
     return (
-      <div style={{ height: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div
+        style={{
+          height: '50vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
         <Spin />
       </div>
     );

@@ -48,8 +48,6 @@ export class TicketsService {
     private readonly verificationRecordModel: Model<VerificationRecordDocument>,
     @InjectModel(Concert.name)
     private readonly concertModel: Model<Concert>,
-    @InjectModel(User.name)
-    private readonly userModel: Model<User>,
     private readonly ecdsaService: EcdsaService,
     private readonly emailService: EmailService,
     @InjectRedis() private readonly redisService: Redis,
@@ -129,6 +127,7 @@ export class TicketsService {
       ) {
         throw error;
       }
+      console.log(error);
       throw new InternalServerErrorException('创建票务订单时发生错误');
     }
   }
@@ -519,7 +518,7 @@ export class TicketsService {
       const concert: Concert = ticket.concert;
       const user: User = ticket.user;
       let valid: boolean = false;
-      let verificationSignature: string = '';
+      let verificationSignature: string = qrData.signature || 'N/A';
 
       if (ticket.status === 'valid') {
         const signatureData: string =

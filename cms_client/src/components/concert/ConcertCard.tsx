@@ -13,11 +13,18 @@ export default function ConcertCard({ concert }: Props): JSX.Element {
   return (
     <Card
       hoverable
-      cover={concert.poster ? <img src={concert.poster} alt={concert.name} /> : undefined}
+      cover={
+        concert.poster ? (
+          <img src={concert.poster} alt={concert.name} />
+        ) : undefined
+      }
       style={{ width: '100%' }}
     >
       <Space direction="vertical" size={8} style={{ width: '100%' }}>
-        <Space align="center" style={{ justifyContent: 'space-between', width: '100%' }}>
+        <Space
+          align="center"
+          style={{ justifyContent: 'space-between', width: '100%' }}
+        >
           <strong>{concert.name}</strong>
           <Tag color="blue">{dateText}</Tag>
         </Space>
@@ -27,7 +34,9 @@ export default function ConcertCard({ concert }: Props): JSX.Element {
           <Tag color="cyan">儿童 ¥{concert.childPrice}</Tag>
         </div>
         <Link to={`/concerts/${concert.id}`}>
-          <Button type="primary" block>查看详情</Button>
+          <Button type="primary" block>
+            查看详情
+          </Button>
         </Link>
       </Space>
     </Card>

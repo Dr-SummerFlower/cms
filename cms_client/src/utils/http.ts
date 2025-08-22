@@ -19,8 +19,14 @@ let isRefreshing = false;
 type Subscriber = (token: string) => void;
 let subscribers: Subscriber[] = [];
 
-function subscribe(cb: Subscriber): void { subscribers.push(cb); }
-function notifyAll(token: string): void { subscribers.forEach(cb => cb(token)); subscribers = []; }
+function subscribe(cb: Subscriber): void {
+  subscribers.push(cb);
+}
+
+function notifyAll(token: string): void {
+  subscribers.forEach((cb) => cb(token));
+  subscribers = [];
+}
 
 interface RetryConfig extends AxiosRequestConfig {
   _retry?: boolean;
@@ -50,7 +56,14 @@ http.interceptors.response.use(
       if (isRefreshing) {
         return new Promise((resolve) => {
           subscribe((newToken: string) => {
-            const newConfig: RetryConfig = { ...config, _retry: true, headers: { ...(config.headers || {}), Authorization: `Bearer ${newToken}` } };
+            const newConfig: RetryConfig = {
+              ...config,
+              _retry: true,
+              headers: {
+                ...(config.headers || {}),
+                Authorization: `Bearer ${newToken}`,
+              },
+            };
             resolve(http(newConfig));
           });
         });
@@ -59,11 +72,20 @@ http.interceptors.response.use(
       isRefreshing = true;
       config._retry = true;
       try {
-        const resp = await refreshClient.post<ApiResponse<Tokens>>('/auth/refresh', { refresh_token: refresh });
+        const resp = await refreshClient.post<ApiResponse<Tokens>>(
+          '/auth/refresh',
+          { refresh_token: refresh },
+        );
         const tokens = resp.data.data;
         setTokens(tokens);
         notifyAll(tokens.access_token);
-        const newConfig: RetryConfig = { ...config, headers: { ...(config.headers || {}), Authorization: `Bearer ${tokens.access_token}` } };
+        const newConfig: RetryConfig = {
+          ...config,
+          headers: {
+            ...(config.headers || {}),
+            Authorization: `Bearer ${tokens.access_token}`,
+          },
+        };
         return http(newConfig);
       } catch (e) {
         clearTokens();
@@ -75,34 +97,52 @@ http.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 // 统一 JSON/Form 方法
-export async function getJson<T>(url: string, params?: Record<string, unknown>): Promise<T> {
+export async function getJson<T>(
+  url: string,
+  params?: Record<string, unknown>,
+): Promise<T> {
   const resp = await http.get<ApiResponse<T>>(url, { params });
   return resp.data.data;
 }
-export async function postJson<T, B extends object>(url: string, body: B): Promise<T> {
+
+export async function postJson<T, B extends object>(
+  url: string,
+  body: B,
+): Promise<T> {
   const resp = await http.post<ApiResponse<T>>(url, body);
   return resp.data.data;
 }
-export async function patchJson<T, B extends object>(url: string, body: B): Promise<T> {
+
+export async function patchJson<T, B extends object>(
+  url: string,
+  body: B,
+): Promise<T> {
   const resp = await http.patch<ApiResponse<T>>(url, body);
   return resp.data.data;
 }
-export async function putJson<T, B extends object>(url: string, body: B): Promise<T> {
+
+export async function putJson<T, B extends object>(
+  url: string,
+  body: B,
+): Promise<T> {
   const resp = await http.put<ApiResponse<T>>(url, body);
   return resp.data.data;
 }
+
 export async function delJson<T>(url: string): Promise<T> {
   const resp = await http.delete<ApiResponse<T>>(url);
   return resp.data.data;
 }
+
 export async function postForm<T>(url: string, form: FormData): Promise<T> {
   const resp = await http.post<ApiResponse<T>>(url, form);
   return resp.data.data;
 }
+
 export async function patchForm<T>(url: string, form: FormData): Promise<T> {
   const resp = await http.patch<ApiResponse<T>>(url, form);
   return resp.data.data;

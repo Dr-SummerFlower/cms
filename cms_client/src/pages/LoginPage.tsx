@@ -28,7 +28,11 @@ export default function LoginPage(): JSX.Element {
           }
         }}
       >
-        <Form.Item name="email" label="邮箱" rules={[{ required: true }, { type: 'email' }]}>
+        <Form.Item
+          name="email"
+          label="邮箱"
+          rules={[{ required: true }, { type: 'email' }]}
+        >
           <Input placeholder="请填写您的邮箱" />
         </Form.Item>
         <Form.Item name="password" label="密码" rules={[{ required: true }]}>

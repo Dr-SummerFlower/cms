@@ -143,7 +143,8 @@ export class UsersController {
 
   @ApiOperation({
     summary: '更新用户信息',
-    description: '用户或管理员更新用户资料（更新邮箱需验证码，更新密码需旧密码验证）',
+    description:
+      '用户或管理员更新用户资料（更新邮箱需验证码，更新密码需旧密码验证）',
   })
   @ApiBody({
     description: '更新用户请求体',

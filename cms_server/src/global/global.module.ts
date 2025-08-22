@@ -50,6 +50,7 @@ if (IS_DEV) {
         type: 'client',
         options: {
           url: config.get<string>('REDIS_URI', 'redis://localhost:6379'), // 默认Redis连接字符串
+          password: config.get<string>('REDIS_PWD'),
         },
       }),
     }),

@@ -181,6 +181,117 @@ export class TicketsController {
     return await this.ticketsService.findMyTickets(req.user.userId, queryDto);
   }
 
+  @ApiOperation({ summary: '获取退票申请列表' })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    description: '申请状态',
+    enum: ['pending', 'approved', 'rejected'],
+    example: 'pending',
+  })
+  @ApiQuery({
+    name: 'concertId',
+    required: false,
+    description: '演唱会ID',
+    example: '66c1234567890abcdef0456',
+  })
+  @ApiQuery({
+    name: 'userId',
+    required: false,
+    description: '用户ID',
+    example: '66u000000000000000000001',
+  })
+  @ApiOkResponse({
+    description: '获取成功',
+    content: {
+      'application/json': {
+        example: {
+          code: 200,
+          message: 'success',
+          data: [
+            {
+              ticketId: '66d111111111111111111111',
+              userId: '66u000000000000000000001',
+              concertId: '66c1234567890abcdef0456',
+              reason: '临时有事无法参加',
+              status: 'pending',
+              requestTime: '2025-08-20T12:00:00.000Z',
+              ticketInfo: {
+                type: 'adult',
+                price: 680,
+                concertName: '周杰伦2025世界巡回演唱会-北京站',
+                concertDate: '2025-09-01T19:30:00.000Z',
+                venue: '北京国家体育场（鸟巢）',
+              },
+              userInfo: {
+                email: 'user@user.com',
+                username: '普通用户',
+              },
+            },
+          ],
+          timestamp: '2025-08-20T12:00:00.000Z',
+          path: '/api/tickets/refund-requests',
+        },
+      },
+    },
+  })
+  @Get('refund-requests')
+  @Roles('ADMIN')
+  async getRefundRequests(
+    @Query() queryDto: RefundRequestQueryDto,
+  ): Promise<RefundRequest[]> {
+    return await this.ticketsService.getPendingRefundRequests(queryDto);
+  }
+
+  @ApiOperation({ summary: '管理员审核退票申请' })
+  @ApiParam({
+    name: 'ticketId',
+    description: '票据ID',
+    example: '66d111111111111111111111',
+  })
+  @ApiBody({
+    description: '审核请求体',
+    type: AdminReviewRefundDto,
+    examples: {
+      approve: {
+        summary: '同意',
+        value: { approved: true, reviewNote: '同意退款' },
+      },
+      reject: {
+        summary: '拒绝',
+        value: { approved: false, reviewNote: '不满足退款条件' },
+      },
+    },
+  })
+  @ApiOkResponse({
+    description: '审核成功',
+    content: {
+      'application/json': {
+        example: {
+          code: 200,
+          message: 'success',
+          data: { success: true, message: '退票申请已通过，票据已退款' },
+          timestamp: '2025-08-20T12:00:00.000Z',
+          path: '/api/tickets/refund-requests/66d111111111111111111111/review',
+        },
+      },
+    },
+  })
+  @Put('refund-requests/:ticketId/review')
+  @Roles('ADMIN')
+  @HttpCode(200)
+  async reviewRefundRequest(
+    @Param('ticketId') ticketId: string,
+    @Body() reviewDto: AdminReviewRefundDto,
+    @Request() req: { user: { userId: string } },
+  ): Promise<{ success: boolean; message: string }> {
+    return await this.ticketsService.reviewRefundRequest(
+      ticketId,
+      req.user.userId,
+      reviewDto,
+    );
+  }
+
   @ApiOperation({ summary: '获取票据详情' })
   @ApiParam({
     name: 'id',
@@ -314,117 +425,6 @@ export class TicketsController {
     @Request() req: { user: { userId: string } },
   ): Promise<TicketQRResponse> {
     return await this.ticketsService.generateQRCode(ticketId, req.user.userId);
-  }
-
-  @ApiOperation({ summary: '获取退票申请列表' })
-  @ApiQuery({
-    name: 'status',
-    required: false,
-    description: '申请状态',
-    enum: ['pending', 'approved', 'rejected'],
-    example: 'pending',
-  })
-  @ApiQuery({
-    name: 'concertId',
-    required: false,
-    description: '演唱会ID',
-    example: '66c1234567890abcdef0456',
-  })
-  @ApiQuery({
-    name: 'userId',
-    required: false,
-    description: '用户ID',
-    example: '66u000000000000000000001',
-  })
-  @ApiOkResponse({
-    description: '获取成功',
-    content: {
-      'application/json': {
-        example: {
-          code: 200,
-          message: 'success',
-          data: [
-            {
-              ticketId: '66d111111111111111111111',
-              userId: '66u000000000000000000001',
-              concertId: '66c1234567890abcdef0456',
-              reason: '临时有事无法参加',
-              status: 'pending',
-              requestTime: '2025-08-20T12:00:00.000Z',
-              ticketInfo: {
-                type: 'adult',
-                price: 680,
-                concertName: '周杰伦2025世界巡回演唱会-北京站',
-                concertDate: '2025-09-01T19:30:00.000Z',
-                venue: '北京国家体育场（鸟巢）',
-              },
-              userInfo: {
-                email: 'user@user.com',
-                username: '普通用户',
-              },
-            },
-          ],
-          timestamp: '2025-08-20T12:00:00.000Z',
-          path: '/api/tickets/refund-requests',
-        },
-      },
-    },
-  })
-  @Get('refund-requests')
-  @Roles('ADMIN')
-  async getRefundRequests(
-    @Query() queryDto: RefundRequestQueryDto,
-  ): Promise<RefundRequest[]> {
-    return await this.ticketsService.getPendingRefundRequests(queryDto);
-  }
-
-  @ApiOperation({ summary: '管理员审核退票申请' })
-  @ApiParam({
-    name: 'ticketId',
-    description: '票据ID',
-    example: '66d111111111111111111111',
-  })
-  @ApiBody({
-    description: '审核请求体',
-    type: AdminReviewRefundDto,
-    examples: {
-      approve: {
-        summary: '同意',
-        value: { approved: true, reviewNote: '同意退款' },
-      },
-      reject: {
-        summary: '拒绝',
-        value: { approved: false, reviewNote: '不满足退款条件' },
-      },
-    },
-  })
-  @ApiOkResponse({
-    description: '审核成功',
-    content: {
-      'application/json': {
-        example: {
-          code: 200,
-          message: 'success',
-          data: { success: true, message: '退票申请已通过，票据已退款' },
-          timestamp: '2025-08-20T12:00:00.000Z',
-          path: '/api/tickets/refund-requests/66d111111111111111111111/review',
-        },
-      },
-    },
-  })
-  @Put('refund-requests/:ticketId/review')
-  @Roles('ADMIN')
-  @HttpCode(200)
-  async reviewRefundRequest(
-    @Param('ticketId') ticketId: string,
-    @Body() reviewDto: AdminReviewRefundDto,
-    @Request() req: { user: { userId: string } },
-  ): Promise<{ success: boolean; message: string }> {
-    return await this.ticketsService.reviewRefundRequest(
-      ticketId,
-      req.user.userId,
-      reviewDto,
-    );
   }
 }
 

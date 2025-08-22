@@ -1,24 +1,23 @@
-import type { TicketItemRaw, VerifyHistoryItem, VerifyTicketResponse } from '../types';
+import type { VerifyHistoryItem, VerifyTicketResponse } from '../types';
 import { getJson, postJson } from '../utils/http';
-import { toTicket } from './_transform.ts';
 
 export async function verifyTicket(payload: { qrData: string; location: string }): Promise<VerifyTicketResponse> {
   const res = await postJson<{
     valid: boolean;
-    ticket: TicketItemRaw;
-    verificationRecord: {
-      _id: string;
-      ticketId: string;
-      inspectorId: string;
-      verifiedAt: string;
-      result: 'valid' | 'invalid'
+    ticket: {
+      id: string;
+      concertName: string;
+      type: 'adult' | 'child';
+      status: 'valid' | 'used' | 'refunded';
+      userName: string;
     };
+    verifiedAt: string;
   }, { qrData: string; location: string }>('/verify/ticket', payload);
 
   return {
     valid: res.valid,
-    ticket: toTicket(res.ticket),
-    verificationRecord: res.verificationRecord,
+    ticket: res.ticket,
+    verifiedAt: res.verifiedAt,
   };
 }
 

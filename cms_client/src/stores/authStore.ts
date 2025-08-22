@@ -8,6 +8,8 @@ import { clearTokens, getRefreshToken, setTokens } from '../utils/auth';
 interface AuthState {
   user: User | null;
   isAuthed: boolean;
+  ready: boolean;
+  bootstrapped: boolean;
   login: (email: string, password: string) => Promise<void>;
   applyAuth: (payload: AuthResult) => void;
   logout: () => void;
@@ -20,15 +22,23 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       user: null,
       isAuthed: false,
+      ready: false,
+      bootstrapped: false,
 
       async login(email: string, password: string) {
         const res: AuthResult = await apiLogin({ email, password });
-        setTokens({ access_token: res.access_token, refresh_token: res.refresh_token });
+        setTokens({
+          access_token: res.access_token,
+          refresh_token: res.refresh_token,
+        });
         set({ user: res.user, isAuthed: true });
       },
 
       applyAuth(res) {
-        setTokens({ access_token: res.access_token, refresh_token: res.refresh_token });
+        setTokens({
+          access_token: res.access_token,
+          refresh_token: res.refresh_token,
+        });
         set({ user: res.user, isAuthed: true });
       },
 
@@ -38,31 +48,44 @@ export const useAuthStore = create<AuthState>()(
           import('./ticketStore').then(({ useTicketStore }) => {
             (useTicketStore.getState() as { reset: () => void }).reset();
           });
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
         set({ user: null, isAuthed: false });
       },
 
-      setUser(u: User): void {
+      setUser(u: User) {
         set({ user: u, isAuthed: true });
       },
 
       async bootstrap() {
+        if (get().bootstrapped) {
+          if (!get().ready) set({ ready: true });
+          return;
+        }
+        set({ bootstrapped: true });
+
         const refresh = getRefreshToken();
-        if (!refresh) return;
+        if (!refresh) {
+          set({ ready: true });
+          return;
+        }
+
         try {
           const tokens = await apiRefresh(refresh);
           setTokens(tokens);
-          const current = get().user;
-          set({ isAuthed: !!current });
+          set({ isAuthed: true });
         } catch {
           clearTokens();
           set({ user: null, isAuthed: false });
+        } finally {
+          set({ ready: true });
         }
       },
     }),
     {
       name: 'auth-storage',
       partialize: (s) => ({ user: s.user, isAuthed: s.isAuthed }),
-    }
-  )
+    },
+  ),
 );

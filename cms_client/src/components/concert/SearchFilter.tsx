@@ -10,16 +10,30 @@ interface Props {
 const statusOptions: Array<{ label: string; value: ConcertStatus }> = [
   { label: '即将开始', value: 'upcoming' },
   { label: '进行中', value: 'ongoing' },
-  { label: '已结束', value: 'completed' }
+  { label: '已结束', value: 'completed' },
 ];
 
-export default function SearchFilter({ value, onChange, onSubmit }: Props): JSX.Element {
+export default function SearchFilter({
+                                       value,
+                                       onChange,
+                                       onSubmit,
+                                     }: Props): JSX.Element {
   const [form] = Form.useForm();
 
   return (
-    <Form form={form} layout="inline" initialValues={value} onFinish={onSubmit} style={{ marginBottom: 16 }}>
+    <Form
+      form={form}
+      layout="inline"
+      initialValues={value}
+      onFinish={onSubmit}
+      style={{ marginBottom: 16 }}
+    >
       <Form.Item name="search" label="搜索">
-        <Input allowClear placeholder="按名称搜索" onChange={(e) => onChange({ ...value, search: e.target.value })} />
+        <Input
+          allowClear
+          placeholder="按名称搜索"
+          onChange={(e) => onChange({ ...value, search: e.target.value })}
+        />
       </Form.Item>
       <Form.Item name="status" label="状态">
         <Select
@@ -32,8 +46,18 @@ export default function SearchFilter({ value, onChange, onSubmit }: Props): JSX.
       </Form.Item>
       <Form.Item>
         <Space>
-          <Button type="primary" htmlType="submit">查询</Button>
-          <Button onClick={() => { form.resetFields(); onChange({}); onSubmit(); }}>重置</Button>
+          <Button type="primary" htmlType="submit">
+            查询
+          </Button>
+          <Button
+            onClick={() => {
+              form.resetFields();
+              onChange({});
+              onSubmit();
+            }}
+          >
+            重置
+          </Button>
         </Space>
       </Form.Item>
     </Form>

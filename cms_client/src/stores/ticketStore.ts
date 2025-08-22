@@ -5,7 +5,10 @@ import type { TicketItem } from '../types';
 interface TicketState {
   loading: boolean;
   items: ReadonlyArray<TicketItem>;
-  fetch: (params?: { status?: 'valid' | 'used' | 'refunded'; concertId?: string }) => Promise<void>;
+  fetch: (params?: {
+    status?: 'valid' | 'used' | 'refunded';
+    concertId?: string;
+  }) => Promise<void>;
   reset: () => void;
 }
 

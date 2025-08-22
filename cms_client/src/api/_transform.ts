@@ -37,7 +37,12 @@ export function toConcert(c: ConcertRaw): Concert {
 export function toTicket(t: TicketItemRaw): TicketItem {
   const concertId = t.concert?._id ?? t.concertId ?? '';
   const concert = t.concert
-    ? { id: t.concert._id, name: t.concert.name, date: t.concert.date, venue: t.concert.venue }
+    ? {
+      id: t.concert._id,
+      name: t.concert.name,
+      date: t.concert.date ?? '',
+      venue: t.concert.venue ?? '',
+    }
     : undefined;
 
   const userId =

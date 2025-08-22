@@ -1,125 +1,147 @@
-import { Alert, App as AntdApp, Button, Card, Descriptions, Empty, Input, Space, Tag, Typography } from 'antd';
-import { useEffect, useRef, useState } from 'react';
-import { verifyTicket } from '../../api/verify';
-import type { BarcodeDetector, BarcodeDetectorConstructor, VerifyTicketResponse } from '../../types';
+import { Button, Card, Input, message, Space, Table, Tag } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
+import { useEffect, useMemo, useState } from 'react';
+import { verifyHistory, verifyTicket } from '../../api/verify';
 
-type Detector = BarcodeDetectorConstructor;
+type VerifyResult = {
+  success: boolean;
+  message: string;
+};
+
+type VerifyHistoryItem = {
+  id: string;
+  ticketId: string;
+  status: 'valid' | 'invalid';
+  message?: string;
+  verifiedAt: string;
+};
 
 export default function InspectorVerify(): JSX.Element {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
-  const [detector, setDetector] = useState<Detector | null>(null);
-  const [scanning, setScanning] = useState(false);
-  const [result, setResult] = useState<VerifyTicketResponse | null>(null);
-  const { message } = AntdApp.useApp();
+  const [location, setLocation] = useState<string>('');
+  const [manualQr, setManualQr] = useState<string>('');
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [history, setHistory] = useState<VerifyHistoryItem[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState<boolean>(false);
 
   useEffect(() => {
-    if ('BarcodeDetector' in window && window.BarcodeDetector) {
-      try {
-        const d = new window.BarcodeDetector({ formats: ['qr_code'] });
-        setDetector(d as unknown as Detector);
-      } catch { /* ignore */
-      }
-    }
+    const saved = localStorage.getItem('verifyLocation') ?? '';
+    setLocation(saved);
+    void loadHistory();
   }, []);
 
-  useEffect(() => {
-    return () => {
-      if (stream) stream.getTracks().forEach(t => t.stop());
-    };
-  }, [stream]);
-
-  const startCamera = async (): Promise<void> => {
-    try {
-      const s = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' } },
-        audio: false,
-      });
-      setStream(s);
-      if (videoRef.current) {
-        videoRef.current.srcObject = s;
-        await videoRef.current.play();
-      }
-      if (detector) {
-        setScanning(true);
-        requestAnimationFrame(tick);
-      } else {
-        message.info('当前浏览器不支持自动扫码，请上传图片或手动输入');
-      }
-    } catch {
-      message.error('无法访问摄像头');
+  const saveLocation = (): void => {
+    const v = location.trim();
+    if (!v) {
+      message.error('请填写验票地点');
+      return;
     }
+    localStorage.setItem('verifyLocation', v);
+    message.success('已保存验票地点');
   };
 
-  const tick = async (): Promise<void> => {
-    if (!scanning || !detector || !videoRef.current) return;
+  const loadHistory = async (): Promise<void> => {
+    setLoadingHistory(true);
     try {
-      const codes = await (detector as unknown as BarcodeDetector).detect(videoRef.current);
-      if (codes.length > 0) {
-        const text = codes[0].rawValue ?? '';
-        setScanning(false);
-        await doVerify(text);
-        return;
-      }
-    } catch { /* ignore */
+      const list = await verifyHistory();
+      setHistory(Array.isArray(list) ? list : []);
+    } catch {
+      setHistory([]);
+    } finally {
+      setLoadingHistory(false);
     }
-    requestAnimationFrame(tick);
   };
 
   const doVerify = async (qrData: string): Promise<void> => {
+    const loc = (localStorage.getItem('verifyLocation') ?? '').trim();
+    if (!loc) {
+      message.error('请先在页面顶部设置验票地点');
+      return;
+    }
+    if (!qrData.trim()) {
+      message.error('请提供二维码数据');
+      return;
+    }
+    setSubmitting(true);
     try {
-      const res = await verifyTicket({ qrData, location: 'mobile' });
-      setResult(res);
+      const res = (await verifyTicket({
+        qrData,
+        location: loc,
+      })) as unknown as VerifyResult;
+      if (res?.success) {
+        message.success(res.message || '验票成功');
+        setManualQr('');
+        await loadHistory();
+      } else {
+        message.error(res?.message || '验票失败');
+      }
     } catch {
       message.error('验票失败');
+    } finally {
+      setSubmitting(false);
     }
   };
 
+  const columns: ColumnsType<VerifyHistoryItem> = useMemo(
+    () => [
+      { title: '票据ID', dataIndex: 'ticketId', key: 'ticketId', width: 220 },
+      {
+        title: '状态',
+        dataIndex: 'status',
+        key: 'status',
+        width: 120,
+        render: (v: VerifyHistoryItem['status']) =>
+          v === 'valid' ? (
+            <Tag color="green">验证通过</Tag>
+          ) : (
+            <Tag color="red">验证失败</Tag>
+          ),
+      },
+      { title: '信息', dataIndex: 'message', key: 'message', ellipsis: true },
+      { title: '时间', dataIndex: 'verifiedAt', key: 'verifiedAt', width: 200 },
+    ],
+    [],
+  );
+
   return (
-    <div style={{ maxWidth: 960, margin: '0 auto', display: 'grid', gap: 12, gridTemplateColumns: '1fr' }}>
-      <Card title="扫码验证" style={{ width: '100%' }}>
-        <Space direction="vertical" style={{ width: '100%' }} size="large">
-          <video ref={videoRef} style={{ width: '100%', maxHeight: 360, background: '#000' }} playsInline muted />
-          <Space wrap>
-            <Button type="primary" onClick={() => void startCamera()}>启动摄像头</Button>
-            <Button onClick={() => setScanning((s) => !s)} disabled={!detector || !stream}>
-              {scanning ? '暂停识别' : '继续识别'}
-            </Button>
-          </Space>
+    <Card title="验票">
+      <Space align="center" style={{ marginBottom: 12 }}>
+        <span style={{ color: '#999' }}>验票地点</span>
+        <Input
+          style={{ width: 260 }}
+          placeholder="例如：东门闸机 / 看台A入口"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          onPressEnter={saveLocation}
+        />
+        <Button type="primary" onClick={saveLocation}>
+          保存地点
+        </Button>
+      </Space>
 
-          <Typography.Text type="secondary">
-            若自动扫码不可用，可手动粘贴二维码内容：
-          </Typography.Text>
-          <Input.Search
-            allowClear
-            placeholder="粘贴二维码文本/签名"
-            enterButton="验证"
-            onSearch={(val) => void doVerify(val.trim())}
-          />
-        </Space>
-      </Card>
+      <Space align="center" style={{ marginBottom: 16 }}>
+        <Input
+          style={{ width: 360 }}
+          placeholder="输入或粘贴二维码数据"
+          value={manualQr}
+          onChange={(e) => setManualQr(e.target.value)}
+          onPressEnter={() => void doVerify(manualQr)}
+        />
+        <Button
+          type="primary"
+          loading={submitting}
+          onClick={() => void doVerify(manualQr)}
+        >
+          验证
+        </Button>
+      </Space>
 
-      <Card title="验证结果">
-        {!result ? (
-          <Empty description="尚无结果" />
-        ) : result.valid ? (
-          <>
-            <Alert type="success" message="票据有效" showIcon style={{ marginBottom: 12 }} />
-            <Descriptions bordered column={1} size="small" items={[
-              { key: 'ticketId', label: '票据ID', children: result.ticket.id },
-              { key: 'type', label: '类型', children: result.ticket.type === 'adult' ? '成人' : '儿童' },
-              { key: 'status', label: '状态', children: <Tag color="green">{result.ticket.status}</Tag> },
-              {
-                key: 'verifiedAt',
-                label: '验证时间',
-                children: new Date(result.verificationRecord.verifiedAt).toLocaleString(),
-              },
-            ]} />
-          </>
-        ) : (
-          <Alert type="error" message="票据无效或已使用/退款" showIcon />
-        )}
-      </Card>
-    </div>
+      <Table<VerifyHistoryItem>
+        rowKey="id"
+        columns={columns}
+        dataSource={history}
+        loading={loadingHistory}
+        pagination={{ pageSize: 10 }}
+      />
+    </Card>
   );
 }

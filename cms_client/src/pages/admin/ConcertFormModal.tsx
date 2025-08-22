@@ -1,9 +1,8 @@
-// pages/admin/ConcertFormModal.tsx
 import { InfoCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { App as AntdApp, DatePicker, Form, Input, InputNumber, Modal, Tooltip, Upload } from 'antd';
 import type { UploadFile } from 'antd/es/upload/interface';
 import dayjs, { type Dayjs } from 'dayjs';
-import React from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Concert, CreateConcertDto } from '../../types';
 
 interface Props {
@@ -18,38 +17,35 @@ type CreateForm = Omit<CreateConcertDto, 'date' | 'poster'> & { date?: Dayjs };
 export default function ConcertFormModal({ open, onCancel, onOk, initial }: Props): JSX.Element {
   const [form] = Form.useForm<CreateForm>();
   const { message } = AntdApp.useApp();
-  const [posterList, setPosterList] = React.useState<UploadFile[]>([]);
-  const [posterFile, setPosterFile] = React.useState<File | undefined>(undefined);
+  const [posterList, setPosterList] = useState<UploadFile[]>([]);
+  const [posterFile, setPosterFile] = useState<File | undefined>(undefined);
 
-  React.useEffect(() => {
-    if (open) {
-      form.setFieldsValue({
-        name: initial?.name,
-        date: initial?.date ? dayjs(initial.date) : undefined,
-        venue: initial?.venue,
-        adultPrice: initial?.adultPrice ?? 0,
-        childPrice: initial?.childPrice ?? 0,
-        totalTickets: initial?.totalTickets ?? 0,
-        maxAdultTicketsPerUser: initial?.maxAdultTicketsPerUser ?? 2,
-        maxChildTicketsPerUser: initial?.maxChildTicketsPerUser ?? 1,
-        description: initial?.description,
-      });
+  useEffect(() => {
+    form.setFieldsValue({
+      name: initial?.name,
+      date: initial?.date ? dayjs(initial.date) : undefined,
+      venue: initial?.venue,
+      adultPrice: initial?.adultPrice ?? 0,
+      childPrice: initial?.childPrice ?? 0,
+      totalTickets: initial?.totalTickets ?? 0,
+      maxAdultTicketsPerUser: initial?.maxAdultTicketsPerUser ?? 2,
+      maxChildTicketsPerUser: initial?.maxChildTicketsPerUser ?? 1,
+      description: initial?.description,
+    });
 
-      if (initial?.poster) {
-        setPosterList([{
-          uid: '-1',
-          name: 'poster',
-          status: 'done',
-          url: initial.poster,
-        } as UploadFile]);
-      } else {
-        setPosterList([]);
-      }
-      setPosterFile(posterFile);
+    if (initial?.poster) {
+      setPosterList([{
+        uid: '-1',
+        name: 'poster',
+        status: 'done',
+        url: initial.poster,
+      } as UploadFile]);
+    } else {
+      setPosterList([]);
     }
   }, [form, initial, open]);
 
-  const handleBeforeUpload = React.useCallback(async (file: File): Promise<boolean> => {
+  const handleBeforeUpload = useCallback(async (file: File): Promise<boolean> => {
     if (!file.type.startsWith('image/')) {
       message.error('请上传图片文件');
       return false;
@@ -68,7 +64,7 @@ export default function ConcertFormModal({ open, onCancel, onOk, initial }: Prop
     return false;
   }, [message]);
 
-  const handleRemove = React.useCallback(() => {
+  const handleRemove = useCallback(() => {
     setPosterFile(undefined);
     setPosterList([]);
     return true;

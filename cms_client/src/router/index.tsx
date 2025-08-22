@@ -20,35 +20,78 @@ const AdminUsers = lazy(() => import('../pages/admin/AdminUsers'));
 const AdminRefunds = lazy(() => import('../pages/admin/AdminRefunds'));
 
 // Inspector
-const InspectorVerify = lazy(() => import('../pages/inspector/InspectorVerify'));
+const InspectorVerify = lazy(
+  () => import('../pages/inspector/InspectorVerify'),
+);
+
+// Error
+const ErrorPage = lazy(() => import('../pages/ErrorPage'));
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
+    errorElement: <ErrorPage />,
     children: [
-      { index: true, element: <Suspense fallback={null}><HomePage /></Suspense> },
-      { path: 'login', element: <Suspense fallback={null}><LoginPage /></Suspense> },
-      { path: 'register', element: <Suspense fallback={null}><RegisterPage /></Suspense> },
-      { path: 'concerts/:id', element: <Suspense fallback={null}><ConcertDetail /></Suspense> },
       {
-        path: 'purchase/:id', element: (
+        index: true,
+        element: (
+          <Suspense fallback={null}>
+            <HomePage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'login',
+        element: (
+          <Suspense fallback={null}>
+            <LoginPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'register',
+        element: (
+          <Suspense fallback={null}>
+            <RegisterPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'concerts/:id',
+        element: (
+          <Suspense fallback={null}>
+            <ConcertDetail />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'purchase/:id',
+        element: (
           <Protected roles={['USER', 'ADMIN', 'INSPECTOR']}>
-            <Suspense fallback={null}><PurchasePage /></Suspense>
+            <Suspense fallback={null}>
+              <PurchasePage />
+            </Suspense>
           </Protected>
         ),
       },
       {
-        path: 'me/tickets', element: (
+        path: 'me/tickets',
+        element: (
           <Protected roles={['USER', 'ADMIN', 'INSPECTOR']}>
-            <Suspense fallback={null}><UserTickets /></Suspense>
+            <Suspense fallback={null}>
+              <UserTickets />
+            </Suspense>
           </Protected>
         ),
       },
       {
-        path: 'me/tickets/:id', element: (
+        path: 'me/tickets/:id',
+        element: (
           <Protected roles={['USER', 'ADMIN', 'INSPECTOR']}>
-            <Suspense fallback={null}><TicketDetail /></Suspense>
+            <Suspense fallback={null}>
+              <TicketDetail />
+            </Suspense>
           </Protected>
         ),
       },
@@ -56,7 +99,9 @@ const router = createBrowserRouter([
         path: 'me/profile',
         element: (
           <Protected roles={['USER', 'ADMIN', 'INSPECTOR']}>
-            <Suspense fallback={null}><UserProfileView /></Suspense>
+            <Suspense fallback={null}>
+              <UserProfileView />
+            </Suspense>
           </Protected>
         ),
       },
@@ -64,7 +109,9 @@ const router = createBrowserRouter([
         path: 'me/profile/edit',
         element: (
           <Protected roles={['USER', 'ADMIN', 'INSPECTOR']}>
-            <Suspense fallback={null}><UserProfileEdit /></Suspense>
+            <Suspense fallback={null}>
+              <UserProfileEdit />
+            </Suspense>
           </Protected>
         ),
       },
@@ -72,23 +119,57 @@ const router = createBrowserRouter([
         path: 'admin',
         element: (
           <Protected roles={['ADMIN']}>
-            <Suspense fallback={null}><AdminLayout /></Suspense>
+            <Suspense fallback={null}>
+              <AdminLayout />
+            </Suspense>
           </Protected>
         ),
+        errorElement: <ErrorPage />,
         children: [
-          { index: true, element: <Suspense fallback={null}><AdminConcerts /></Suspense> },
-          { path: 'concerts', element: <Suspense fallback={null}><AdminConcerts /></Suspense> },
-          { path: 'users', element: <Suspense fallback={null}><AdminUsers /></Suspense> },
-          { path: 'refunds', element: <Suspense fallback={null}><AdminRefunds /></Suspense> },
+          {
+            index: true,
+            element: (
+              <Suspense fallback={null}>
+                <AdminConcerts />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'concerts',
+            element: (
+              <Suspense fallback={null}>
+                <AdminConcerts />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'users',
+            element: (
+              <Suspense fallback={null}>
+                <AdminUsers />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'refunds',
+            element: (
+              <Suspense fallback={null}>
+                <AdminRefunds />
+              </Suspense>
+            ),
+          },
         ],
       },
       {
         path: 'inspector',
         element: (
           <Protected roles={['INSPECTOR', 'ADMIN']}>
-            <Suspense fallback={null}><InspectorVerify /></Suspense>
+            <Suspense fallback={null}>
+              <InspectorVerify />
+            </Suspense>
           </Protected>
         ),
+        errorElement: <ErrorPage />,
       },
     ],
   },

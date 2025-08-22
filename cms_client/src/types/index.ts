@@ -43,6 +43,10 @@ export interface RegisterDto {
   code: string;
 }
 
+export interface RefreshDto {
+  refresh_token: string;
+}
+
 export interface Tokens {
   access_token: string;
   refresh_token: string;
@@ -157,7 +161,7 @@ export interface TicketItemRaw {
 export interface TicketItem {
   id: string;
   concertId: string;
-  concert?: { id: string; name: string; date?: string; venue?: string };
+  concert?: TicketConcertLite;
   userId: string;
   type: TicketType;
   price: number;
@@ -215,14 +219,14 @@ export interface VerifyHistoryItem {
 
 export interface VerifyTicketResponse {
   valid: boolean;
-  ticket: TicketItem;
-  verificationRecord: {
-    _id: string;
-    ticketId: string;
-    inspectorId: string;
-    verifiedAt: string;
-    result: VerifyResult;
+  ticket: {
+    id: string;
+    concertName: string;
+    type: 'adult' | 'child';
+    status: 'valid' | 'used' | 'refunded';
+    userName: string;
   };
+  verifiedAt: string;
 }
 
 // ---- BarcodeDetector API Types ----

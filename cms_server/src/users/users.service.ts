@@ -6,8 +6,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
+import { FilterQuery, Model } from 'mongoose';
 import { UpdateData, UserData } from '../types';
 import { PaginationDto } from './dto/pagination.dto';
 import { UserListResponseDto } from './dto/user-list-response.dto';
@@ -120,7 +120,9 @@ export class UsersService {
         throw new BadRequestException('无效的用户ID格式');
       }
 
-      const user = (await this.userModel.findById(id).select('+password')) as User;
+      const user = (await this.userModel
+        .findById(id)
+        .select('+password')) as User;
       if (!user) {
         throw new NotFoundException('用户不存在');
       }
@@ -145,12 +147,15 @@ export class UsersService {
         if (!updateData.password) {
           throw new BadRequestException('更新密码需要提供旧密码');
         }
-        
-        const isOldPasswordValid = await bcrypt.compare(updateData.password, user.password);
+
+        const isOldPasswordValid = await bcrypt.compare(
+          updateData.password,
+          user.password,
+        );
         if (!isOldPasswordValid) {
           throw new BadRequestException('旧密码不正确');
         }
-        
+
         user.password = updateData.newPassword;
       }
 

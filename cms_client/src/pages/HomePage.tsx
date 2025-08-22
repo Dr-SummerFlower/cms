@@ -20,7 +20,9 @@ export default function HomePage(): JSX.Element {
       />
 
       {loading && <Skeleton active />}
-      {!loading && (!data || data.items?.length === 0) && <Empty description="暂无演唱会" />}
+      {!loading && (!data || data.items?.length === 0) && (
+        <Empty description="暂无演唱会" />
+      )}
 
       <Row gutter={[16, 16]}>
         {data?.items?.map((c) => (

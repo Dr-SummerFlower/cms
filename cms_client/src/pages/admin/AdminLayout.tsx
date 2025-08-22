@@ -17,41 +17,53 @@ export default function AdminLayout(): JSX.Element {
       : 'concerts';
 
   return (
-    <Layout style={{
-      minHeight: 'calc(100vh - 64px)',
-      borderRadius: '8px',
-      overflow: 'hidden',
-      backgroundColor: isDark ? '#141414' : '#f0f2f5',
-    }}>
+    <Layout
+      style={{
+        minHeight: 'calc(100vh - 64px)',
+        borderRadius: '8px',
+        overflow: 'hidden',
+        backgroundColor: isDark ? '#141414' : '#f0f2f5',
+      }}
+    >
       <Sider
         breakpoint="lg"
         collapsedWidth="0"
         style={{
-          backgroundColor: isDark ? '#1f1f1f' : '#001529',
+          backgroundColor: isDark ? '#1f1f1f' : '#fff',
         }}
       >
         <Menu
-          theme={isDark ? 'dark' : 'dark'}
           mode="inline"
+          theme={isDark ? 'dark' : 'light'}
           selectedKeys={[selected]}
-          onClick={(e) => navigate(`/admin/${e.key}`)}
           items={[
-            { key: 'concerts', label: '演唱会管理' },
-            { key: 'users', label: '用户管理' },
-            { key: 'refunds', label: '退票审核' },
+            {
+              key: 'concerts',
+              label: '演唱会管理',
+              onClick: () => navigate('/admin/concerts'),
+            },
+            {
+              key: 'users',
+              label: '用户管理',
+              onClick: () => navigate('/admin/users'),
+            },
+            {
+              key: 'refunds',
+              label: '退款审核',
+              onClick: () => navigate('/admin/refunds'),
+            },
           ]}
-          style={{
-            backgroundColor: 'transparent',
-          }}
         />
       </Sider>
       <Layout style={{ backgroundColor: 'transparent' }}>
-        <Content style={{
-          padding: 24,
-          backgroundColor: isDark ? '#141414' : '#ffffff',
-          borderRadius: '0 8px 8px 0',
-          margin: '0',
-        }}>
+        <Content
+          style={{
+            padding: 24,
+            backgroundColor: isDark ? '#141414' : '#ffffff',
+            borderRadius: '0 8px 8px 0',
+            margin: '0',
+          }}
+        >
           <Outlet />
         </Content>
       </Layout>

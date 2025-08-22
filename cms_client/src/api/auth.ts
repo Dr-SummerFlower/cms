@@ -1,5 +1,4 @@
-import axios from 'axios';
-import type { AuthPayload, LoginDto, RegisterDto, Tokens, User } from '../types';
+import type { AuthPayload, LoginDto, RefreshDto, RegisterDto, SendCodeDto, Tokens, User } from '../types';
 import { postForm, postJson } from '../utils/http';
 import { toUser } from './_transform.ts';
 
@@ -22,13 +21,9 @@ export async function register(dto: RegisterDto, avatar: File | undefined): Prom
 }
 
 export async function refresh(refresh_token: string): Promise<Tokens> {
-  const resp = await axios.post<{ code: number; message: string; data: Tokens; timestamp: string; path: string }>(
-    '/api/auth/refresh',
-    { refresh_token },
-  );
-  return resp.data.data;
+  return await postJson<Tokens, RefreshDto>('/auth/refresh', { refresh_token });
 }
 
 export async function sendEmailCode(email: string, type: 'register' | 'update'): Promise<void> {
-  await postJson<unknown, { email: string; type: 'register' | 'update' }>('/email', { email, type });
+  await postJson<unknown, SendCodeDto>('/email', { email, type });
 }

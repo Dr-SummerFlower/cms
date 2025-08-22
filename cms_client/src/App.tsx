@@ -19,15 +19,19 @@ export default function App() {
         },
       }}
     >
-      <Layout style={{
-        minHeight: '100vh',
-        backgroundColor: isDark ? '#141414' : '#f0f2f5',
-      }}>
-        <AppHeader />
-        <Content style={{
-          padding: 24,
+      <Layout
+        style={{
+          minHeight: '100vh',
           backgroundColor: isDark ? '#141414' : '#f0f2f5',
-        }}>
+        }}
+      >
+        <AppHeader />
+        <Content
+          style={{
+            padding: 24,
+            backgroundColor: isDark ? '#141414' : '#f0f2f5',
+          }}
+        >
           <Outlet />
         </Content>
         <AppFooter />

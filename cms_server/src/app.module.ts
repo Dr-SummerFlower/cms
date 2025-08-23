@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import * as fs from 'node:fs';
 import * as path from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -19,6 +20,10 @@ if (IS_DEV) {
   envFilePath.unshift('.env.dev');
 } else {
   envFilePath.unshift('.env.prod');
+}
+
+if (!fs.existsSync(path.join(path.resolve(), 'public'))) {
+  fs.mkdirSync(path.join(path.resolve(), 'public'));
 }
 
 @Module({

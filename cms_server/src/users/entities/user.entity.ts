@@ -26,6 +26,12 @@ export class User extends Document {
 
   @Prop({ enum: ['GUEST', 'USER', 'ADMIN', 'INSPECTOR'], default: 'USER' })
   role: string;
+
+  @Prop()
+  createdAt: Date;
+
+  @Prop()
+  updatedAt: Date;
 }
 
 export type UserDocument = User & Document;

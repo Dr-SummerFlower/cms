@@ -89,6 +89,12 @@ export class Concert extends Document {
     },
   })
   privateKey: string;
+
+  @Prop()
+  createdAt: Date;
+
+  @Prop()
+  updatedAt: Date;
 }
 
 export type ConcertDocument = Concert & Document;

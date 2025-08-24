@@ -24,6 +24,12 @@ export class VerificationRecord extends Document {
 
   @Prop({ required: true })
   result: boolean;
+
+  @Prop()
+  createdAt: Date;
+
+  @Prop()
+  updatedAt: Date;
 }
 
 export type VerificationRecordDocument = VerificationRecord & Document;

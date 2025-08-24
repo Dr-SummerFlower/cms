@@ -34,6 +34,12 @@ export class Ticket extends Document {
 
   @Prop()
   refundReason: string;
+
+  @Prop()
+  createdAt: Date;
+
+  @Prop()
+  updatedAt: Date;
 }
 
 export type TicketDocument = Ticket & Document;

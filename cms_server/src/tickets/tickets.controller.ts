@@ -462,9 +462,13 @@ export class VerifyController {
             ticket: {
               id: '66d111111111111111111111',
               concertName: '周杰伦2025世界巡回演唱会-北京站',
+              concertDate: '2025-09-01T19:30:00.000Z',
+              concertVenue: '北京国家体育场（鸟巢）',
               type: 'adult',
-              status: 'valid',
+              price: 680,
+              status: 'used',
               userName: '普通用户',
+              userEmail: 'user@example.com',
             },
             verifiedAt: '2025-08-20T12:05:00.000Z',
           },
@@ -519,8 +523,30 @@ export class VerifyController {
           data: [
             {
               _id: '66v111111111111111111111',
-              ticket: '66d111111111111111111111',
-              inspector: '66i000000000000000000001',
+              ticket: {
+                _id: '66d111111111111111111111',
+                type: 'adult',
+                price: 680,
+                status: 'used',
+                concert: {
+                  _id: '66c1234567890abcdef0456',
+                  name: '周杰伦2025世界巡回演唱会-北京站',
+                  date: '2025-09-01T19:30:00.000Z',
+                  venue: '北京国家体育场（鸟巢）',
+                  adultPrice: 680,
+                  childPrice: 380,
+                },
+                user: {
+                  _id: '66u000000000000000000001',
+                  username: '普通用户',
+                  email: 'user@example.com',
+                },
+              },
+              inspector: {
+                _id: '66i000000000000000000001',
+                username: '检票员张三',
+                email: 'inspector@example.com',
+              },
               location: '北京国家体育场 检票口A',
               verifiedAt: '2025-08-20T12:05:00.000Z',
               signature: '3045022100abc123...',

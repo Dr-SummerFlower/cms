@@ -507,8 +507,8 @@ export class TicketsService {
 
       const ticket: Ticket = (await this.ticketModel
         .findOne({ qrCodeData: verifyDto.qrData })
-        .populate('concert', 'name date publicKey')
-        .populate('user', 'username')
+        .populate('concert', 'name date venue adultPrice childPrice publicKey')
+        .populate('user', 'username email')
         .exec()) as Ticket;
 
       if (!ticket) {
@@ -559,9 +559,13 @@ export class TicketsService {
         ticket: {
           id: String(ticket._id),
           concertName: concert.name,
+          concertDate: concert.date,
+          concertVenue: concert.venue,
           type: ticket.type,
+          price: ticket.price,
           status: valid ? 'used' : ticket.status,
           userName: user.username,
+          userEmail: user.email,
         },
         verifiedAt: new Date(),
       };
@@ -628,12 +632,19 @@ export class TicketsService {
         .find(filter)
         .populate({
           path: 'ticket',
-          populate: {
-            path: 'concert',
-            select: 'name date venue',
-          },
+          select: '_id type price status user concert',
+          populate: [
+            {
+              path: 'concert',
+              select: '_id name date venue adultPrice childPrice',
+            },
+            {
+              path: 'user',
+              select: '_id username email',
+            },
+          ],
         })
-        .populate('inspector', 'username')
+        .populate('inspector', 'username email')
         .sort({ verifiedAt: -1 })
         .exec()) as VerificationRecord[];
     } catch (error) {

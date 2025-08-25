@@ -43,9 +43,13 @@ export interface VerifyTicketResponse {
   ticket: {
     id: string;
     concertName: string;
+    concertDate: Date;
+    concertVenue: string;
     type: TicketType;
+    price: number;
     status: TicketStatus;
     userName: string;
+    userEmail: string;
   };
   verifiedAt: Date;
 }

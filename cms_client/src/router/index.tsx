@@ -23,6 +23,7 @@ const AdminRefunds = lazy(() => import('../pages/admin/AdminRefunds'));
 const InspectorVerify = lazy(
   () => import('../pages/inspector/InspectorVerify'),
 );
+const InspectorVerifyHistory = lazy(()=> import('../pages/inspector/VerifyHistory.tsx'))
 
 // Error
 const ErrorPage = lazy(() => import('../pages/ErrorPage'));
@@ -166,6 +167,17 @@ const router = createBrowserRouter([
           <Protected roles={['INSPECTOR', 'ADMIN']}>
             <Suspense fallback={null}>
               <InspectorVerify />
+            </Suspense>
+          </Protected>
+        ),
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'inspector/history',
+        element: (
+          <Protected roles={['INSPECTOR', 'ADMIN']}>
+            <Suspense fallback={null}>
+              <InspectorVerifyHistory />
             </Suspense>
           </Protected>
         ),

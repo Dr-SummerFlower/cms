@@ -1,18 +1,8 @@
-import type { VerifyHistoryItem, VerifyTicketResponse } from '../types';
+import type { VerifyHistoryItem, VerifyQrCodeDto, VerifyTicketResponse } from '../types';
 import { getJson, postJson } from '../utils/http';
 
-export async function verifyTicket(payload: { qrData: string; location: string }): Promise<VerifyTicketResponse> {
-  const res = await postJson<{
-    valid: boolean;
-    ticket: {
-      id: string;
-      concertName: string;
-      type: 'adult' | 'child';
-      status: 'valid' | 'used' | 'refunded';
-      userName: string;
-    };
-    verifiedAt: string;
-  }, { qrData: string; location: string }>('/verify/ticket', payload);
+export async function verifyTicket(payload: VerifyQrCodeDto): Promise<VerifyTicketResponse> {
+  const res = await postJson<VerifyTicketResponse, VerifyQrCodeDto>('/verify/ticket', payload);
 
   return {
     valid: res.valid,

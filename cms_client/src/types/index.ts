@@ -208,13 +208,43 @@ export interface RefundRequest {
 // ---- Verify ----
 export type VerifyResult = 'valid' | 'invalid';
 
+export interface VerifyQrCodeDto {
+  qrData: string;
+  location: string;
+}
+
 export interface VerifyHistoryItem {
   _id: string;
-  ticketId: string;
-  inspectorId: string;
+  ticket: {
+    _id: string;
+    type: 'adult' | 'child';
+    price: number;
+    status: 'valid' | 'used' | 'refunded';
+    concert: {
+      _id: string;
+      name: string;
+      date: string;
+      venue: string;
+      adultPrice: number;
+      childPrice: number;
+    };
+    user: {
+      _id: string;
+      username: string;
+      email: string;
+    };
+  };
+  inspector: {
+    _id: string;
+    username: string;
+    email: string;
+  };
+  location: string;
   verifiedAt: string;
-  result: VerifyResult;
-  notes?: string;
+  signature: string;
+  result: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface VerifyTicketResponse {
@@ -222,9 +252,13 @@ export interface VerifyTicketResponse {
   ticket: {
     id: string;
     concertName: string;
+    concertDate: string;
+    concertVenue: string;
     type: 'adult' | 'child';
+    price: number;
     status: 'valid' | 'used' | 'refunded';
     userName: string;
+    userEmail: string;
   };
   verifiedAt: string;
 }

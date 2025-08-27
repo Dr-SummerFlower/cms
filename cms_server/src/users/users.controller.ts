@@ -193,7 +193,7 @@ export class UsersController {
     example: '66c1234567890abcdef0123',
   })
   @Patch(':id')
-  @Roles('ADMIN', 'USER')
+  @Roles('ADMIN', 'USER', 'INSPECTOR')
   async update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,

@@ -3,7 +3,7 @@ import { useAuthStore } from '../stores/authStore';
 import type { ApiResponse, Tokens } from '../types';
 import { clearTokens, getAccessToken, getRefreshToken, setTokens } from './auth';
 
-const API_BASE = 'http://localhost:25551/api';
+const API_BASE = '/api';
 
 const http: AxiosInstance = axios.create({
   baseURL: API_BASE,

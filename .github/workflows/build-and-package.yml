@@ -1,0 +1,77 @@
+name: 构建并打包 CMS
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  build-and-package:
+    name: 构建并打包
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🧾 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🔧 安装 Node（前端）
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.20.8
+          cache: npm
+          cache-dependency-path: cms_client/package-lock.json
+
+      - name: 📦 安装依赖（前端）
+        working-directory: cms_client
+        run: npm ci
+
+      - name: 🏗️ 构建前端
+        working-directory: cms_client
+        run: npm run build
+
+      - name: 🔧 安装 Node（后端）
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.20.8
+          cache: npm
+          cache-dependency-path: cms_server/package-lock.json
+
+      - name: 📦 安装依赖（后端）
+        working-directory: cms_server
+        run: npm ci
+
+      - name: 🏗️ 构建后端
+        working-directory: cms_server
+        run: npm run build
+
+      - name: 🗂️ 准备 cms 目录
+        run: |
+          rm -rf cms
+          mkdir -p cms/public
+
+      - name: 📥 拷贝前端产物到 cms/public（不包含 dist 目录本身）
+        run: |
+          # 拷贝 dist 的内容到 cms/public
+          rsync -a --delete --exclude='.DS_Store' cms_client/dist/ cms/public/
+
+      - name: 📥 拷贝后端 dist、template 与 package.json（忽略 html）
+        run: |
+          # dist 整体拷贝到 cms/dist
+          rsync -a --delete cms_server/dist/ cms/dist/
+
+          # template 拷贝到 cms/template，并忽略 *.html
+          rsync -a --delete --exclude='*.html' cms_server/template/ cms/template/
+
+          # 拷贝 package.json 到 cms 根
+          cp cms_server/package.json cms/
+
+      - name: 📦 生成压缩包（不包含 cms 文件夹本身）
+        run: |
+          TAR_NAME="cms-$(date +%Y%m%d-%H%M%S)-${GITHUB_SHA::7}.tar.gz"
+          tar -czf "$TAR_NAME" -C cms .
+          echo "TAR_NAME=$TAR_NAME" >> $GITHUB_ENV
+
+      - name: ⬆️ 上传打包文件
+        uses: actions/upload-artifact@v4
+        with:
+          name: cms-package
+          path: ${{ env.TAR_NAME }}
+          if-no-files-found: error

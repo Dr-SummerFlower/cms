@@ -1,4 +1,4 @@
-import { Button, Card, Space, Tag } from 'antd';
+import { Button, Card, Tag } from 'antd';
 import dayjs from 'dayjs';
 import { Link } from 'react-router-dom';
 import type { Concert } from '../../types';
@@ -15,30 +15,103 @@ export default function ConcertCard({ concert }: Props): JSX.Element {
       hoverable
       cover={
         concert.poster ? (
-          <img src={concert.poster} alt={concert.name} />
-        ) : undefined
+          <div style={{ height: '200px', overflow: 'hidden' }}>
+            <img
+              src={concert.poster}
+              alt={concert.name}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover'
+              }}
+            />
+          </div>
+        ) : (
+          <div style={{
+            height: '200px',
+            backgroundColor: '#f5f5f5',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#999'
+          }}>
+            暂无海报
+          </div>
+        )
       }
-      style={{ width: '100%' }}
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+      styles={{
+        body: {
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '16px'
+        }
+      }}
     >
-      <Space direction="vertical" size={8} style={{ width: '100%' }}>
-        <Space
-          align="center"
-          style={{ justifyContent: 'space-between', width: '100%' }}
-        >
-          <strong>{concert.name}</strong>
-          <Tag color="blue">{dateText}</Tag>
-        </Space>
-        <div>场馆：{concert.venue}</div>
-        <div>
-          票价：<Tag color="geekblue">成人 ¥{concert.adultPrice}</Tag>
-          <Tag color="cyan">儿童 ¥{concert.childPrice}</Tag>
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        gap: '8px'
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          marginBottom: '8px'
+        }}>
+          <strong style={{
+            fontSize: '16px',
+            lineHeight: '1.4',
+            flex: 1,
+            marginRight: '8px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical'
+          }}>
+            {concert.name}
+          </strong>
+          <Tag color="blue" style={{ flexShrink: 0 }}>
+            {dateText}
+          </Tag>
         </div>
-        <Link to={`/concerts/${concert.id}`}>
-          <Button type="primary" block>
-            查看详情
-          </Button>
-        </Link>
-      </Space>
+
+        <div style={{
+          fontSize: '14px',
+          color: '#666',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap'
+        }}>
+          场馆：{concert.venue}
+        </div>
+
+        <div style={{ marginBottom: '12px' }}>
+          票价：
+          <Tag color="geekblue" style={{ margin: '0 4px 0 4px' }}>
+            成人 ¥{concert.adultPrice}
+          </Tag>
+          <Tag color="cyan">
+            儿童 ¥{concert.childPrice}
+          </Tag>
+        </div>
+
+        <div style={{ marginTop: 'auto' }}>
+          <Link to={`/concerts/${concert.id}`}>
+            <Button type="primary" block>
+              查看详情
+            </Button>
+          </Link>
+        </div>
+      </div>
     </Card>
   );
 }

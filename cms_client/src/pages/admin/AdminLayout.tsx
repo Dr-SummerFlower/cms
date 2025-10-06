@@ -14,7 +14,9 @@ export default function AdminLayout(): JSX.Element {
     ? 'users'
     : location.pathname.startsWith('/admin/refunds')
       ? 'refunds'
-      : 'concerts';
+      : location.pathname.startsWith('/admin/feedback')
+        ? 'feedback'
+        : 'concerts';
 
   return (
     <Layout
@@ -51,6 +53,11 @@ export default function AdminLayout(): JSX.Element {
               key: 'refunds',
               label: '退款审核',
               onClick: () => navigate('/admin/refunds'),
+            },
+            {
+              key: 'feedback',
+              label: '错误反馈',
+              onClick: () => navigate('/admin/feedback'),
             },
           ]}
         />

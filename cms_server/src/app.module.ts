@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { ConcertsModule } from './concerts/concerts.module';
 import { EcdsaModule } from './ecdsa/ecdsa.module';
 import { EmailModule } from './email/email.module';
+import { FeedbackModule } from './feedback/feedback.module';
 import { GlobalModule } from './global/global.module';
 import { InitModule } from './init/init.module';
 import { StoragesModule } from './storages/storages.module';
@@ -37,13 +38,14 @@ if (!fs.existsSync(path.join(path.resolve(), 'public'))) {
     EcdsaModule,
     TicketsModule,
     StoragesModule,
+    FeedbackModule,
     ServeStaticModule.forRootAsync({
       useFactory: () => {
         return [
           {
             rootPath: path.join(path.resolve(), 'public'),
             serveRoot: '/',
-            exclude: ['/api*'],
+            exclude: ['/api/*'],
           },
         ];
       },

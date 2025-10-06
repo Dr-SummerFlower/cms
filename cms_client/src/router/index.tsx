@@ -1,8 +1,9 @@
 import { lazy, Suspense } from 'react';
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import App from '../App';
 import RegisterPage from '../pages/RegisterPage.tsx';
 import Protected from './protected';
+import ErrorPage from '../pages/ErrorPage.tsx';
 
 const HomePage = lazy(() => import('../pages/HomePage'));
 const LoginPage = lazy(() => import('../pages/LoginPage'));
@@ -18,15 +19,13 @@ const AdminLayout = lazy(() => import('../pages/admin/AdminLayout'));
 const AdminConcerts = lazy(() => import('../pages/admin/AdminConcerts'));
 const AdminUsers = lazy(() => import('../pages/admin/AdminUsers'));
 const AdminRefunds = lazy(() => import('../pages/admin/AdminRefunds'));
+const AdminFeedback = lazy(() => import('../pages/admin/AdminFeedback'));
 
 // Inspector
 const InspectorVerify = lazy(
   () => import('../pages/inspector/InspectorVerify'),
 );
 const InspectorVerifyHistory = lazy(()=> import('../pages/inspector/VerifyHistory.tsx'))
-
-// Error
-const ErrorPage = lazy(() => import('../pages/ErrorPage'));
 
 const router = createBrowserRouter([
   {
@@ -125,7 +124,6 @@ const router = createBrowserRouter([
             </Suspense>
           </Protected>
         ),
-        errorElement: <ErrorPage />,
         children: [
           {
             index: true,
@@ -159,6 +157,14 @@ const router = createBrowserRouter([
               </Suspense>
             ),
           },
+          {
+            path: 'feedback',
+            element: (
+              <Suspense fallback={null}>
+                <AdminFeedback />
+              </Suspense>
+            ),
+          },
         ],
       },
       {
@@ -170,7 +176,6 @@ const router = createBrowserRouter([
             </Suspense>
           </Protected>
         ),
-        errorElement: <ErrorPage />,
       },
       {
         path: 'inspector/history',
@@ -181,9 +186,16 @@ const router = createBrowserRouter([
             </Suspense>
           </Protected>
         ),
-        errorElement: <ErrorPage />,
       },
     ],
+  },
+  {
+    path: '*',
+    element: (
+      <Suspense fallback={null}>
+        <Navigate to="/" replace />
+      </Suspense>
+    ),
   },
 ]);
 

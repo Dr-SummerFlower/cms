@@ -2,6 +2,9 @@ import { INestApplication, Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
+import { NextFunction, Request, Response } from 'express';
+import * as fs from 'fs';
+import * as path from 'path';
 import { AppModule } from './app.module';
 
 async function bootstrap(): Promise<void> {
@@ -11,6 +14,21 @@ async function bootstrap(): Promise<void> {
 
   // 全局前缀
   app.setGlobalPrefix('api');
+
+  const staticPath = path.join(path.resolve(), 'public');
+
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
+
+    const filePath = path.join(staticPath, req.path);
+    if (fs.existsSync(filePath) && !fs.statSync(filePath).isDirectory()) {
+      return next();
+    }
+
+    res.sendFile(path.join(staticPath, 'index.html'));
+  });
 
   // CORS配置
   app.enableCors({

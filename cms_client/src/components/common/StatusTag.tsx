@@ -61,13 +61,6 @@ export default function StatusTag<K extends StatusKind>({
   return <Tag color={color}>{text}</Tag>;
 }
 
-export function TicketStatusTag({
-                                  status,
-                                }: {
-  status: TicketStatus;
-}): JSX.Element {
-  return <StatusTag kind="ticket" value={status} />;
-}
 
 export function ConcertStatusTag({
                                    status,
@@ -77,13 +70,6 @@ export function ConcertStatusTag({
   return <StatusTag kind="concert" value={status} />;
 }
 
-export function RefundStatusTag({
-                                  status,
-                                }: {
-  status: RefundStatus;
-}): JSX.Element {
-  return <StatusTag kind="refund" value={status} />;
-}
 
 export function VerifyResultTag({
                                   result,

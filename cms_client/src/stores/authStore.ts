@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import type { AuthResult } from '../api/auth';
 import { login as apiLogin, refresh as apiRefresh } from '../api/auth';
 import type { User } from '../types';
-import { clearTokens, getRefreshToken, setTokens } from '../utils/auth';
+import { clearTokens, getRefreshToken, setTokens, updateAccessToken } from '../utils/auth';
 
 interface AuthState {
   user: User | null;
@@ -73,7 +73,11 @@ export const useAuthStore = create<AuthState>()(
 
         try {
           const tokens = await apiRefresh(refresh);
-          setTokens(tokens);
+          if (tokens.refresh_token && tokens.refresh_token !== refresh) {
+            setTokens(tokens);
+          } else {
+            updateAccessToken(tokens.access_token);
+          }
           set({ isAuthed: true });
         } catch {
           clearTokens();

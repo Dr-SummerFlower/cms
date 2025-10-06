@@ -78,9 +78,13 @@ export default function RegisterPage(): JSX.Element {
       setCountdown(60);
       timerRef.current = window.setInterval(
         () =>
-          setCountdown((c) =>
-            c <= 1 ? (window.clearInterval(timerRef.current!), 0) : c - 1,
-          ),
+          setCountdown((c) => {
+            if (c <= 1) {
+              window.clearInterval(timerRef.current!);
+              return 0;
+            }
+            return c - 1;
+          }),
         1000,
       );
     } catch {

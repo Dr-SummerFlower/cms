@@ -285,6 +285,83 @@ export interface BarcodeDetectorConstructor {
   getSupportedFormats(): Promise<ReadonlyArray<string>>;
 }
 
+// ---- Feedback ----
+export type ErrorType = 'route_error' | 'runtime_error' | 'string_error' | 'unknown';
+export type FeedbackStatus = 'pending' | 'resolved' | 'ignored';
+
+export interface FeedbackRaw {
+  _id: string;
+  timestamp: string;
+  userAgent: string;
+  url: string;
+  errorType: ErrorType;
+  message: string;
+  stack?: string;
+  routeStatus?: number;
+  routeStatusText?: string;
+  routeData?: RouteData;
+  status: FeedbackStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Feedback {
+  id: string;
+  timestamp: string;
+  userAgent: string;
+  url: string;
+  errorType: ErrorType;
+  message: string;
+  stack?: string;
+  routeStatus?: number;
+  routeStatusText?: string;
+  routeData?: RouteData;
+  status: FeedbackStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateFeedbackDto {
+  timestamp: string;
+  userAgent: string;
+  url: string;
+  errorType: ErrorType;
+  message: string;
+  stack?: string;
+  routeStatus?: number;
+  routeStatusText?: string;
+  routeData?: RouteData;
+}
+
+export interface FeedbackQueryDto {
+  page?: number;
+  limit?: number;
+  status?: FeedbackStatus;
+  errorType?: ErrorType;
+  search?: string;
+}
+
+export interface FeedbackListResponse {
+  data: Feedback[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface UpdateFeedbackStatusDto {
+  status: FeedbackStatus;
+}
+
+export type RouteData =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | { [key: string]: RouteData }
+  | RouteData[];
+
 declare global {
   interface Window {
     BarcodeDetector?: BarcodeDetectorConstructor;

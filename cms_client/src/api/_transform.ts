@@ -1,4 +1,4 @@
-import type { Concert, ConcertRaw, Paginated, TicketItem, TicketItemRaw, User, UserRaw } from '../types';
+import type { Concert, ConcertRaw, Feedback, FeedbackRaw, Paginated, TicketItem, TicketItemRaw, User, UserRaw } from '../types';
 
 export function toUser(u: UserRaw | User): User {
   if ('id' in u) return u as User;
@@ -62,6 +62,24 @@ export function toTicket(t: TicketItemRaw): TicketItem {
     qrCodeData: t.qrCodeData,
     createdAt: t.createdAt,
     updatedAt: t.updatedAt,
+  };
+}
+
+export function toFeedback(f: FeedbackRaw): Feedback {
+  return {
+    id: f._id,
+    timestamp: f.timestamp,
+    userAgent: f.userAgent,
+    url: f.url,
+    errorType: f.errorType,
+    message: f.message,
+    stack: f.stack,
+    routeStatus: f.routeStatus,
+    routeStatusText: f.routeStatusText,
+    routeData: f.routeData,
+    status: f.status,
+    createdAt: f.createdAt,
+    updatedAt: f.updatedAt,
   };
 }
 

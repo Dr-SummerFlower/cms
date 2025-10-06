@@ -36,6 +36,8 @@ export interface VerificationRecordData {
 export interface TicketQRResponse {
   qrCode: string;
   data: TicketQRData;
+  refreshInterval: number;
+  nextRefreshTime: number;
 }
 
 export interface VerifyTicketResponse {

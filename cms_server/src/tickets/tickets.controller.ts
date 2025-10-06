@@ -397,6 +397,12 @@ export class TicketsController {
     description: '票据ID',
     example: '66d111111111111111111111',
   })
+  @ApiQuery({
+    name: 'timestamp',
+    required: false,
+    description: '时间戳',
+    example: '1724155200000',
+  })
   @ApiOkResponse({
     description: '生成成功',
     content: {
@@ -411,6 +417,8 @@ export class TicketsController {
               signature: '3045022100abc123...',
               timestamp: 1724155200000,
             },
+            refreshInterval: 30000,
+            nextRefreshTime: 1724155230000,
           },
           timestamp: '2025-08-20T12:00:00.000Z',
           path: '/api/tickets/66d111111111111111111111/qr',
@@ -423,8 +431,16 @@ export class TicketsController {
   async generateQRCode(
     @Param('id') ticketId: string,
     @Request() req: { user: { userId: string } },
+    @Query('timestamp') timestamp?: string,
   ): Promise<TicketQRResponse> {
-    return await this.ticketsService.generateQRCode(ticketId, req.user.userId);
+    const timestampNumber: number | undefined = timestamp
+      ? parseInt(timestamp, 10)
+      : undefined;
+    return await this.ticketsService.generateQRCode(
+      ticketId,
+      req.user.userId,
+      timestampNumber,
+    );
   }
 }
 

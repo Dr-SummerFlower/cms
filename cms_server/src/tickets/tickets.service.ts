@@ -458,26 +458,67 @@ export class TicketsService {
   async generateQRCode(
     ticketId: string,
     userId: string,
+    timestamp?: number,
   ): Promise<TicketQRResponse> {
     try {
       const ticket: Ticket = await this.findOne(ticketId, userId);
 
-      if (ticket.status !== 'valid') {
-        throw new BadRequestException('只能为有效票据生成二维码');
+      // 允许所有状态的票据生成二维码，包括已使用的票据
+      // if (ticket.status !== 'valid') {
+      //   throw new BadRequestException('只能为有效票据生成二维码');
+      // }
+
+      const currentTime: number = Date.now();
+      const dynamicTimestamp: number =
+        timestamp || this.generateDynamicTimestamp(currentTime);
+
+      const concert: Concert = (await this.concertModel
+        .findById(ticket.concert)
+        .select('+privateKey')
+        .exec()) as Concert;
+
+      if (!concert) {
+        throw new NotFoundException('演唱会不存在');
       }
 
-      const qrCodeImage: string = await QRCode.toDataURL(ticket.qrCodeData);
+      const signatureData: string =
+        this.ecdsaService.generateTicketSignatureData(
+          ticketId,
+          String(concert._id),
+          userId,
+          dynamicTimestamp,
+        );
 
-      const qrData: TicketQRData | null = this.ecdsaService.parseQRCodeData(
-        ticket.qrCodeData,
+      const { signature }: { signature: string } = this.ecdsaService.sign(
+        signatureData,
+        concert.privateKey,
       );
+
+      const dynamicQrCodeData: string = this.ecdsaService.generateQRCodeData(
+        ticketId,
+        signature,
+        dynamicTimestamp,
+      );
+
+      const qrCodeImage: string = await QRCode.toDataURL(dynamicQrCodeData);
+
+      const qrData: TicketQRData | null =
+        this.ecdsaService.parseQRCodeData(dynamicQrCodeData);
       if (!qrData) {
         throw new BadRequestException('无效的二维码数据');
       }
 
+      const refreshInterval: number = 30000;
+      const nextRefreshTime: number = this.getNextRefreshTime(
+        dynamicTimestamp,
+        refreshInterval,
+      );
+
       return {
         qrCode: qrCodeImage,
         data: qrData,
+        refreshInterval,
+        nextRefreshTime,
       };
     } catch (error) {
       if (
@@ -506,7 +547,7 @@ export class TicketsService {
       }
 
       const ticket: Ticket = (await this.ticketModel
-        .findOne({ qrCodeData: verifyDto.qrData })
+        .findById(qrData.ticketId)
         .populate('concert', 'name date venue adultPrice childPrice publicKey')
         .populate('user', 'username email')
         .exec()) as Ticket;
@@ -521,6 +562,14 @@ export class TicketsService {
       let verificationSignature: string = qrData.signature || 'N/A';
 
       if (ticket.status === 'valid') {
+        const currentTime: number = Date.now();
+        const timestampAge: number = currentTime - qrData.timestamp;
+        const maxAge: number = 60000;
+
+        if (timestampAge > maxAge) {
+          throw new BadRequestException('二维码已过期，请刷新后重试');
+        }
+
         const signatureData: string =
           this.ecdsaService.generateTicketSignatureData(
             qrData.ticketId,
@@ -752,5 +801,17 @@ export class TicketsService {
         `每个用户最多只能购买${concert.maxChildTicketsPerUser}张儿童票，您已购买${existingChildTickets}张，本次申请${requestedChildTickets}张，超出限制`,
       );
     }
+  }
+
+  private generateDynamicTimestamp(currentTime: number): number {
+    const refreshInterval: number = 30000;
+    return Math.floor(currentTime / refreshInterval) * refreshInterval;
+  }
+
+  private getNextRefreshTime(
+    currentTimestamp: number,
+    refreshInterval: number,
+  ): number {
+    return currentTimestamp + refreshInterval;
   }
 }

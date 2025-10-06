@@ -182,6 +182,8 @@ export interface TicketQr {
   ticketId?: string;
   signature?: string;
   data?: QrCodeData;
+  refreshInterval?: number;
+  nextRefreshTime?: number;
 }
 
 export interface QrCodeData {

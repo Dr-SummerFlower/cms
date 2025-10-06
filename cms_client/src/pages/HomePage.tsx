@@ -1,20 +1,15 @@
-import { Button, Col, Empty, Row, Skeleton } from 'antd';
-import { useEffect, useState } from 'react';
+import { Col, Empty, Row, Skeleton } from 'antd';
+import { useEffect } from 'react';
 import ConcertCard from '../components/concert/ConcertCard';
 import SearchFilter from '../components/concert/SearchFilter';
 import { useConcertStore } from '../stores/concertStore';
 
 export default function HomePage(): JSX.Element {
   const { loading, data, filter, setFilter, fetch } = useConcertStore();
-  const [crash, setCrash] = useState(false);
 
   useEffect(() => {
     void fetch();
   }, [filter.page, filter.limit, filter.search, filter.status, fetch]);
-
-  if (crash) {
-    throw new Error('临时错误（开发调试按钮触发）');
-  }
 
   return (
     <div style={{ padding: '0 16px' }}>
@@ -24,12 +19,6 @@ export default function HomePage(): JSX.Element {
           onChange={(v) => setFilter({ ...v, page: 1 })}
           onSubmit={() => void fetch()}
         />
-      </div>
-
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
-        <Button type="primary" danger size="small" onClick={() => setCrash(true)}>
-          触发错误（临时）
-        </Button>
       </div>
 
       {loading && (

@@ -12,6 +12,16 @@ import {
 } from 'class-validator';
 import { TicketType } from '../../types';
 
+export class TicketAttendeeInfoDto {
+  @ApiProperty({ description: '购票人姓名', example: '张三' })
+  @IsNotEmpty({ message: '姓名不能为空' })
+  realName: string;
+
+  @ApiProperty({ description: '购票人身份证号', example: '110101199001011234' })
+  @IsNotEmpty({ message: '身份证号不能为空' })
+  idCard: string;
+}
+
 export class TicketOrderItemDto {
   @ApiProperty({
     description: '票据类型',
@@ -29,6 +39,19 @@ export class TicketOrderItemDto {
   @IsNumber({}, { message: '票据数量必须是数字' })
   @Min(1, { message: '票据数量至少为1' })
   quantity: number;
+
+  @ApiProperty({
+    description: '购票人实名信息列表（每张票对应一个）',
+    type: [TicketAttendeeInfoDto],
+    example: [
+      { realName: '张三', idCard: '110101199001011234' },
+      { realName: '李四', idCard: '110101199001011235' },
+    ],
+  })
+  @IsArray({ message: '实名信息必须是数组' })
+  @ValidateNested({ each: true })
+  @Type(() => TicketAttendeeInfoDto)
+  attendees: TicketAttendeeInfoDto[];
 }
 
 export class CreateTicketOrderDto {

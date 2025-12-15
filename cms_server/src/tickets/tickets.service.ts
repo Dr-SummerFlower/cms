@@ -12,6 +12,7 @@ import * as QRCode from 'qrcode';
 import { Concert } from '../concerts/entities/concert.entity';
 import { EcdsaService } from '../ecdsa/ecdsa.service';
 import { EmailService } from '../email/email.service';
+import { StoragesService } from '../storages/storages.service';
 import {
   RefundRequest,
   TicketCreateData,
@@ -50,12 +51,14 @@ export class TicketsService {
     private readonly concertModel: Model<Concert>,
     private readonly ecdsaService: EcdsaService,
     private readonly emailService: EmailService,
+    private readonly storagesService: StoragesService,
     @InjectRedis() private readonly redisService: Redis,
-  ) {}
+  ) { }
 
   async createOrder(
     createTicketOrderDto: CreateTicketOrderDto,
     userId: string,
+    faceImages: Express.Multer.File[],
   ): Promise<Ticket[]> {
     try {
       const { concertId, tickets } = createTicketOrderDto;
@@ -95,23 +98,64 @@ export class TicketsService {
         throw new BadRequestException('票数不足');
       }
 
+      // 验证实名信息数量
+      const totalAttendees = tickets.reduce(
+        (sum: number, ticket: TicketOrderItemDto): number =>
+          sum + (ticket.attendees?.length || 0),
+        0,
+      );
+
+      if (totalAttendees !== totalQuantity) {
+        throw new BadRequestException(
+          `实名信息数量不匹配：需要 ${totalQuantity} 条，实际提供 ${totalAttendees} 条`,
+        );
+      }
+
+      if ((faceImages?.length || 0) !== totalQuantity) {
+        throw new BadRequestException(
+          `人脸图像数量不匹配：需要 ${totalQuantity} 张，实际上传 ${faceImages?.length || 0} 张`,
+        );
+      }
+
       await this.checkUserPurchaseLimit(userId, concertId, tickets, concert);
 
       const createdTickets: Ticket[] = [];
       const timestamp: number = Date.now();
+      let imageIndex: number = 0;
+
+      // 上传所有人脸图像
+      const faceImageUrls: string[] = [];
+      for (const faceImage of faceImages) {
+        const url: string = await this.storagesService.uploadFile(
+          faceImage,
+          'face',
+        );
+        faceImageUrls.push(url);
+      }
 
       for (const ticketItem of tickets) {
         for (let i: number = 0; i < ticketItem.quantity; i++) {
+          const attendee = ticketItem.attendees[i];
+          if (!attendee) {
+            throw new BadRequestException(
+              `缺少第 ${imageIndex + 1} 张票的实名信息`,
+            );
+          }
+
           const ticketData: TicketCreateData = this.createSingleTicket(
             concert,
             userId,
             ticketItem,
-            timestamp + i,
+            timestamp + imageIndex,
+            attendee.realName,
+            attendee.idCard,
+            faceImageUrls[imageIndex],
           );
           const ticket: Ticket = (await this.ticketModel.create(
             ticketData,
           )) as Ticket;
           createdTickets.push(ticket);
+          imageIndex++;
         }
       }
 
@@ -560,6 +604,7 @@ export class TicketsService {
       const user: User = ticket.user;
       let valid: boolean = false;
       let verificationSignature: string = qrData.signature || 'N/A';
+      let requiresManualVerification: boolean = false;
 
       if (ticket.status === 'valid') {
         const currentTime: number = Date.now();
@@ -586,18 +631,23 @@ export class TicketsService {
 
         verificationSignature = qrData.signature;
 
-        if (valid) {
+        // 如果票有实名信息（姓名、身份证或人脸图像），需要人工审核
+        if (valid && (ticket.realName || ticket.idCard || ticket.faceImage)) {
+          requiresManualVerification = true;
+        } else if (valid) {
+          // 没有实名信息的票，直接标记为已使用
           await this.ticketModel.findByIdAndUpdate(ticket._id, {
             status: 'used',
           });
         }
       }
 
+      // 先创建验证记录，但 result 暂时为 false（待人工确认）
       const verificationData: VerificationRecordData = {
         ticket: String(ticket._id),
         inspector: inspectorId,
         location: verifyDto.location,
-        result: valid,
+        result: valid && !requiresManualVerification,
         signature: verificationSignature,
       };
 
@@ -612,11 +662,15 @@ export class TicketsService {
           concertVenue: concert.venue,
           type: ticket.type,
           price: ticket.price,
-          status: valid ? 'used' : ticket.status,
+          status: valid && !requiresManualVerification ? 'used' : ticket.status,
           userName: user.username,
           userEmail: user.email,
+          realName: ticket.realName,
+          idCard: ticket.idCard,
+          faceImage: ticket.faceImage,
         },
         verifiedAt: new Date(),
+        requiresManualVerification,
       };
     } catch (error) {
       if (
@@ -626,6 +680,66 @@ export class TicketsService {
         throw error;
       }
       throw new InternalServerErrorException('验证票据时发生错误');
+    }
+  }
+
+  async confirmVerification(
+    ticketId: string,
+    inspectorId: string,
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      if (!ticketId || !ticketId.match(/^[0-9a-fA-F]{24}$/)) {
+        throw new BadRequestException('无效的票据ID格式');
+      }
+
+      if (!inspectorId || !inspectorId.match(/^[0-9a-fA-F]{24}$/)) {
+        throw new BadRequestException('无效的检票员ID格式');
+      }
+
+      const ticket: Ticket = (await this.ticketModel
+        .findById(ticketId)
+        .exec()) as Ticket;
+
+      if (!ticket) {
+        throw new NotFoundException('票据不存在');
+      }
+
+      if (ticket.status !== 'valid') {
+        throw new BadRequestException('只能确认有效状态的票据');
+      }
+
+      // 更新票据状态为已使用
+      await this.ticketModel.findByIdAndUpdate(ticketId, {
+        status: 'used',
+      });
+
+      // 更新最近的验证记录为成功
+      const latestRecord = await this.verificationRecordModel
+        .findOne({
+          ticket: ticketId,
+          inspector: inspectorId,
+        })
+        .sort({ createdAt: -1 })
+        .exec();
+
+      if (latestRecord) {
+        await this.verificationRecordModel.findByIdAndUpdate(latestRecord._id, {
+          result: true,
+        });
+      }
+
+      return {
+        success: true,
+        message: '验票确认成功',
+      };
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('确认验票时发生错误');
     }
   }
 
@@ -709,6 +823,9 @@ export class TicketsService {
     userId: string,
     ticketItem: TicketOrderItem,
     timestamp: number,
+    realName: string,
+    idCard: string,
+    faceImage: string,
   ): TicketCreateData {
     const tempTicketId: string = this.generateTempTicketId(timestamp);
 
@@ -745,6 +862,9 @@ export class TicketsService {
       signature,
       publicKey: concert.publicKey,
       qrCodeData,
+      realName,
+      idCard,
+      faceImage,
     };
   }
 

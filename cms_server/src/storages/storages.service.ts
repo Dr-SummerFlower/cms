@@ -34,7 +34,7 @@ export class StoragesService {
 
   async uploadFile(
     file: Express.Multer.File,
-    folder: 'avatar' | 'poster',
+    folder: 'avatar' | 'poster' | 'face',
   ): Promise<string> {
     if (!file || !file.buffer || !file.originalname) {
       throw new InternalServerErrorException('上传文件无效');

@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Concert, ConcertSchema } from '../concerts/entities/concert.entity';
 import { EcdsaModule } from '../ecdsa/ecdsa.module';
 import { EmailModule } from '../email/email.module';
+import { StoragesModule } from '../storages/storages.module';
 import { User, UserSchema } from '../users/entities/user.entity';
 import { Ticket, TicketSchema } from './entities/ticket.entity';
 import {
@@ -22,9 +23,10 @@ import { TicketsService } from './tickets.service';
     ]),
     EcdsaModule,
     EmailModule,
+    StoragesModule,
   ],
   controllers: [TicketsController, VerifyController],
   providers: [TicketsService],
   exports: [TicketsService],
 })
-export class TicketsModule {}
+export class TicketsModule { }

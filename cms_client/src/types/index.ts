@@ -172,9 +172,18 @@ export interface TicketItem {
   updatedAt?: string;
 }
 
+export interface TicketAttendeeInfo {
+  realName: string;
+  idCard: string;
+}
+
 export interface CreateTicketOrderDto {
   concertId: string;
-  tickets: ReadonlyArray<{ type: TicketType; quantity: number }>;
+  tickets: ReadonlyArray<{
+    type: TicketType;
+    quantity: number;
+    attendees: ReadonlyArray<TicketAttendeeInfo>;
+  }>;
 }
 
 export interface TicketQr {
@@ -261,8 +270,12 @@ export interface VerifyTicketResponse {
     status: 'valid' | 'used' | 'refunded';
     userName: string;
     userEmail: string;
+    realName?: string;
+    idCard?: string;
+    faceImage?: string;
   };
   verifiedAt: string;
+  requiresManualVerification?: boolean;
 }
 
 // ---- BarcodeDetector API Types ----

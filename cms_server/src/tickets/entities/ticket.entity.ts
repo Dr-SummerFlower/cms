@@ -36,6 +36,15 @@ export class Ticket extends Document {
   refundReason: string;
 
   @Prop()
+  faceImage: string;
+
+  @Prop()
+  realName: string;
+
+  @Prop()
+  idCard: string;
+
+  @Prop()
   createdAt: Date;
 
   @Prop()

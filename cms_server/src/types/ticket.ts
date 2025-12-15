@@ -17,6 +17,9 @@ export interface TicketCreateData {
   signature: string;
   publicKey: string;
   qrCodeData: string;
+  realName?: string;
+  idCard?: string;
+  faceImage?: string;
 }
 
 export interface TicketQueryFilter {
@@ -52,8 +55,12 @@ export interface VerifyTicketResponse {
     status: TicketStatus;
     userName: string;
     userEmail: string;
+    realName?: string;
+    idCard?: string;
+    faceImage?: string;
   };
   verifiedAt: Date;
+  requiresManualVerification?: boolean;
 }
 
 export interface RefundRequest {

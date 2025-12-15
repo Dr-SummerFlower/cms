@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -9,7 +10,10 @@ import {
   Query,
   Request,
   UseGuards,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -29,6 +33,7 @@ import {
   VerifyTicketResponse,
 } from '../types';
 import { AdminReviewRefundDto } from './dto/admin-review-refund.dto';
+import { ConfirmVerificationDto } from './dto/confirm-verification.dto';
 import { CreateTicketOrderDto } from './dto/create-ticket-order.dto';
 import { RefundRequestQueryDto } from './dto/refund-request-query.dto';
 import { RefundTicketDto } from './dto/refund-ticket.dto';
@@ -43,7 +48,7 @@ import { TicketsService } from './tickets.service';
 @Controller('tickets')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TicketsController {
-  constructor(private readonly ticketsService: TicketsService) {}
+  constructor(private readonly ticketsService: TicketsService) { }
 
   @ApiOperation({ summary: '创建票务订单' })
   @ApiBody({
@@ -114,13 +119,30 @@ export class TicketsController {
   })
   @Post('orders')
   @Roles('USER', 'ADMIN')
+  @UseInterceptors(FilesInterceptor('faceImages'))
   async createOrder(
-    @Body() createTicketOrderDto: CreateTicketOrderDto,
+    @Body() body: { data?: string } & Partial<CreateTicketOrderDto>,
+    @UploadedFiles() faceImages: Express.Multer.File[],
     @Request() req: { user: { userId: string } },
   ) {
+    let createTicketOrderDto: CreateTicketOrderDto;
+    
+    // 如果 body 中有 data 字段（JSON 字符串），则解析它
+    if (body.data && typeof body.data === 'string') {
+      try {
+        createTicketOrderDto = JSON.parse(body.data) as CreateTicketOrderDto;
+      } catch {
+        throw new BadRequestException('无效的订单数据格式');
+      }
+    } else {
+      // 否则直接使用 body（兼容直接发送 JSON 的情况）
+      createTicketOrderDto = body as CreateTicketOrderDto;
+    }
+
     return await this.ticketsService.createOrder(
       createTicketOrderDto,
       req.user.userId,
+      faceImages || [],
     );
   }
 
@@ -449,7 +471,7 @@ export class TicketsController {
 @Controller('verify')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class VerifyController {
-  constructor(private readonly ticketsService: TicketsService) {}
+  constructor(private readonly ticketsService: TicketsService) { }
 
   @ApiOperation({ summary: '验票' })
   @ApiBody({
@@ -583,5 +605,40 @@ export class VerifyController {
     @Query() queryDto: VerificationHistoryQueryDto,
   ): Promise<VerificationRecord[]> {
     return await this.ticketsService.getVerificationHistory(queryDto);
+  }
+
+  @ApiOperation({ summary: '手动确认验票' })
+  @ApiBody({
+    description: '确认验票请求体',
+    type: ConfirmVerificationDto,
+  })
+  @ApiOkResponse({
+    description: '确认成功',
+    content: {
+      'application/json': {
+        example: {
+          code: 200,
+          message: 'success',
+          data: {
+            success: true,
+            message: '验票确认成功',
+          },
+          timestamp: '2025-08-20T12:05:00.000Z',
+          path: '/api/verify/confirm',
+        },
+      },
+    },
+  })
+  @Post('confirm')
+  @Roles('INSPECTOR', 'ADMIN')
+  @HttpCode(200)
+  async confirmVerification(
+    @Body() confirmDto: ConfirmVerificationDto,
+    @Request() req: { user: { userId: string } },
+  ): Promise<{ success: boolean; message: string }> {
+    return await this.ticketsService.confirmVerification(
+      confirmDto.ticketId,
+      req.user.userId,
+    );
   }
 }

@@ -1,3 +1,5 @@
+import { UploadOutlined } from '@ant-design/icons';
+import type { UploadFile } from 'antd';
 import {
   Alert,
   App as AntdApp,
@@ -5,16 +7,18 @@ import {
   Card,
   Descriptions,
   Form,
+  Input,
   InputNumber,
   Space,
   Statistic,
   Typography,
+  Upload,
 } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getConcert } from '../api/concerts';
 import { createOrder, myTickets } from '../api/tickets';
-import type { Concert, CreateTicketOrderDto, TicketItem } from '../types';
+import type { Concert, CreateTicketOrderDto, TicketAttendeeInfo, TicketItem } from '../types';
 
 export default function PurchasePage(): JSX.Element {
   const { id } = useParams();
@@ -31,8 +35,12 @@ export default function PurchasePage(): JSX.Element {
       const c = await getConcert(id);
       setConcert(c);
       try {
-        const mine = await myTickets({ status: 'valid', concertId: id });
-        const counts = mine.reduce<{ adult: number; child: number }>((acc, t: TicketItem) => {
+        // 获取所有 valid 和 used 状态的票（与后端检查逻辑一致）
+        const allTickets = await myTickets({ concertId: id });
+        const validAndUsedTickets = allTickets.filter(
+          (t: TicketItem) => t.status === 'valid' || t.status === 'used',
+        );
+        const counts = validAndUsedTickets.reduce<{ adult: number; child: number }>((acc, t: TicketItem) => {
           if (t.type === 'adult') acc.adult += 1;
           if (t.type === 'child') acc.child += 1;
           return acc;
@@ -60,30 +68,87 @@ export default function PurchasePage(): JSX.Element {
     return adultQty * concert.adultPrice + childQty * concert.childPrice;
   }, [concert, adultQty, childQty]);
 
+  const totalTickets = useMemo(() => adultQty + childQty, [adultQty, childQty]);
+
   if (!concert)
     return <Card loading style={{ maxWidth: 720, margin: '24px auto' }} />;
 
-  const onFinish = async (vals: { adultQty?: number; childQty?: number }): Promise<void> => {
+  const onFinish = async (vals: Record<string, unknown>): Promise<void> => {
     const a = Number(vals.adultQty ?? 0);
     const c = Number(vals.childQty ?? 0);
     if (a > remainAdult || c > remainChild) {
-      message.error('超过个人剩余额度，请调整张数');
+      message.error('抱歉，您选择的票数超过了剩余可购数量，请您根据剩余额度调整购票数量，感谢您的配合。');
       return;
     }
     if (a + c <= 0) {
-      message.warning('请选择至少 1 张票');
+      message.warning('请您至少选择 1 张票');
       return;
     }
     if (!id) return;
+
+    const totalTickets = a + c;
+
+    // 收集所有票的实名信息
+    const attendees: TicketAttendeeInfo[] = [];
+    const faceImages: File[] = [];
+
+    for (let i = 0; i < totalTickets; i++) {
+      const realName = vals[`attendee_${i}_realName`] as string;
+      const idCard = vals[`attendee_${i}_idCard`] as string;
+      const faceFileList = vals[`attendee_${i}_faceImage`] as UploadFile[] | undefined;
+
+      if (!realName || !idCard) {
+        message.error(`请您填写第 ${i + 1} 张票的完整实名信息，包括姓名和身份证号，感谢您的配合。`);
+        return;
+      }
+
+      if (!faceFileList || faceFileList.length === 0) {
+        message.error(`请您上传第 ${i + 1} 张票的人脸照片，以便入场时进行身份核验，感谢您的配合。`);
+        return;
+      }
+
+      const faceFile = faceFileList[0];
+      if (!faceFile.originFileObj) {
+        message.error(`请您上传第 ${i + 1} 张票的人脸照片，以便入场时进行身份核验，感谢您的配合。`);
+        return;
+      }
+
+      attendees.push({ realName, idCard });
+      faceImages.push(faceFile.originFileObj);
+    }
+
+    // 按票类型分组
+    let attendeeIndex = 0;
+    const tickets: Array<{
+      type: 'adult' | 'child';
+      quantity: number;
+      attendees: TicketAttendeeInfo[];
+    }> = [];
+
+    if (a > 0) {
+      tickets.push({
+        type: 'adult',
+        quantity: a,
+        attendees: attendees.slice(attendeeIndex, attendeeIndex + a),
+      });
+      attendeeIndex += a;
+    }
+
+    if (c > 0) {
+      tickets.push({
+        type: 'child',
+        quantity: c,
+        attendees: attendees.slice(attendeeIndex, attendeeIndex + c),
+      });
+    }
+
     const dto: CreateTicketOrderDto = {
       concertId: id,
-      tickets: [
-        ...(a > 0 ? [{ type: 'adult' as const, quantity: a }] : []),
-        ...(c > 0 ? [{ type: 'child' as const, quantity: c }] : []),
-      ],
+      tickets,
     };
+
     try {
-      await createOrder(dto);
+      await createOrder(dto, faceImages);
       message.success('下单成功，电子票已生成');
       navigate('/me/tickets', { replace: true });
     } catch {
@@ -126,7 +191,7 @@ export default function PurchasePage(): JSX.Element {
         showIcon
         style={{ marginTop: 12 }}
         message="购票须知"
-        description="每位用户的购买上限受“单人限购”约束；若超出将无法提交订单。当前按剩余额度计算。"
+        description="为保障广大消费者的购票需求，我们对每位用户的购票数量进行了限制，对您造成的不便敬请谅解，感谢您的配合。请您根据剩余可购票数量进行购买，超出限制将无法完成下单。"
       />
 
       <Form
@@ -141,7 +206,7 @@ export default function PurchasePage(): JSX.Element {
             label={`成人票（¥${concert.adultPrice}）`}
             name="adultQty"
             rules={[{ type: 'number', min: 0, message: '请输入不小于 0 的整数' }]}
-            help={`单人最多 ${maxAdult} 张，剩余可购 ${remainAdult} 张`}
+            help={`限购 ${maxAdult} 张/人，您还可购买 ${remainAdult} 张`}
           >
             <InputNumber min={0} max={remainAdult} style={{ width: 160 }} />
           </Form.Item>
@@ -150,13 +215,84 @@ export default function PurchasePage(): JSX.Element {
             label={`儿童票（¥${concert.childPrice}）`}
             name="childQty"
             rules={[{ type: 'number', min: 0, message: '请输入不小于 0 的整数' }]}
-            help={`单人最多 ${maxChild} 张，剩余可购 ${remainChild} 张`}
+            help={`限购 ${maxChild} 张/人，您还可购买 ${remainChild} 张`}
           >
             <InputNumber min={0} max={remainChild} style={{ width: 160 }} />
           </Form.Item>
 
           <Statistic title="合计金额" value={total} prefix="¥" />
         </Space>
+
+        {totalTickets > 0 && (
+          <div style={{ marginTop: 24 }}>
+            <Alert
+              type="warning"
+              showIcon
+              message="实名制购票提醒"
+              description="根据实名制购票要求，请您为每张票填写实际观演人的真实姓名、身份证号，并上传清晰的人脸照片。入场时将进行身份核验，信息不符将无法入场，感谢您的理解与配合。"
+              style={{ marginBottom: 16 }}
+            />
+            {Array.from({ length: totalTickets }).map((_, index) => {
+              const ticketType = index < adultQty ? 'adult' : 'child';
+              const ticketTypeName = ticketType === 'adult' ? '成人票' : '儿童票';
+              return (
+                <Card
+                  key={index}
+                  size="small"
+                  title={`第 ${index + 1} 张票（${ticketTypeName}）`}
+                  style={{ marginBottom: 16 }}
+                >
+                  <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                    <Form.Item
+                      label="观演人姓名"
+                      name={`attendee_${index}_realName`}
+                      rules={[{ required: true, message: '请您输入观演人的真实姓名' }]}
+                    >
+                      <Input placeholder="请输入与身份证一致的姓名" />
+                    </Form.Item>
+                    <Form.Item
+                      label="身份证号码"
+                      name={`attendee_${index}_idCard`}
+                      rules={[
+                        { required: true, message: '请您输入身份证号码' },
+                        {
+                          pattern: /^[1-9]\d{5}(18|19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[\dXx]$/,
+                          message: '身份证号码格式不正确，请您检查后重新输入',
+                        },
+                      ]}
+                    >
+                      <Input placeholder="请输入18位身份证号码" maxLength={18} />
+                    </Form.Item>
+                    <Form.Item
+                      label="人脸照片"
+                      name={`attendee_${index}_faceImage`}
+                      rules={[{ required: true, message: '请您上传观演人的清晰人脸照片' }]}
+                      valuePropName="fileList"
+                      getValueFromEvent={(e) => {
+                        if (Array.isArray(e)) {
+                          return e;
+                        }
+                        return e?.fileList;
+                      }}
+                    >
+                      <Upload
+                        listType="picture-card"
+                        maxCount={1}
+                        beforeUpload={() => false}
+                        accept="image/*"
+                      >
+                        <div>
+                          <UploadOutlined />
+                          <div style={{ marginTop: 8 }}>上传照片</div>
+                        </div>
+                      </Upload>
+                    </Form.Item>
+                  </Space>
+                </Card>
+              );
+            })}
+          </div>
+        )}
 
         <Button
           type="primary"

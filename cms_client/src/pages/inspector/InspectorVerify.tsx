@@ -1,8 +1,20 @@
-import { Alert, App as AntdApp, Button, Card, Descriptions, Input, Select, Space, Typography } from 'antd';
+import {
+  Alert,
+  App as AntdApp,
+  Button,
+  Card,
+  Descriptions,
+  Image,
+  Input,
+  Modal,
+  Select,
+  Space,
+  Typography,
+} from 'antd';
 import { Html5Qrcode } from 'html5-qrcode';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { verifyTicket } from '../../api/verify';
+import { confirmVerification, verifyTicket } from '../../api/verify';
 import { VerifyResultTag } from '../../components/common/StatusTag';
 import Html5QrScanner from '../../components/qrcode/Html5QrScanner';
 import type { VerifyTicketResponse } from '../../types';
@@ -28,6 +40,10 @@ export default function InspectorVerify(): JSX.Element {
 
   const [lastResult, setLastResult] = useState<VerifyTicketResponse | null>(null);
   const [warn, setWarn] = useState<string>('');
+  const [verificationModalVisible, setVerificationModalVisible] = useState<boolean>(false);
+  const [pendingVerification, setPendingVerification] = useState<VerifyTicketResponse | null>(null);
+  const [confirming, setConfirming] = useState<boolean>(false);
+  const [wasFromScan, setWasFromScan] = useState<boolean>(false);
 
   useEffect(() => {
     setLocationText(localStorage.getItem('verifyLocation') ?? '');
@@ -75,54 +91,10 @@ export default function InspectorVerify(): JSX.Element {
     [cameras],
   );
 
-  const doVerify = useCallback(
-    async (qrData: string, isFromScan: boolean = false): Promise<void> => {
-      const loc = (localStorage.getItem('verifyLocation') ?? '').trim();
-      if (!loc) {
-        message.error('请先在页面顶部设置验票地点');
-        return;
-      }
-      const data = qrData.trim();
-      if (!data) {
-        message.error('请提供二维码数据');
-        return;
-      }
-      setSubmitting(true);
-      try {
-        const res = await verifyTicket({ qrData: data, location: loc });
-        setLastResult(res);
-        if (res.valid) {
-          message.success('验票成功');
-          if (isFromScan) {
-            setTimeout(() => {
-              setActive(true);
-              setScanState('scanning');
-            }, 3000);
-          }
-        } else {
-          message.warning('验票失败');
-          if (isFromScan) {
-            setTimeout(() => {
-              setActive(true);
-              setScanState('scanning');
-            }, 3000);
-          }
-        }
-        setManualQr('');
-      } catch {
-        message.error('验票失败');
-        if (isFromScan) {
-          setTimeout(() => {
-            setActive(true);
-            setScanState('scanning');
-          }, 3000);
-        }
-      } finally {
-        setSubmitting(false);
-      }
-    },
-    [message],
-  );
+  const stopScan = useCallback((): void => {
+    setActive(false);
+    setScanState('ready');
+  }, []);
 
   const startScan = useCallback(async (): Promise<void> => {
     if (!locationText.trim()) {
@@ -138,10 +110,125 @@ export default function InspectorVerify(): JSX.Element {
     setScanState('scanning');
   }, [cameras.length, locationText, message, refreshCameras, selectedDeviceId]);
 
-  const stopScan = useCallback((): void => {
-    setActive(false);
-    setScanState('ready');
-  }, []);
+  const doVerify = useCallback(
+    async (qrData: string, isFromScan: boolean = false): Promise<void> => {
+      const loc = (localStorage.getItem('verifyLocation') ?? '').trim();
+      if (!loc) {
+        message.error('请先在页面顶部设置验票地点');
+        return;
+      }
+      let data = qrData.trim();
+      if (!data) {
+        message.error('请提供二维码数据');
+        return;
+      }
+
+      // 如果输入的是 JSON 字符串，尝试解析并提取 qrCodeData
+      try {
+        const parsed = JSON.parse(data);
+        if (parsed.qrCodeData) {
+          data = parsed.qrCodeData;
+        } else if (parsed.ticketId && parsed.signature && parsed.timestamp) {
+          // 如果直接是二维码数据对象，转换为字符串
+          data = JSON.stringify(parsed);
+        }
+      } catch {
+        // 不是 JSON，直接使用原始数据
+      }
+
+      setSubmitting(true);
+      try {
+        const res = await verifyTicket({ qrData: data, location: loc });
+        setLastResult(res);
+        setWasFromScan(isFromScan);
+        if (res.valid) {
+          // 如果有实名信息（姓名、身份证或人脸图像），需要人工审核
+          if (res.requiresManualVerification || res.ticket.realName || res.ticket.idCard || res.ticket.faceImage) {
+            // 需要人工审核，显示弹窗
+            setPendingVerification(res);
+            setVerificationModalVisible(true);
+            if (isFromScan) {
+              stopScan();
+            }
+          } else {
+            message.success('验票成功');
+            // 只有从扫描触发时才自动重启扫描
+            if (isFromScan) {
+              setTimeout(() => {
+                setActive(true);
+                setScanState('scanning');
+              }, 3000);
+            }
+          }
+        } else {
+          message.warning('验票失败');
+          // 只有从扫描触发时才自动重启扫描
+          if (isFromScan) {
+            setTimeout(() => {
+              setActive(true);
+              setScanState('scanning');
+            }, 3000);
+          }
+        }
+        setManualQr('');
+      } catch {
+        message.error('验票失败');
+        // 只有从扫描触发时才自动重启扫描
+        if (isFromScan) {
+          setTimeout(() => {
+            setActive(true);
+            setScanState('scanning');
+          }, 3000);
+        }
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [message, stopScan],
+  );
+
+  const handleConfirmVerification = useCallback(async (): Promise<void> => {
+    if (!pendingVerification) return;
+    const shouldRestart = wasFromScan;
+    setConfirming(true);
+    try {
+      await confirmVerification(pendingVerification.ticket.id);
+      message.success('验票确认成功');
+      setVerificationModalVisible(false);
+      setPendingVerification(null);
+      setLastResult({
+        ...pendingVerification,
+        ticket: {
+          ...pendingVerification.ticket,
+          status: 'used',
+        },
+      });
+      // 只有从扫描触发时才自动重启扫描
+      if (shouldRestart) {
+        setTimeout(() => {
+          setActive(true);
+          setScanState('scanning');
+        }, 2000);
+      }
+    } catch {
+      message.error('确认失败，请稍后重试');
+    } finally {
+      setConfirming(false);
+    }
+  }, [message, pendingVerification, wasFromScan]);
+
+  const handleCancelVerification = useCallback((): void => {
+    const shouldRestart = wasFromScan;
+    setVerificationModalVisible(false);
+    setPendingVerification(null);
+    // 只有从扫描触发时才自动重启扫描
+    if (shouldRestart) {
+      setTimeout(() => {
+        setActive(true);
+        setScanState('scanning');
+      }, 500);
+    }
+  }, [wasFromScan]);
 
   return (
     <Card
@@ -213,10 +300,12 @@ export default function InspectorVerify(): JSX.Element {
           active={active}
           deviceId={selectedDeviceId || undefined}
           onDecoded={(text) => {
+            // 立即停止扫描，避免重复触发
+            stopScan();
+            // 延迟验证，确保扫描器已停止
             setTimeout(() => {
-              stopScan();
               void doVerify(text, true);
-            }, 100);
+            }, 200);
           }}
           qrbox={280}
           fps={10}
@@ -275,6 +364,74 @@ export default function InspectorVerify(): JSX.Element {
           )}
         </div>
       </div>
+
+      <Modal
+        title="人工审核验票"
+        open={verificationModalVisible}
+        onOk={handleConfirmVerification}
+        onCancel={handleCancelVerification}
+        okText="确认通过"
+        cancelText="取消"
+        okButtonProps={{ loading: confirming, type: 'primary' }}
+        width={600}
+      >
+        {pendingVerification && (
+          <div>
+            <Alert
+              type="info"
+              message="请核验以下信息"
+              description="请核对人脸图像与持票人是否一致，以及实名信息与身份证是否匹配。"
+              style={{ marginBottom: 16 }}
+            />
+            <Descriptions
+              column={1}
+              bordered
+              size="small"
+              items={[
+                {
+                  key: 'concert',
+                  label: '演唱会',
+                  children: pendingVerification.ticket.concertName,
+                },
+                {
+                  key: 'venue',
+                  label: '演出地点',
+                  children: pendingVerification.ticket.concertVenue,
+                },
+                {
+                  key: 'type',
+                  label: '票据类型',
+                  children: pendingVerification.ticket.type === 'adult' ? '成人票' : '儿童票',
+                },
+                {
+                  key: 'realName',
+                  label: '购票人姓名',
+                  children: pendingVerification.ticket.realName || '未填写',
+                },
+                {
+                  key: 'idCard',
+                  label: '身份证号',
+                  children: pendingVerification.ticket.idCard || '未填写',
+                },
+                {
+                  key: 'faceImage',
+                  label: '人脸图像',
+                  children: pendingVerification.ticket.faceImage ? (
+                    <Image
+                      src={pendingVerification.ticket.faceImage}
+                      alt="人脸图像"
+                      width={200}
+                      style={{ maxHeight: 200, objectFit: 'contain' }}
+                    />
+                  ) : (
+                    '未上传'
+                  ),
+                },
+              ]}
+            />
+          </div>
+        )}
+      </Modal>
     </Card>
   );
 }

@@ -11,6 +11,10 @@ export async function verifyTicket(payload: VerifyQrCodeDto): Promise<VerifyTick
   };
 }
 
+export async function confirmVerification(ticketId: string): Promise<{ success: boolean; message: string }> {
+  return postJson<{ success: boolean; message: string }, { ticketId: string }>('/verify/confirm', { ticketId });
+}
+
 export async function verifyHistory(q?: {
   concertId?: string;
   startDate?: string;

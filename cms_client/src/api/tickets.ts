@@ -1,10 +1,23 @@
 import type { CreateTicketOrderDto, RefundRequest, RefundStatus, TicketItem, TicketItemRaw, TicketQr } from '../types';
-import { getJson, postJson, putJson } from '../utils/http';
+import { getJson, postForm, postJson, putJson } from '../utils/http';
 import { toTicket } from './_transform.ts';
 
 // 创建订单：返回每张票据
-export async function createOrder(dto: CreateTicketOrderDto): Promise<ReadonlyArray<TicketItem>> {
-  const raws = await postJson<ReadonlyArray<TicketItemRaw>, CreateTicketOrderDto>('/tickets/orders', dto);
+export async function createOrder(
+  dto: CreateTicketOrderDto,
+  faceImages: ReadonlyArray<File>,
+): Promise<ReadonlyArray<TicketItem>> {
+  const formData = new FormData();
+
+  // 添加 JSON 数据
+  formData.append('data', JSON.stringify(dto));
+
+  // 添加所有人脸图像
+  faceImages.forEach((file) => {
+    formData.append('faceImages', file);
+  });
+
+  const raws = await postForm<ReadonlyArray<TicketItemRaw>>('/tickets/orders', formData);
   return raws.map(toTicket);
 }
 

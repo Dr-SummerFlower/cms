@@ -30,7 +30,7 @@ export class GlobalInterceptor<T> implements NestInterceptor<T, Response<T>> {
         }),
       ),
       // 捕获并处理异常
-      catchError((err: any): Observable<never> => {
+      catchError((err: unknown): Observable<never> => {
         // 确定HTTP状态码
         const status: number =
           err instanceof HttpException

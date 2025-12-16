@@ -8,9 +8,6 @@ import * as path from 'path';
 export class StoragesService {
   private readonly client: MinioClient;
   private readonly bucket: string;
-  private readonly publicHost: string;
-  private readonly useSSL: boolean;
-  private readonly port: number;
 
   constructor(private readonly config: ConfigService) {
     const endPoint = this.config.get<string>('MINIO_END_POINT', 'localhost');
@@ -19,13 +16,11 @@ export class StoragesService {
     const accessKey = this.config.get<string>('MINIO_ACCESS_KEY', '');
     const secretKey = this.config.get<string>('MINIO_SECRET_KEY', '');
     this.bucket = this.config.get<string>('MINIO_BUCKET', 'assets');
-    this.publicHost = this.config.get<string>('MINIO_PUBLIC_HOST', 'localhost');
-    this.useSSL = useSSL;
-    this.port = Number(portStr);
+    const port = Number(portStr);
 
     this.client = new MinioClient({
       endPoint,
-      port: this.port,
+      port,
       useSSL,
       accessKey,
       secretKey,
@@ -41,7 +36,7 @@ export class StoragesService {
     }
     const ext = path.extname(file.originalname) || '';
     const objectName = `${folder}/${new Date().toISOString().slice(0, 10)}/${randomUUID()}${ext}`;
-    return await this.putObjectAndGetUrl(
+    return await this.putObjectAndGetPath(
       objectName,
       file.buffer,
       file.buffer.length,
@@ -60,7 +55,7 @@ export class StoragesService {
     }
     const ext = path.extname(filename) || '';
     const objectName = `${folder}/${new Date().toISOString().slice(0, 10)}/${randomUUID()}${ext}`;
-    return await this.putObjectAndGetUrl(
+    return await this.putObjectAndGetPath(
       objectName,
       buffer,
       buffer.length,
@@ -95,12 +90,20 @@ export class StoragesService {
     }
   }
 
-  private buildPublicUrl(objectName: string): string {
-    const protocol = this.useSSL ? 'https' : 'http';
-    return `${protocol}://${this.publicHost}:${this.port}/${this.bucket}/${objectName}`;
+  /**
+   * 构建path格式的路径（用于数据库存储）
+   * @param objectName 对象名称，例如：avatar/2025-08-24/xxx.jpg
+   * @returns path格式，例如：/assets/avatar/2025-08-24/xxx.jpg
+   */
+  private buildPath(objectName: string): string {
+    return `/${this.bucket}/${objectName}`;
   }
 
-  private async putObjectAndGetUrl(
+  /**
+   * 上传文件并返回path格式（用于数据库存储）
+   * 前端需要通过 /api/proxy 路由访问
+   */
+  private async putObjectAndGetPath(
     objectName: string,
     buffer: Buffer,
     length: number,
@@ -110,6 +113,6 @@ export class StoragesService {
     await this.client.putObject(this.bucket, objectName, buffer, length, {
       'Content-Type': contentType,
     });
-    return this.buildPublicUrl(objectName);
+    return this.buildPath(objectName);
   }
 }

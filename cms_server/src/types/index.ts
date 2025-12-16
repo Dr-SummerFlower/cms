@@ -15,3 +15,6 @@ export * from './ecdsa';
 
 // 票据相关接口
 export * from './ticket';
+
+// 代理相关接口
+export * from './proxy';

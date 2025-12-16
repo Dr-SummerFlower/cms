@@ -1,4 +1,5 @@
 import type { Concert, ConcertRaw, Feedback, FeedbackRaw, Paginated, TicketItem, TicketItemRaw, User, UserRaw } from '../types';
+import { getImageUrl } from '../utils/image';
 
 export function toUser(u: UserRaw | User): User {
   if ('id' in u) return u as User;
@@ -8,7 +9,7 @@ export function toUser(u: UserRaw | User): User {
     username: (u as UserRaw).username,
     email: (u as UserRaw).email,
     role: (u as UserRaw).role,
-    avatar: (u as UserRaw).avatar,
+    avatar: getImageUrl((u as UserRaw).avatar) ?? undefined,
     createdAt: (u as UserRaw).createdAt,
     updatedAt: (u as UserRaw).updatedAt,
   };
@@ -18,7 +19,7 @@ export function toConcert(c: ConcertRaw): Concert {
   return {
     id: c._id,
     name: c.name,
-    poster: c.poster,
+    poster: getImageUrl(c.poster) ?? undefined,
     date: c.date,
     venue: c.venue,
     adultPrice: c.adultPrice,

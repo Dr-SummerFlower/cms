@@ -3,6 +3,7 @@ import { App as AntdApp, Avatar, Button, Dropdown, Layout, type MenuProps, Space
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { useThemeStore } from '../../stores/themeStore';
+import { getImageUrl } from '../../utils/image';
 
 const { Header } = Layout;
 
@@ -217,7 +218,7 @@ export default function AppHeader(): JSX.Element {
                   : '0 2px 8px rgba(0, 0, 0, 0.1)',
                 transition: 'all 0.2s ease',
               }}
-              src={user?.avatar}
+              src={getImageUrl(user?.avatar)}
               alt={user?.username}
               size={isMobile ? 'default' : 'large'}
             >

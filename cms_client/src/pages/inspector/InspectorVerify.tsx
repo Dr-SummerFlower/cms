@@ -1,23 +1,12 @@
-import {
-  Alert,
-  App as AntdApp,
-  Button,
-  Card,
-  Descriptions,
-  Image,
-  Input,
-  Modal,
-  Select,
-  Space,
-  Typography,
-} from 'antd';
-import { Html5Qrcode } from 'html5-qrcode';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { confirmVerification, verifyTicket } from '../../api/verify';
-import { VerifyResultTag } from '../../components/common/StatusTag';
+import {Alert, App as AntdApp, Button, Card, Descriptions, Image, Input, Modal, Select, Space, Typography,} from 'antd';
+import {Html5Qrcode} from 'html5-qrcode';
+import {useCallback, useEffect, useMemo, useState} from 'react';
+import {Link} from 'react-router-dom';
+import {confirmVerification, verifyTicket} from '../../api/verify';
+import {VerifyResultTag} from '../../components/common/StatusTag';
 import Html5QrScanner from '../../components/qrcode/Html5QrScanner';
-import type { VerifyTicketResponse } from '../../types';
+import type {VerifyTicketResponse} from '../../types';
+import {getImageUrl} from '../../utils/image';
 
 type ScanState = 'idle' | 'ready' | 'scanning' | 'denied' | 'error';
 
@@ -418,7 +407,7 @@ export default function InspectorVerify(): JSX.Element {
                   label: '人脸图像',
                   children: pendingVerification.ticket.faceImage ? (
                     <Image
-                      src={pendingVerification.ticket.faceImage}
+                      src={getImageUrl(pendingVerification.ticket.faceImage)}
                       alt="人脸图像"
                       width={200}
                       style={{ maxHeight: 200, objectFit: 'contain' }}

@@ -11,6 +11,7 @@ import { EmailModule } from './email/email.module';
 import { FeedbackModule } from './feedback/feedback.module';
 import { GlobalModule } from './global/global.module';
 import { InitModule } from './init/init.module';
+import { ProxyModule } from './proxy/proxy.module';
 import { StoragesModule } from './storages/storages.module';
 import { TicketsModule } from './tickets/tickets.module';
 import { UsersModule } from './users/users.module';
@@ -39,6 +40,7 @@ if (!fs.existsSync(path.join(path.resolve(), 'public'))) {
     TicketsModule,
     StoragesModule,
     FeedbackModule,
+    ProxyModule,
     ServeStaticModule.forRootAsync({
       useFactory: () => {
         return [

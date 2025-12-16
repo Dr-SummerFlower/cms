@@ -1,6 +1,7 @@
 import { Avatar, Button, Card, Descriptions, Space } from 'antd';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
+import { getImageUrl } from '../utils/image';
 
 export default function UserProfileView(): JSX.Element {
   const user = useAuthStore((s) => s.user);
@@ -17,7 +18,7 @@ export default function UserProfileView(): JSX.Element {
       }
     >
       <Space align="center" size="large" style={{ marginBottom: 12 }}>
-        <Avatar src={user.avatar} size={64}>
+        <Avatar src={getImageUrl(user.avatar)} size={64}>
           {user.username.at(0)}
         </Avatar>
         <span>{user.username}</span>

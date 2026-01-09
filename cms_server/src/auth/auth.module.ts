@@ -6,6 +6,7 @@ import { StoragesModule } from '../storages/storages.module';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { LoginLimitService } from './login-limit.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { ValidationService } from './validation.service';
 
@@ -25,7 +26,7 @@ import { ValidationService } from './validation.service';
     StoragesModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, ValidationService],
+  providers: [AuthService, JwtStrategy, ValidationService, LoginLimitService],
   exports: [AuthService, ValidationService],
 })
 export class AuthModule {}

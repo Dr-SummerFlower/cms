@@ -11,6 +11,7 @@ import * as bcrypt from 'bcrypt';
 import { AuthResponse, IUserInfo, JwtPayload, TokenResponse } from '../types';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
+import { LoginLimitService } from './login-limit.service';
 
 @Injectable()
 export class AuthService {
@@ -18,18 +19,26 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private loginLimitService: LoginLimitService,
   ) {}
 
   async login(dto: { email: string; password: string }): Promise<AuthResponse> {
     const { email, password } = dto;
+
+    await this.loginLimitService.checkLimit(email);
+
     const user: User = await this.usersService.findOne(email);
     if (!user) {
+      await this.loginLimitService.recordFailure(email);
       throw new BadRequestException('用户名或密码错误');
     }
     const isPwdValid: boolean = await bcrypt.compare(password, user.password);
     if (!isPwdValid) {
+      await this.loginLimitService.recordFailure(email);
       throw new BadRequestException('用户名或密码错误');
     }
+
+    await this.loginLimitService.clearFailure(email);
 
     const id: string = String(user.id);
     const payload: JwtPayload = {

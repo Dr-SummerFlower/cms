@@ -53,7 +53,7 @@ export class TicketsService {
     private readonly emailService: EmailService,
     private readonly storagesService: StoragesService,
     @InjectRedis() private readonly redisService: Redis,
-  ) { }
+  ) {}
 
   async createOrder(
     createTicketOrderDto: CreateTicketOrderDto,

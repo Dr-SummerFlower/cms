@@ -1,8 +1,11 @@
 import {
   Body,
   Controller,
+  Get,
+  Header,
   HttpCode,
   Post,
+  Res,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -13,11 +16,14 @@ import {
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiProduces,
   ApiTags,
 } from '@nestjs/swagger';
+import { Response } from 'express';
 import { StoragesService } from '../storages/storages.service';
 import { AuthResponse, TokenResponse } from '../types';
 import { AuthService } from './auth.service';
+import { CaptchaService } from './captcha.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -30,9 +36,13 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly validationService: ValidationService,
     private readonly storagesService: StoragesService,
+    private readonly captchaService: CaptchaService,
   ) {}
 
-  @ApiOperation({ summary: '用户登录', description: '使用邮箱和密码登录' })
+  @ApiOperation({
+    summary: '用户登录',
+    description: '使用邮箱、密码和验证码登录',
+  })
   @ApiBody({
     description: '登录请求体',
     type: LoginDto,
@@ -42,6 +52,8 @@ export class AuthController {
         value: {
           email: 'admin@admin.com',
           password: '@Admin123456',
+          captchaId: '123e4567-e89b-12d3-a456-426614174000',
+          captchaCode: 'A3bC',
         },
       },
       user: {
@@ -49,6 +61,8 @@ export class AuthController {
         value: {
           email: 'user@user.com',
           password: '@User123456',
+          captchaId: '123e4567-e89b-12d3-a456-426614174000',
+          captchaCode: 'A3bC',
         },
       },
     },
@@ -185,5 +199,31 @@ export class AuthController {
     @Body() refreshTokenDto: RefreshTokenDto,
   ): Promise<TokenResponse> {
     return this.authService.refreshToken(refreshTokenDto.refresh_token);
+  }
+
+  @ApiOperation({
+    summary: '获取图片验证码',
+    description: '获取登录所需的图片验证码，返回图片二进制和验证码ID',
+  })
+  @ApiOkResponse({
+    description: '验证码图片（PNG格式）',
+    content: {
+      'image/png': {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+        example: 'PNG图片二进制数据',
+      },
+    },
+  })
+  @ApiProduces('image/png')
+  @Get('captcha')
+  @Header('Content-Type', 'image/png')
+  async getCaptcha(@Res() res: Response): Promise<void> {
+    const { id, image } = await this.captchaService.generate();
+    // 将验证码ID通过响应头返回，前端需要获取这个ID用于登录
+    res.setHeader('X-Captcha-Id', id);
+    res.send(image);
   }
 }

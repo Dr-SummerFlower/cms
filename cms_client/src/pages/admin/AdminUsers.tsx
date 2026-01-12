@@ -1,8 +1,24 @@
-import { App as AntdApp, Button, Descriptions, Drawer, Empty, Popconfirm, Select, Skeleton, Space, Table } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import { useCallback, useEffect, useState } from 'react';
-import { deleteUser, getUser, listUsers, updateUserRole } from '../../api/users';
-import type { Paginated, Role, User } from '../../types';
+import {
+  App as AntdApp,
+  Button,
+  Descriptions,
+  Drawer,
+  Empty,
+  Popconfirm,
+  Select,
+  Skeleton,
+  Space,
+  Table,
+} from "antd";
+import type { ColumnsType } from "antd/es/table";
+import { useCallback, useEffect, useState } from "react";
+import {
+  deleteUser,
+  getUser,
+  listUsers,
+  updateUserRole,
+} from "../../api/users";
+import type { Paginated, Role, User } from "../../types";
 
 export default function AdminUsers(): JSX.Element {
   const { message } = AntdApp.useApp();
@@ -37,7 +53,7 @@ export default function AdminUsers(): JSX.Element {
       const u = await getUser(id);
       setDetail(u);
     } catch {
-      message.error('获取用户详情失败');
+      message.error("获取用户详情失败");
       setDetailOpen(false);
     } finally {
       setDetailLoading(false);
@@ -47,54 +63,58 @@ export default function AdminUsers(): JSX.Element {
   const updateRole = async (id: string, role: Role): Promise<void> => {
     try {
       await updateUserRole(id, role);
-      message.success('已更新角色');
+      message.success("已更新角色");
       await fetch(page, pageSize);
     } catch {
-      message.error('更新失败');
+      message.error("更新失败");
     }
   };
 
   const columns: ColumnsType<User> = [
-    { title: '用户名', dataIndex: 'username', key: 'username' },
-    { title: '邮箱', dataIndex: 'email', key: 'email' },
+    { title: "用户名", dataIndex: "username", key: "username" },
+    { title: "邮箱", dataIndex: "email", key: "email" },
     {
-      title: '角色',
-      key: 'role',
+      title: "角色",
+      key: "role",
       width: 260,
       render: (_, row) => (
         <Select<Role>
           value={row.role}
           onChange={(val) => void updateRole(row.id, val)}
           options={[
-            { label: '普通用户', value: 'USER' },
-            { label: '验票员', value: 'INSPECTOR' },
-            { label: '管理员', value: 'ADMIN' },
+            { label: "普通用户", value: "USER" },
+            { label: "验票员", value: "INSPECTOR" },
+            { label: "管理员", value: "ADMIN" },
           ]}
           style={{ width: 220 }}
         />
       ),
     },
     {
-      title: '操作',
-      key: 'action',
+      title: "操作",
+      key: "action",
       width: 260,
       render: (_, row) => (
         <Space>
-          <Button size="small" onClick={() => void openDetail(row.id)}>查看</Button>
+          <Button size="small" onClick={() => void openDetail(row.id)}>
+            查看
+          </Button>
           <Popconfirm
             title="确认删除该用户？"
             okButtonProps={{ danger: true }}
             onConfirm={async () => {
               try {
                 await deleteUser(row.id);
-                message.success('已删除');
+                message.success("已删除");
                 await fetch(page, pageSize);
               } catch {
-                message.error('删除失败');
+                message.error("删除失败");
               }
             }}
           >
-            <Button size="small" danger>删除</Button>
+            <Button size="small" danger>
+              删除
+            </Button>
           </Popconfirm>
         </Space>
       ),
@@ -126,18 +146,36 @@ export default function AdminUsers(): JSX.Element {
         }}
       />
 
-      <Drawer title="用户详情" open={detailOpen} onClose={() => setDetailOpen(false)} width={520}>
+      <Drawer
+        title="用户详情"
+        open={detailOpen}
+        onClose={() => setDetailOpen(false)}
+        width={520}
+      >
         {detailLoading ? (
           <Skeleton active paragraph={{ rows: 6 }} />
         ) : detail ? (
-          <Descriptions column={1} bordered size="small" items={[
-            { key: 'id', label: 'ID', children: detail.id },
-            { key: 'username', label: '用户名', children: detail.username },
-            { key: 'email', label: '邮箱', children: detail.email },
-            { key: 'role', label: '角色', children: detail.role },
-            { key: 'created', label: '注册时间', children: detail.createdAt ?? '-' },
-            { key: 'updated', label: '最近更新', children: detail.updatedAt ?? '-' },
-          ]} />
+          <Descriptions
+            column={1}
+            bordered
+            size="small"
+            items={[
+              { key: "id", label: "ID", children: detail.id },
+              { key: "username", label: "用户名", children: detail.username },
+              { key: "email", label: "邮箱", children: detail.email },
+              { key: "role", label: "角色", children: detail.role },
+              {
+                key: "created",
+                label: "注册时间",
+                children: detail.createdAt ?? "-",
+              },
+              {
+                key: "updated",
+                label: "最近更新",
+                children: detail.updatedAt ?? "-",
+              },
+            ]}
+          />
         ) : (
           <Empty description="暂无数据" />
         )}

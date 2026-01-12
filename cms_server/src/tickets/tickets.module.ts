@@ -29,4 +29,4 @@ import { TicketsService } from './tickets.service';
   providers: [TicketsService],
   exports: [TicketsService],
 })
-export class TicketsModule { }
+export class TicketsModule {}

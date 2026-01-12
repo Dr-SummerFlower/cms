@@ -1,5 +1,5 @@
-import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse, type AxiosError } from 'axios';
 import { message } from 'antd';
+import axios, { type AxiosError, type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios';
 import { useAuthStore } from '../stores/authStore';
 import type { ApiResponse, Tokens } from '../types';
 import { clearTokens, getAccessToken, getRefreshToken, setTokens, updateAccessToken } from './auth';
@@ -10,7 +10,7 @@ function handleGlobalError(error: unknown) {
     const ax = error as AxiosError<ApiResponse<unknown>>;
 
     // 详细错误信息打印到控制台
-    console.error('HTTP请求错误详情:', {
+    console.error("HTTP请求错误详情:", {
       error: ax,
       response: ax.response,
       status: ax.response?.status,
@@ -27,35 +27,35 @@ function handleGlobalError(error: unknown) {
       // 401错误通常由拦截器处理，这里不显示通知
       return;
     } else if (status === 403) {
-      message.error('权限不足：您没有权限执行此操作');
+      message.error("权限不足：您没有权限执行此操作");
     } else if (status === 404) {
-      message.error('资源不存在：请求的资源未找到');
+      message.error("资源不存在：请求的资源未找到");
     } else if (status === 500) {
-      message.error('服务器错误：服务器内部错误，请稍后重试');
-    } else if (typeof status === 'number' && status >= 400 && status < 500) {
+      message.error("服务器错误：服务器内部错误，请稍后重试");
+    } else if (typeof status === "number" && status >= 400 && status < 500) {
       let errorMessage: string | undefined;
       const data = ax.response?.data;
-      if (data && typeof data === 'object' && 'message' in data) {
+      if (data && typeof data === "object" && "message" in data) {
         const msgVal = (data as { message?: unknown }).message;
-        if (typeof msgVal === 'string') errorMessage = msgVal;
+        if (typeof msgVal === "string") errorMessage = msgVal;
       }
-      message.warning(`请求失败：${errorMessage ?? '请求参数错误'}`);
-    } else if (ax.code === 'NETWORK_ERROR' || ax.code === 'ECONNABORTED') {
-      message.error('网络错误：网络连接失败，请检查网络设置');
-    } else if (ax.code === 'TIMEOUT') {
-      message.warning('请求超时：请求超时，请稍后重试');
+      message.warning(`请求失败：${errorMessage ?? "请求参数错误"}`);
+    } else if (ax.code === "NETWORK_ERROR" || ax.code === "ECONNABORTED") {
+      message.error("网络错误：网络连接失败，请检查网络设置");
+    } else if (ax.code === "TIMEOUT") {
+      message.warning("请求超时：请求超时，请稍后重试");
     } else {
-      message.error('未知错误：发生了未知错误，请稍后重试');
+      message.error("未知错误：发生了未知错误，请稍后重试");
     }
   } else {
     // 非 AxiosError 的兜底处理
-    console.error('HTTP请求未知错误详情:', error);
-    message.error('未知错误：发生了未知错误，请稍后重试');
+    console.error("HTTP请求未知错误详情:", error);
+    message.error("未知错误：发生了未知错误，请稍后重试");
   }
 }
 
 // API基础路径 - 开发环境通过Vite代理，生产环境需要配置nginx等反向代理
-const API_BASE = '/api';
+const API_BASE = "/api";
 
 const http: AxiosInstance = axios.create({
   baseURL: API_BASE,
@@ -125,7 +125,7 @@ http.interceptors.response.use(
       config._retry = true;
       try {
         const resp = await refreshClient.post<ApiResponse<Tokens>>(
-          '/auth/refresh',
+          "/auth/refresh",
           { refresh_token: refresh },
         );
         const tokens = resp.data.data;

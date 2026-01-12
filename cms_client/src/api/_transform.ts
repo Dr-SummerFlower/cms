@@ -1,17 +1,27 @@
-import type { Concert, ConcertRaw, Feedback, FeedbackRaw, Paginated, TicketItem, TicketItemRaw, User, UserRaw } from '../types';
-import { getImageUrl } from '../utils/image';
+import type {
+  Concert,
+  ConcertRaw,
+  Feedback,
+  FeedbackRaw,
+  Paginated,
+  TicketItem,
+  TicketItemRaw,
+  User,
+  UserRaw,
+} from "../types";
+import { getImageUrl } from "../utils/image";
 
 export function toUser(u: UserRaw | User): User {
-  if ('id' in u) return u as User;
-  const id = (u as UserRaw)._id ?? (u as unknown as { userId?: string }).userId ?? '';
+  if ("id" in u) return u;
+  const id = u._id ?? (u as unknown as { userId?: string }).userId ?? "";
   return {
     id,
-    username: (u as UserRaw).username,
-    email: (u as UserRaw).email,
-    role: (u as UserRaw).role,
-    avatar: getImageUrl((u as UserRaw).avatar) ?? undefined,
-    createdAt: (u as UserRaw).createdAt,
-    updatedAt: (u as UserRaw).updatedAt,
+    username: u.username,
+    email: u.email,
+    role: u.role,
+    avatar: getImageUrl(u.avatar) ?? undefined,
+    createdAt: u.createdAt,
+    updatedAt: u.updatedAt,
   };
 }
 
@@ -36,20 +46,20 @@ export function toConcert(c: ConcertRaw): Concert {
 }
 
 export function toTicket(t: TicketItemRaw): TicketItem {
-  const concertId = t.concert?._id ?? t.concertId ?? '';
+  const concertId = t.concert?._id ?? t.concertId ?? "";
   const concert = t.concert
     ? {
-      id: t.concert._id,
-      name: t.concert.name,
-      date: t.concert.date ?? '',
-      venue: t.concert.venue ?? '',
-    }
+        id: t.concert._id,
+        name: t.concert.name,
+        date: t.concert.date ?? "",
+        venue: t.concert.venue ?? "",
+      }
     : undefined;
 
   const userId =
-    typeof t.user === 'string'
+    typeof t.user === "string"
       ? t.user
-      : (t.user && (t.user as { _id?: string })._id) || t.userId || '';
+      : (t.user && (t.user as { _id?: string })._id) || t.userId || "";
 
   return {
     id: t._id,
@@ -85,11 +95,17 @@ export function toFeedback(f: FeedbackRaw): Feedback {
 }
 
 export function toPaginated<TModel, TRaw>(
-  raw: { [k: string]: unknown; total: number; page: number; limit: number; totalPages?: number },
+  raw: {
+    [k: string]: unknown;
+    total: number;
+    page: number;
+    limit: number;
+    totalPages?: number;
+  },
   key: string,
   mapItem: (r: TRaw) => TModel,
 ): Paginated<TModel> {
-  const arr = (raw[key] as unknown as ReadonlyArray<TRaw>) ?? [];
+  const arr = (raw[key] as ReadonlyArray<TRaw>) ?? [];
   return {
     items: arr.map(mapItem),
     total: raw.total,

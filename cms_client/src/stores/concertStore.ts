@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { listConcerts } from '../api/concerts';
-import type { Concert, ConcertStatus, Paginated } from '../types';
+import { create } from "zustand";
+import { listConcerts } from "../api/concerts";
+import type { Concert, ConcertStatus, Paginated } from "../types";
 
 interface ConcertFilter {
   status?: ConcertStatus;

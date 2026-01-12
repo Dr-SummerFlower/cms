@@ -1,19 +1,21 @@
-import { Html5Qrcode, type Html5QrcodeCameraScanConfig } from 'html5-qrcode';
-import type { CSSProperties } from 'react';
-import { useEffect, useId, useRef } from 'react';
+import { Html5Qrcode, type Html5QrcodeCameraScanConfig } from "html5-qrcode";
+import type { CSSProperties } from "react";
+import { useEffect, useId, useRef } from "react";
 
 interface Html5QrScannerProps {
   active: boolean;
   deviceId?: string;
   onDecoded: (text: string) => void;
   onError?: (error: string) => void;
-  qrbox?: Html5QrcodeCameraScanConfig['qrbox'];
+  qrbox?: Html5QrcodeCameraScanConfig["qrbox"];
   className?: string;
   style?: CSSProperties;
   fps?: number;
 }
 
-export default function Html5QrScanner(props: Html5QrScannerProps): JSX.Element {
+export default function Html5QrScanner(
+  props: Html5QrScannerProps,
+): JSX.Element {
   const {
     active,
     deviceId,
@@ -25,7 +27,7 @@ export default function Html5QrScanner(props: Html5QrScannerProps): JSX.Element 
     fps = 10,
   } = props;
 
-  const domId = useId().replace(/:/g, '_');
+  const domId = useId().replace(/:/g, "_");
   const qrcodeRef = useRef<Html5Qrcode | null>(null);
   const runningRef = useRef<boolean>(false);
   const stoppingRef = useRef<boolean>(false);
@@ -46,8 +48,7 @@ export default function Html5QrScanner(props: Html5QrScannerProps): JSX.Element 
         // 先停止扫描器实例（这会停止扫描但可能不会立即释放摄像头）
         if (qrcodeRef.current && runningRef.current) {
           try {
-            await qrcodeRef.current.stop().catch(() => {
-            });
+            await qrcodeRef.current.stop().catch(() => {});
           } catch {
             // 忽略停止错误
           }
@@ -56,7 +57,7 @@ export default function Html5QrScanner(props: Html5QrScannerProps): JSX.Element 
         // 强制停止所有媒体流（确保摄像头完全释放）
         const container = document.getElementById(domId);
         if (container) {
-          const videoElements = container.querySelectorAll('video');
+          const videoElements = container.querySelectorAll("video");
           videoElements.forEach((video) => {
             const stream = video.srcObject as MediaStream;
             if (stream) {
@@ -77,7 +78,7 @@ export default function Html5QrScanner(props: Html5QrScannerProps): JSX.Element 
           }
         }
       } catch (error) {
-        console.warn('QR Scanner stop error:', error);
+        console.warn("QR Scanner stop error:", error);
       } finally {
         runningRef.current = false;
         stoppingRef.current = false;
@@ -110,7 +111,9 @@ export default function Html5QrScanner(props: Html5QrScannerProps): JSX.Element 
         aspectRatio: 16 / 9,
       };
 
-      const cameraConfig = deviceId ? { deviceId: { exact: deviceId } } : { facingMode: 'environment' as const };
+      const cameraConfig = deviceId
+        ? { deviceId: { exact: deviceId } }
+        : { facingMode: "environment" as const };
 
       try {
         await inst.start(
@@ -125,7 +128,7 @@ export default function Html5QrScanner(props: Html5QrScannerProps): JSX.Element 
         );
         runningRef.current = true;
       } catch (error) {
-        console.warn('QR Scanner start error:', error);
+        console.warn("QR Scanner start error:", error);
         runningRef.current = false;
         if (onError) onError(String(error));
       }
@@ -154,9 +157,9 @@ export default function Html5QrScanner(props: Html5QrScannerProps): JSX.Element 
       id={domId}
       className={className}
       style={{
-        width: '100%',
+        width: "100%",
         minHeight: 240,
-        background: '#000',
+        background: "#000",
         borderRadius: 8,
         ...style,
       }}

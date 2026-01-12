@@ -7,7 +7,7 @@ export interface ApiResponse<T> {
   path: string;
 }
 
-export type Role = 'GUEST' | 'USER' | 'ADMIN' | 'INSPECTOR';
+export type Role = "GUEST" | "USER" | "ADMIN" | "INSPECTOR";
 
 // ---- User ----
 export interface UserRaw {
@@ -31,9 +31,16 @@ export interface User {
   updatedAt?: string;
 }
 
+export interface CaptchaResult {
+  id: string;
+  image: ArrayBuffer;
+}
+
 export interface LoginDto {
   email: string;
   password: string;
+  captchaId: string;
+  captchaCode: string;
 }
 
 export interface RegisterDto {
@@ -60,7 +67,7 @@ export interface AuthPayload {
 
 export interface SendCodeDto {
   email: string;
-  type: 'register' | 'update';
+  type: "register" | "update";
 }
 
 export type UpdateUserDto = Partial<{
@@ -68,11 +75,11 @@ export type UpdateUserDto = Partial<{
   email: string;
   password: string;
   newPassword: string;
-  emailCode: string
-}>
+  emailCode: string;
+}>;
 
 // ---- Concert ----
-export type ConcertStatus = 'upcoming' | 'ongoing' | 'completed';
+export type ConcertStatus = "upcoming" | "ongoing" | "completed";
 
 export interface ConcertRaw {
   _id: string;
@@ -133,8 +140,8 @@ export interface CreateConcertDto {
 export type UpdateConcertDto = Partial<CreateConcertDto>;
 
 // ---- Ticket ----
-export type TicketStatus = 'valid' | 'used' | 'refunded';
-export type TicketType = 'adult' | 'child';
+export type TicketStatus = "valid" | "used" | "refunded";
+export type TicketType = "adult" | "child";
 
 export interface TicketConcertLite {
   id: string;
@@ -201,9 +208,8 @@ export interface QrCodeData {
   timestamp: number;
 }
 
-
 // ---- Refund (Admin) ----
-export type RefundStatus = 'pending' | 'approved' | 'rejected';
+export type RefundStatus = "pending" | "approved" | "rejected";
 
 export interface RefundRequest {
   ticketId: string;
@@ -212,12 +218,17 @@ export interface RefundRequest {
   reason: string;
   status: RefundStatus;
   requestTime: string;
-  ticketInfo: { type: TicketType; price: number; concertName: string; venue: string };
+  ticketInfo: {
+    type: TicketType;
+    price: number;
+    concertName: string;
+    venue: string;
+  };
   userInfo: { email: string; username: string };
 }
 
 // ---- Verify ----
-export type VerifyResult = 'valid' | 'invalid';
+export type VerifyResult = "valid" | "invalid";
 
 export interface VerifyQrCodeDto {
   qrData: string;
@@ -228,9 +239,9 @@ export interface VerifyHistoryItem {
   _id: string;
   ticket: {
     _id: string;
-    type: 'adult' | 'child';
+    type: "adult" | "child";
     price: number;
-    status: 'valid' | 'used' | 'refunded';
+    status: "valid" | "used" | "refunded";
     concert: {
       _id: string;
       name: string;
@@ -265,9 +276,9 @@ export interface VerifyTicketResponse {
     concertName: string;
     concertDate: string;
     concertVenue: string;
-    type: 'adult' | 'child';
+    type: "adult" | "child";
     price: number;
-    status: 'valid' | 'used' | 'refunded';
+    status: "valid" | "used" | "refunded";
     userName: string;
     userEmail: string;
     realName?: string;
@@ -301,8 +312,12 @@ export interface BarcodeDetectorConstructor {
 }
 
 // ---- Feedback ----
-export type ErrorType = 'route_error' | 'runtime_error' | 'string_error' | 'unknown';
-export type FeedbackStatus = 'pending' | 'resolved' | 'ignored';
+export type ErrorType =
+  | "route_error"
+  | "runtime_error"
+  | "string_error"
+  | "unknown";
+export type FeedbackStatus = "pending" | "resolved" | "ignored";
 
 export interface FeedbackRaw {
   _id: string;

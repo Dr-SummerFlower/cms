@@ -13,7 +13,7 @@ export interface CookieOptions {
   /** 是否仅在 HTTPS 下传输 */
   secure?: boolean;
   /** SameSite 属性 */
-  sameSite?: 'Strict' | 'Lax' | 'None';
+  sameSite?: "Strict" | "Lax" | "None";
   /** 是否仅服务器可访问（设为 false 以便 JS 访问） */
   httpOnly?: boolean;
 }
@@ -24,13 +24,17 @@ export interface CookieOptions {
  * @param value cookie 值
  * @param options cookie 选项
  */
-export function setCookie(name: string, value: string, options: CookieOptions = {}): void {
+export function setCookie(
+  name: string,
+  value: string,
+  options: CookieOptions = {},
+): void {
   const {
     expires = 7, // 默认7天过期
-    path = '/',
+    path = "/",
     domain,
-    secure = location.protocol === 'https:', // 在 HTTPS 下自动启用 secure
-    sameSite = 'Lax',
+    secure = location.protocol === "https:", // 在 HTTPS 下自动启用 secure
+    sameSite = "Lax",
     httpOnly = false, // 设为 false 以便 JavaScript 访问
   } = options;
 
@@ -53,7 +57,7 @@ export function setCookie(name: string, value: string, options: CookieOptions = 
 
   // 设置安全属性
   if (secure) {
-    cookieString += '; secure';
+    cookieString += "; secure";
   }
 
   // 设置 SameSite
@@ -61,7 +65,7 @@ export function setCookie(name: string, value: string, options: CookieOptions = 
 
   // 设置 HttpOnly（注意：如果设为 true，JavaScript 将无法访问）
   if (httpOnly) {
-    cookieString += '; httponly';
+    cookieString += "; httponly";
   }
 
   document.cookie = cookieString;
@@ -73,8 +77,8 @@ export function setCookie(name: string, value: string, options: CookieOptions = 
  * @returns cookie 值，如果不存在则返回 null
  */
 export function getCookie(name: string): string | null {
-  const nameEQ = encodeURIComponent(name) + '=';
-  const cookies = document.cookie.split(';');
+  const nameEQ = encodeURIComponent(name) + "=";
+  const cookies = document.cookie.split(";");
 
   for (let cookie of cookies) {
     cookie = cookie.trim();
@@ -91,8 +95,11 @@ export function getCookie(name: string): string | null {
  * @param name cookie 名称
  * @param options cookie 选项（主要是 path 和 domain）
  */
-export function deleteCookie(name: string, options: Pick<CookieOptions, 'path' | 'domain'> = {}): void {
-  const { path = '/', domain } = options;
+export function deleteCookie(
+  name: string,
+  options: Pick<CookieOptions, "path" | "domain"> = {},
+): void {
+  const { path = "/", domain } = options;
 
   let cookieString = `${encodeURIComponent(name)}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}`;
 

@@ -1,10 +1,19 @@
-import { ReloadOutlined } from '@ant-design/icons';
-import { App as AntdApp, Button, Card, Descriptions, Divider, Progress, Space, Typography } from 'antd';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { ticketDetail, ticketQr } from '../api/tickets';
-import StatusTag from '../components/common/StatusTag.tsx';
-import type { TicketItem, TicketQr as TicketQrType } from '../types';
+import { ReloadOutlined } from "@ant-design/icons";
+import {
+  App as AntdApp,
+  Button,
+  Card,
+  Descriptions,
+  Divider,
+  Progress,
+  Space,
+  Typography,
+} from "antd";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { ticketDetail, ticketQr } from "../api/tickets";
+import StatusTag from "../components/common/StatusTag.tsx";
+import type { TicketItem, TicketQr as TicketQrType } from "../types";
 
 interface ApiError {
   response?: {
@@ -31,7 +40,7 @@ export default function TicketDetail(): JSX.Element {
   const smoothProgressRef = useRef<number | null>(null);
   const refreshQrCodeRef = useRef<(() => Promise<void>) | null>(null);
   const lastErrorTimeRef = useRef<number>(0);
-  const lastErrorMessageRef = useRef<string>('');
+  const lastErrorMessageRef = useRef<string>("");
   const [isPageVisible, setIsPageVisible] = useState<boolean>(true);
   const messageRef = useRef(message);
   const isRefreshingRef = useRef(false);
@@ -69,7 +78,8 @@ export default function TicketDetail(): JSX.Element {
       setSmoothProgress(100);
     } catch (error: unknown) {
       const apiError = error as ApiError;
-      const errorMessage = apiError?.response?.data?.message || '刷新二维码失败';
+      const errorMessage =
+        apiError?.response?.data?.message || "刷新二维码失败";
       showErrorMessage(errorMessage);
       // 发生错误时清除定时器，避免继续刷新
       if (intervalRef.current) {
@@ -103,7 +113,7 @@ export default function TicketDetail(): JSX.Element {
         await refreshQrCode();
       }
     } catch {
-      messageRef.current.error('加载票据详情失败');
+      messageRef.current.error("加载票据详情失败");
     }
   }, [id, refreshQrCode]);
 
@@ -135,7 +145,7 @@ export default function TicketDetail(): JSX.Element {
 
     // 设置倒计时定时器
     countdownRef.current = setInterval(() => {
-      setCountdown(prev => {
+      setCountdown((prev) => {
         if (prev <= 1) {
           return Math.floor((qrInfo.refreshInterval || 30000) / 1000);
         }
@@ -147,9 +157,9 @@ export default function TicketDetail(): JSX.Element {
     const totalMs = qrInfo.refreshInterval;
     const updateInterval = 100; // 100毫秒更新一次
     const decrementPerUpdate = (100 / totalMs) * updateInterval;
-    
+
     smoothProgressRef.current = setInterval(() => {
-      setSmoothProgress(prev => {
+      setSmoothProgress((prev) => {
         const newProgress = prev - decrementPerUpdate;
         if (newProgress <= 0) {
           return 100; // 重置为100%
@@ -177,9 +187,9 @@ export default function TicketDetail(): JSX.Element {
       setIsPageVisible(!document.hidden);
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
@@ -200,7 +210,7 @@ export default function TicketDetail(): JSX.Element {
   return (
     <Card
       title="票据详情"
-      style={{ maxWidth: 960, margin: '0 auto' }}
+      style={{ maxWidth: 960, margin: "0 auto" }}
       extra={
         <Link to="/me/tickets">
           <Button>返回</Button>
@@ -211,27 +221,27 @@ export default function TicketDetail(): JSX.Element {
         bordered
         column={2}
         items={[
-          { key: 'id', label: '票据ID', children: ticket.id },
+          { key: "id", label: "票据ID", children: ticket.id },
           {
-            key: 'concert',
-            label: '演唱会',
-            children: ticket.concert?.name ?? '-',
+            key: "concert",
+            label: "演唱会",
+            children: ticket.concert?.name ?? "-",
           },
           {
-            key: 'type',
-            label: '类型',
-            children: ticket.type === 'adult' ? '成人' : '儿童',
+            key: "type",
+            label: "类型",
+            children: ticket.type === "adult" ? "成人" : "儿童",
           },
-          { key: 'price', label: '价格', children: `¥${ticket.price}` },
+          { key: "price", label: "价格", children: `¥${ticket.price}` },
           {
-            key: 'status',
-            label: '状态',
+            key: "status",
+            label: "状态",
             children: <StatusTag kind="ticket" value={ticket.status} />,
           },
           {
-            key: 'createdAt',
-            label: '购买时间',
-            children: ticket.createdAt ?? '-',
+            key: "createdAt",
+            label: "购买时间",
+            children: ticket.createdAt ?? "-",
           },
         ]}
       />
@@ -239,7 +249,7 @@ export default function TicketDetail(): JSX.Element {
       <Space
         direction="vertical"
         size="middle"
-        style={{ width: '100%', alignItems: 'center' }}
+        style={{ width: "100%", alignItems: "center" }}
       >
         {/* 动态二维码显示 */}
         {!!qr.png && (
@@ -252,8 +262,12 @@ export default function TicketDetail(): JSX.Element {
 
         {/* 动态二维码状态指示器 */}
         {qrInfo?.refreshInterval && (
-          <Space direction="vertical" size="small" style={{ alignItems: 'center' }}>
-            <Text type="secondary" style={{ fontSize: '12px' }}>
+          <Space
+            direction="vertical"
+            size="small"
+            style={{ alignItems: "center" }}
+          >
+            <Text type="secondary" style={{ fontSize: "12px" }}>
               动态二维码 · {countdown}秒后自动刷新
             </Text>
             <Progress

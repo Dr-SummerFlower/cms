@@ -10,7 +10,7 @@ interface AuthState {
   isAuthed: boolean;
   ready: boolean;
   bootstrapped: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, captchaId: string, captchaCode: string) => Promise<void>;
   applyAuth: (payload: AuthResult) => void;
   logout: () => void;
   setUser: (u: User) => void;
@@ -25,8 +25,8 @@ export const useAuthStore = create<AuthState>()(
       ready: false,
       bootstrapped: false,
 
-      async login(email: string, password: string) {
-        const res: AuthResult = await apiLogin({ email, password });
+      async login(email: string, password: string, captchaId: string, captchaCode: string) {
+        const res: AuthResult = await apiLogin({ email, password, captchaId, captchaCode });
         setTokens({
           access_token: res.access_token,
           refresh_token: res.refresh_token,

@@ -1,7 +1,7 @@
-import { Avatar, Button, Card, Descriptions, Space } from 'antd';
-import { Link } from 'react-router-dom';
-import { useAuthStore } from '../stores/authStore';
-import { getImageUrl } from '../utils/image';
+import { Avatar, Button, Card, Descriptions, Space } from "antd";
+import { Link } from "react-router-dom";
+import { useAuthStore } from "../stores/authStore";
+import { getImageUrl } from "../utils/image";
 
 export default function UserProfileView(): JSX.Element {
   const user = useAuthStore((s) => s.user);
@@ -10,7 +10,7 @@ export default function UserProfileView(): JSX.Element {
   return (
     <Card
       title="个人资料"
-      style={{ maxWidth: 960, margin: '0 auto' }}
+      style={{ maxWidth: 960, margin: "0 auto" }}
       extra={
         <Link to="/me/profile/edit">
           <Button type="primary">编辑资料</Button>
@@ -27,13 +27,13 @@ export default function UserProfileView(): JSX.Element {
         column={2}
         bordered
         items={[
-          { key: 'u', label: '用户名', children: user.username },
-          { key: 'e', label: '邮箱', children: user.email },
-          { key: 'r', label: '角色', children: user.role },
+          { key: "u", label: "用户名", children: user.username },
+          { key: "e", label: "邮箱", children: user.email },
+          { key: "r", label: "角色", children: user.role },
           {
-            key: 'created',
-            label: '注册时间',
-            children: user.createdAt ?? '-',
+            key: "created",
+            label: "注册时间",
+            children: user.createdAt ?? "-",
           },
         ]}
       />

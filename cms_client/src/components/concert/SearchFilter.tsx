@@ -1,5 +1,5 @@
-import { Button, Form, Input, Select, Space } from 'antd';
-import type { ConcertStatus } from '../../types';
+import { Button, Form, Input, Select, Space } from "antd";
+import type { ConcertStatus } from "../../types";
 
 interface Props {
   value: { search?: string; status?: ConcertStatus };
@@ -8,16 +8,16 @@ interface Props {
 }
 
 const statusOptions: Array<{ label: string; value: ConcertStatus }> = [
-  { label: '即将开始', value: 'upcoming' },
-  { label: '进行中', value: 'ongoing' },
-  { label: '已结束', value: 'completed' },
+  { label: "即将开始", value: "upcoming" },
+  { label: "进行中", value: "ongoing" },
+  { label: "已结束", value: "completed" },
 ];
 
 export default function SearchFilter({
-                                       value,
-                                       onChange,
-                                       onSubmit,
-                                     }: Props): JSX.Element {
+  value,
+  onChange,
+  onSubmit,
+}: Props): JSX.Element {
   const [form] = Form.useForm();
 
   return (

@@ -10,4 +10,3 @@ export class ConfirmVerificationDto {
   @IsNotEmpty({ message: '票据ID不能为空' })
   ticketId: string;
 }
-

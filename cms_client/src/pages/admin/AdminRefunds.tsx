@@ -1,9 +1,9 @@
-import { Button, Input, message, Modal, Space, Table } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { listRefundRequests, reviewRefund } from '../../api/tickets';
-import StatusTag from '../../components/common/StatusTag.tsx';
-import type { RefundRequest, RefundStatus } from '../../types';
+import { Button, Input, message, Modal, Space, Table } from "antd";
+import type { ColumnsType } from "antd/es/table";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { listRefundRequests, reviewRefund } from "../../api/tickets";
+import StatusTag from "../../components/common/StatusTag.tsx";
+import type { RefundRequest, RefundStatus } from "../../types";
 
 type ReviewAction = { ticketId: string; approved: boolean };
 
@@ -12,11 +12,11 @@ export default function AdminRefunds(): JSX.Element {
   const [loading, setLoading] = useState<boolean>(false);
 
   const [noteOpen, setNoteOpen] = useState<boolean>(false);
-  const [noteText, setNoteText] = useState<string>('');
+  const [noteText, setNoteText] = useState<string>("");
   const [pendingAction, setPendingAction] = useState<ReviewAction | null>(null);
 
   const [reasonOpen, setReasonOpen] = useState<boolean>(false);
-  const [reasonText, setReasonText] = useState<string>('');
+  const [reasonText, setReasonText] = useState<string>("");
 
   const fetch = useCallback(async (): Promise<void> => {
     setLoading(true);
@@ -34,26 +34,26 @@ export default function AdminRefunds(): JSX.Element {
 
   const askNoteAndReview = (ticketId: string, approved: boolean): void => {
     setPendingAction({ ticketId, approved });
-    setNoteText('');
+    setNoteText("");
     setNoteOpen(true);
   };
 
   const submitReview = async (): Promise<void> => {
     const note = noteText.trim();
     if (!note) {
-      message.error('请填写审核意见');
+      message.error("请填写审核意见");
       return;
     }
     if (!pendingAction) return;
     try {
       await reviewRefund(pendingAction.ticketId, pendingAction.approved, note);
-      message.success(pendingAction.approved ? '已通过' : '已拒绝');
+      message.success(pendingAction.approved ? "已通过" : "已拒绝");
       setNoteOpen(false);
       setPendingAction(null);
-      setNoteText('');
+      setNoteText("");
       await fetch();
     } catch {
-      message.error('操作失败');
+      message.error("操作失败");
     }
   };
 
@@ -64,61 +64,61 @@ export default function AdminRefunds(): JSX.Element {
 
   const columns: ColumnsType<RefundRequest> = useMemo(
     () => [
-      { title: '票据ID', dataIndex: 'ticketId', key: 'ticketId', width: 220 },
+      { title: "票据ID", dataIndex: "ticketId", key: "ticketId", width: 220 },
       {
-        title: '用户',
-        dataIndex: ['userInfo', 'username'],
-        key: 'userName',
+        title: "用户",
+        dataIndex: ["userInfo", "username"],
+        key: "userName",
         width: 160,
       },
       {
-        title: '邮箱',
-        dataIndex: ['userInfo', 'email'],
-        key: 'email',
+        title: "邮箱",
+        dataIndex: ["userInfo", "email"],
+        key: "email",
         width: 220,
       },
       {
-        title: '演唱会',
-        dataIndex: ['ticketInfo', 'concertName'],
-        key: 'concertName',
+        title: "演唱会",
+        dataIndex: ["ticketInfo", "concertName"],
+        key: "concertName",
       },
       {
-        title: '价格',
-        dataIndex: ['ticketInfo', 'price'],
-        key: 'price',
+        title: "价格",
+        dataIndex: ["ticketInfo", "price"],
+        key: "price",
         width: 100,
         render: (v: number) => `¥${v}`,
       },
       {
-        title: '状态',
-        dataIndex: 'status',
-        key: 'status',
+        title: "状态",
+        dataIndex: "status",
+        key: "status",
         width: 120,
         render: (v: RefundStatus) => <StatusTag kind="refund" value={v} />,
       },
       {
-        title: '申请时间',
-        dataIndex: 'requestTime',
-        key: 'requestTime',
+        title: "申请时间",
+        dataIndex: "requestTime",
+        key: "requestTime",
         width: 200,
       },
       {
-        title: '操作',
-        key: 'action',
+        title: "操作",
+        key: "action",
         width: 260,
         render: (_, r) => (
           <Space>
             <Button onClick={() => openReason(r.reason)}>查看原因</Button>
             <Button
               type="primary"
-              disabled={r.status !== 'pending'}
+              disabled={r.status !== "pending"}
               onClick={() => askNoteAndReview(r.ticketId, true)}
             >
               通过
             </Button>
             <Button
               danger
-              disabled={r.status !== 'pending'}
+              disabled={r.status !== "pending"}
               onClick={() => askNoteAndReview(r.ticketId, false)}
             >
               拒绝
@@ -167,10 +167,10 @@ export default function AdminRefunds(): JSX.Element {
         onCancel={() => setReasonOpen(false)}
         onOk={() => setReasonOpen(false)}
         okText="关闭"
-        cancelButtonProps={{ style: { display: 'none' } }}
+        cancelButtonProps={{ style: { display: "none" } }}
       >
-        <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-          {reasonText || '-'}
+        <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+          {reasonText || "-"}
         </div>
       </Modal>
     </>

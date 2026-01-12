@@ -11,6 +11,7 @@ import * as bcrypt from 'bcrypt';
 import { AuthResponse, IUserInfo, JwtPayload, TokenResponse } from '../types';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
+import { CaptchaService } from './captcha.service';
 import { LoginLimitService } from './login-limit.service';
 
 @Injectable()
@@ -20,10 +21,25 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private loginLimitService: LoginLimitService,
+    private captchaService: CaptchaService,
   ) {}
 
-  async login(dto: { email: string; password: string }): Promise<AuthResponse> {
-    const { email, password } = dto;
+  async login(dto: {
+    email: string;
+    password: string;
+    captchaId: string;
+    captchaCode: string;
+  }): Promise<AuthResponse> {
+    const { email, password, captchaId, captchaCode } = dto;
+
+    // 首先验证验证码
+    const isCaptchaValid = await this.captchaService.validate(
+      captchaId,
+      captchaCode,
+    );
+    if (!isCaptchaValid) {
+      throw new BadRequestException('验证码错误或已过期');
+    }
 
     await this.loginLimitService.checkLimit(email);
 

@@ -1,10 +1,10 @@
-import { App as AntdApp, Button, Card, Form, Input, Space, Upload } from 'antd';
-import type { UploadChangeParam, UploadFile } from 'antd/es/upload/interface';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { register as apiRegister, sendEmailCode } from '../api/auth';
-import { useAuthStore } from '../stores/authStore';
-import type { RegisterDto } from '../types';
+import { App as AntdApp, Button, Card, Form, Input, Space, Upload } from "antd";
+import type { UploadChangeParam, UploadFile } from "antd/es/upload/interface";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { register as apiRegister, sendEmailCode } from "../api/auth";
+import { useAuthStore } from "../stores/authStore";
+import type { RegisterDto } from "../types";
 
 const PASSWORD_RULE =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d~!@#$%^&*()_\-+={}[\]|\\:;"'<>,.?/]{8,32}$/;
@@ -50,14 +50,14 @@ export default function RegisterPage(): JSX.Element {
       setAvatarFile(undefined);
       return;
     }
-    if (!raw.type.startsWith('image/')) {
-      message.error('仅支持图片文件');
+    if (!raw.type.startsWith("image/")) {
+      message.error("仅支持图片文件");
       setUploadList([]);
       setAvatarFile(undefined);
       return;
     }
     if (raw.size > 2 * 1024 * 1024) {
-      message.error('图片大小不能超过 2MB');
+      message.error("图片大小不能超过 2MB");
       setUploadList([]);
       setAvatarFile(undefined);
       return;
@@ -66,15 +66,15 @@ export default function RegisterPage(): JSX.Element {
   };
 
   const handleSendCode = async (): Promise<void> => {
-    const email = form.getFieldValue('email') as string | undefined;
+    const email = form.getFieldValue("email") as string | undefined;
     if (!email) {
-      message.warning('请先填写邮箱');
+      message.warning("请先填写邮箱");
       return;
     }
     try {
       setSending(true);
-      await sendEmailCode(email, 'register');
-      message.success('验证码已发送，请查收邮箱');
+      await sendEmailCode(email, "register");
+      message.success("验证码已发送，请查收邮箱");
       setCountdown(60);
       timerRef.current = window.setInterval(
         () =>
@@ -88,20 +88,20 @@ export default function RegisterPage(): JSX.Element {
         1000,
       );
     } catch {
-      message.error('验证码发送失败');
+      message.error("验证码发送失败");
     } finally {
       setSending(false);
     }
   };
 
   return (
-    <Card style={{ maxWidth: 480, margin: '48px auto' }} title="注册">
+    <Card style={{ maxWidth: 480, margin: "48px auto" }} title="注册">
       <Form
         layout="vertical"
         form={form}
         onFinish={async (vals) => {
           if (vals.password !== vals.confirmPassword) {
-            message.error('两次输入的密码不一致');
+            message.error("两次输入的密码不一致");
             return;
           }
           const dto: RegisterDto = {
@@ -114,10 +114,10 @@ export default function RegisterPage(): JSX.Element {
             setSubmitting(true);
             const res = await apiRegister(dto, avatarFile);
             applyAuth(res);
-            message.success('注册成功，已自动登录');
-            navigate('/', { replace: true });
+            message.success("注册成功，已自动登录");
+            navigate("/", { replace: true });
           } catch {
-            message.error('注册失败，请检查信息或稍后重试');
+            message.error("注册失败，请检查信息或稍后重试");
           } finally {
             setSubmitting(false);
           }
@@ -137,7 +137,7 @@ export default function RegisterPage(): JSX.Element {
               setAvatarFile(undefined);
             }}
           >
-            {uploadList.length >= 1 ? null : '上传头像'}
+            {uploadList.length >= 1 ? null : "上传头像"}
           </Upload>
         </Form.Item>
 
@@ -151,7 +151,7 @@ export default function RegisterPage(): JSX.Element {
         <Form.Item
           label="邮箱"
           name="email"
-          rules={[{ required: true }, { type: 'email' }]}
+          rules={[{ required: true }, { type: "email" }]}
         >
           <Input placeholder="you@example.com" allowClear />
         </Form.Item>
@@ -160,7 +160,7 @@ export default function RegisterPage(): JSX.Element {
           name="password"
           rules={[
             { required: true },
-            { pattern: PASSWORD_RULE, message: '8-32位，需大小写字母和数字' },
+            { pattern: PASSWORD_RULE, message: "8-32位，需大小写字母和数字" },
           ]}
           hasFeedback
         >
@@ -169,14 +169,14 @@ export default function RegisterPage(): JSX.Element {
         <Form.Item
           label="确认密码"
           name="confirmPassword"
-          dependencies={['password']}
+          dependencies={["password"]}
           rules={[
             { required: true },
             ({ getFieldValue }) => ({
               validator(_, v?: string) {
-                return !v || v === (getFieldValue('password') as string)
+                return !v || v === (getFieldValue("password") as string)
                   ? Promise.resolve()
-                  : Promise.reject(new Error('两次输入的密码不一致'));
+                  : Promise.reject(new Error("两次输入的密码不一致"));
               },
             }),
           ]}
@@ -191,10 +191,10 @@ export default function RegisterPage(): JSX.Element {
           rules={[
             { required: true },
             { len: 6 },
-            { pattern: /^\d{6}$/, message: '验证码为6位数字' },
+            { pattern: /^\d{6}$/, message: "验证码为6位数字" },
           ]}
         >
-          <Space.Compact style={{ width: '100%' }}>
+          <Space.Compact style={{ width: "100%" }}>
             <Input placeholder="6位数字" maxLength={6} />
             <Button
               type="primary"
@@ -202,7 +202,7 @@ export default function RegisterPage(): JSX.Element {
               disabled={!canSendCode}
               loading={sending}
             >
-              {countdown > 0 ? `${countdown}s后重发` : '发送验证码'}
+              {countdown > 0 ? `${countdown}s后重发` : "发送验证码"}
             </Button>
           </Space.Compact>
         </Form.Item>

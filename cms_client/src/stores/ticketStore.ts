@@ -1,12 +1,12 @@
-import { create } from 'zustand';
-import { myTickets } from '../api/tickets';
-import type { TicketItem } from '../types';
+import { create } from "zustand";
+import { myTickets } from "../api/tickets";
+import type { TicketItem } from "../types";
 
 interface TicketState {
   loading: boolean;
   items: ReadonlyArray<TicketItem>;
   fetch: (params?: {
-    status?: 'valid' | 'used' | 'refunded';
+    status?: "valid" | "used" | "refunded";
     concertId?: string;
   }) => Promise<void>;
   reset: () => void;

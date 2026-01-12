@@ -15,7 +15,7 @@ import { sendEmailCode } from "../api/auth";
 import { updateUser, uploadAvatar } from "../api/users";
 import { useAuthStore } from "../stores/authStore";
 import type { UpdateUserDto } from "../types";
-import { getImageUrl } from '../utils/image';
+import { getImageUrl } from "../utils/image";
 
 export default function UserProfileEdit(): JSX.Element {
   const { message } = AntdApp.useApp();

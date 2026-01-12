@@ -21,3 +21,8 @@ export interface AuthResponse {
   refresh_token: string;
   user: IUserInfo;
 }
+
+export interface CaptchaResult {
+  id: string;
+  image: Buffer;
+}

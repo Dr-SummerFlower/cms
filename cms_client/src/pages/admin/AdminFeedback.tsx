@@ -13,11 +13,22 @@ import {
   Table,
   Tag,
   Typography,
-} from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import { useCallback, useEffect, useState } from 'react';
-import { deleteFeedback, getFeedbackById, getFeedbackList, updateFeedbackStatus } from '../../api/feedback';
-import type { ErrorType, Feedback, FeedbackListResponse, FeedbackQueryDto, FeedbackStatus } from '../../types';
+} from "antd";
+import type { ColumnsType } from "antd/es/table";
+import { useCallback, useEffect, useState } from "react";
+import {
+  deleteFeedback,
+  getFeedbackById,
+  getFeedbackList,
+  updateFeedbackStatus,
+} from "../../api/feedback";
+import type {
+  ErrorType,
+  Feedback,
+  FeedbackListResponse,
+  FeedbackQueryDto,
+  FeedbackStatus,
+} from "../../types";
 
 const { Search } = Input;
 const { Text, Paragraph } = Typography;
@@ -35,17 +46,20 @@ export default function AdminFeedback(): JSX.Element {
   const [detailLoading, setDetailLoading] = useState<boolean>(false);
   const [detail, setDetail] = useState<Feedback | null>(null);
 
-  const fetch = useCallback(async (queryParams: FeedbackQueryDto): Promise<void> => {
-    setLoading(true);
-    try {
-      const res = await getFeedbackList(queryParams);
-      setData(res);
-    } catch {
-      message.error('获取错误反馈列表失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [message]);
+  const fetch = useCallback(
+    async (queryParams: FeedbackQueryDto): Promise<void> => {
+      setLoading(true);
+      try {
+        const res = await getFeedbackList(queryParams);
+        setData(res);
+      } catch {
+        message.error("获取错误反馈列表失败");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [message],
+  );
 
   useEffect(() => {
     void fetch(query);
@@ -58,105 +72,126 @@ export default function AdminFeedback(): JSX.Element {
       const feedback = await getFeedbackById(id);
       setDetail(feedback);
     } catch {
-      message.error('获取错误反馈详情失败');
+      message.error("获取错误反馈详情失败");
       setDetailOpen(false);
     } finally {
       setDetailLoading(false);
     }
   };
 
-  const updateStatus = async (id: string, status: FeedbackStatus): Promise<void> => {
+  const updateStatus = async (
+    id: string,
+    status: FeedbackStatus,
+  ): Promise<void> => {
     try {
       await updateFeedbackStatus(id, status);
-      message.success('状态更新成功');
+      message.success("状态更新成功");
       void fetch(query);
       if (detail && detail.id === id) {
         setDetail({ ...detail, status });
       }
     } catch {
-      message.error('状态更新失败');
+      message.error("状态更新失败");
     }
   };
 
   const handleDelete = async (id: string): Promise<void> => {
     try {
       await deleteFeedback(id);
-      message.success('删除成功');
+      message.success("删除成功");
       void fetch(query);
       if (detail && detail.id === id) {
         setDetailOpen(false);
         setDetail(null);
       }
     } catch {
-      message.error('删除失败');
+      message.error("删除失败");
     }
   };
 
   const getErrorTypeColor = (type: ErrorType): string => {
     switch (type) {
-      case 'route_error': return 'red';
-      case 'runtime_error': return 'orange';
-      case 'string_error': return 'blue';
-      default: return 'default';
+      case "route_error":
+        return "red";
+      case "runtime_error":
+        return "orange";
+      case "string_error":
+        return "blue";
+      default:
+        return "default";
     }
   };
 
   const getStatusColor = (status: FeedbackStatus): string => {
     switch (status) {
-      case 'pending': return 'orange';
-      case 'resolved': return 'green';
-      case 'ignored': return 'gray';
-      default: return 'default';
+      case "pending":
+        return "orange";
+      case "resolved":
+        return "green";
+      case "ignored":
+        return "gray";
+      default:
+        return "default";
     }
   };
 
   const getStatusText = (status: FeedbackStatus): string => {
     switch (status) {
-      case 'pending': return '待处理';
-      case 'resolved': return '已解决';
-      case 'ignored': return '已忽略';
-      default: return status;
+      case "pending":
+        return "待处理";
+      case "resolved":
+        return "已解决";
+      case "ignored":
+        return "已忽略";
+      default:
+        return status;
     }
   };
 
   const getErrorTypeText = (type: ErrorType): string => {
     switch (type) {
-      case 'route_error': return '路由错误';
-      case 'runtime_error': return '运行时错误';
-      case 'string_error': return '字符串错误';
-      case 'unknown': return '未知错误';
-      default: return type;
+      case "route_error":
+        return "路由错误";
+      case "runtime_error":
+        return "运行时错误";
+      case "string_error":
+        return "字符串错误";
+      case "unknown":
+        return "未知错误";
+      default:
+        return type;
     }
   };
 
   const columns: ColumnsType<Feedback> = [
     {
-      title: '时间',
-      dataIndex: 'timestamp',
-      key: 'timestamp',
+      title: "时间",
+      dataIndex: "timestamp",
+      key: "timestamp",
       width: 160,
       render: (timestamp: string) => new Date(timestamp).toLocaleString(),
-      sorter: (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+      sorter: (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
     },
     {
-      title: '错误类型',
-      dataIndex: 'errorType',
-      key: 'errorType',
+      title: "错误类型",
+      dataIndex: "errorType",
+      key: "errorType",
       width: 120,
       render: (type: ErrorType) => (
         <Tag color={getErrorTypeColor(type)}>{getErrorTypeText(type)}</Tag>
       ),
       filters: [
-        { text: '路由错误', value: 'route_error' },
-        { text: '运行时错误', value: 'runtime_error' },
-        { text: '字符串错误', value: 'string_error' },
-        { text: '未知错误', value: 'unknown' },
+        { text: "路由错误", value: "route_error" },
+        { text: "运行时错误", value: "runtime_error" },
+        { text: "字符串错误", value: "string_error" },
+        { text: "未知错误", value: "unknown" },
       ],
     },
     {
-      title: '错误消息',
-      dataIndex: 'message',
-      key: 'message',
+      title: "错误消息",
+      dataIndex: "message",
+      key: "message",
       ellipsis: true,
       render: (message: string) => (
         <Text ellipsis={{ tooltip: message }} style={{ maxWidth: 300 }}>
@@ -165,9 +200,9 @@ export default function AdminFeedback(): JSX.Element {
       ),
     },
     {
-      title: '页面URL',
-      dataIndex: 'url',
-      key: 'url',
+      title: "页面URL",
+      dataIndex: "url",
+      key: "url",
       width: 200,
       ellipsis: true,
       render: (url: string) => (
@@ -177,22 +212,22 @@ export default function AdminFeedback(): JSX.Element {
       ),
     },
     {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
+      title: "状态",
+      dataIndex: "status",
+      key: "status",
       width: 100,
       render: (status: FeedbackStatus) => (
         <Tag color={getStatusColor(status)}>{getStatusText(status)}</Tag>
       ),
       filters: [
-        { text: '待处理', value: 'pending' },
-        { text: '已解决', value: 'resolved' },
-        { text: '已忽略', value: 'ignored' },
+        { text: "待处理", value: "pending" },
+        { text: "已解决", value: "resolved" },
+        { text: "已忽略", value: "ignored" },
       ],
     },
     {
-      title: '操作',
-      key: 'action',
+      title: "操作",
+      key: "action",
       width: 280,
       render: (_, record) => (
         <Space size="small" wrap>
@@ -203,7 +238,9 @@ export default function AdminFeedback(): JSX.Element {
             size="small"
             value={record.status}
             style={{ width: 90 }}
-            onChange={(status: FeedbackStatus) => updateStatus(record.id, status)}
+            onChange={(status: FeedbackStatus) =>
+              updateStatus(record.id, status)
+            }
           >
             <Select.Option value="pending">待处理</Select.Option>
             <Select.Option value="resolved">已解决</Select.Option>
@@ -268,8 +305,10 @@ export default function AdminFeedback(): JSX.Element {
             total: data?.total || 0,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
-            onChange: (page, pageSize) => setQuery({ ...query, page, limit: pageSize }),
+            showTotal: (total, range) =>
+              `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+            onChange: (page, pageSize) =>
+              setQuery({ ...query, page, limit: pageSize }),
           }}
           locale={{
             emptyText: <Empty description="暂无错误反馈" />,
@@ -289,7 +328,9 @@ export default function AdminFeedback(): JSX.Element {
               <Select
                 value={detail.status}
                 style={{ width: 100 }}
-                onChange={(status: FeedbackStatus) => updateStatus(detail.id, status)}
+                onChange={(status: FeedbackStatus) =>
+                  updateStatus(detail.id, status)
+                }
               >
                 <Select.Option value="pending">待处理</Select.Option>
                 <Select.Option value="resolved">已解决</Select.Option>
@@ -343,7 +384,7 @@ export default function AdminFeedback(): JSX.Element {
                   copyable
                   code
                   ellipsis={{ rows: 10, expandable: true }}
-                  style={{ whiteSpace: 'pre-wrap' }}
+                  style={{ whiteSpace: "pre-wrap" }}
                 >
                   {detail.stack}
                 </Paragraph>
@@ -360,13 +401,13 @@ export default function AdminFeedback(): JSX.Element {
                   copyable
                   code
                   ellipsis={{ rows: 5, expandable: true }}
-                  style={{ whiteSpace: 'pre-wrap' }}
+                  style={{ whiteSpace: "pre-wrap" }}
                 >
                   {(() => {
                     try {
-                      return JSON.stringify(detail.routeData, null, 2) as string;
+                      return JSON.stringify(detail.routeData, null, 2);
                     } catch {
-                      return '数据格式错误';
+                      return "数据格式错误";
                     }
                   })()}
                 </Paragraph>

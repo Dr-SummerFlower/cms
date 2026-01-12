@@ -43,4 +43,5 @@ export class RealName {
 
   @Prop() remark?: string;
 }
+
 export const RealNameSchema = SchemaFactory.createForClass(RealName);

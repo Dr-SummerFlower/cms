@@ -1,5 +1,5 @@
-import React from 'react';
-import ErrorPage from '../pages/ErrorPage';
+import React from "react";
+import ErrorPage from "../pages/ErrorPage";
 
 type Props = {
   children: React.ReactNode;
@@ -21,8 +21,8 @@ export default class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: unknown, errorInfo: React.ErrorInfo): void {
-    if (import.meta.env.MODE === 'development') {
-      console.error('ErrorBoundary caught error:', error, errorInfo);
+    if (import.meta.env.MODE === "development") {
+      console.error("ErrorBoundary caught error:", error, errorInfo);
     }
   }
 

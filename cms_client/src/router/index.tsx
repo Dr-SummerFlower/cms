@@ -1,35 +1,37 @@
-import { lazy, Suspense } from 'react';
-import { createBrowserRouter, Navigate } from 'react-router-dom';
-import App from '../App';
-import RegisterPage from '../pages/RegisterPage.tsx';
-import Protected from './protected';
-import ErrorPage from '../pages/ErrorPage.tsx';
+import { lazy, Suspense } from "react";
+import { createBrowserRouter, Navigate } from "react-router-dom";
+import App from "../App";
+import ErrorPage from "../pages/ErrorPage.tsx";
+import RegisterPage from "../pages/RegisterPage.tsx";
+import Protected from "./protected";
 
-const HomePage = lazy(() => import('../pages/HomePage'));
-const LoginPage = lazy(() => import('../pages/LoginPage'));
-const ConcertDetail = lazy(() => import('../pages/ConcertDetail'));
-const UserTickets = lazy(() => import('../pages/UserTickets'));
-const TicketDetail = lazy(() => import('../pages/TicketDetail'));
-const PurchasePage = lazy(() => import('../pages/PurchasePage'));
-const UserProfileView = lazy(() => import('../pages/UserProfileView'));
-const UserProfileEdit = lazy(() => import('../pages/UserProfileEdit'));
+const HomePage = lazy(() => import("../pages/HomePage"));
+const LoginPage = lazy(() => import("../pages/LoginPage"));
+const ConcertDetail = lazy(() => import("../pages/ConcertDetail"));
+const UserTickets = lazy(() => import("../pages/UserTickets"));
+const TicketDetail = lazy(() => import("../pages/TicketDetail"));
+const PurchasePage = lazy(() => import("../pages/PurchasePage"));
+const UserProfileView = lazy(() => import("../pages/UserProfileView"));
+const UserProfileEdit = lazy(() => import("../pages/UserProfileEdit"));
 
 // Admin
-const AdminLayout = lazy(() => import('../pages/admin/AdminLayout'));
-const AdminConcerts = lazy(() => import('../pages/admin/AdminConcerts'));
-const AdminUsers = lazy(() => import('../pages/admin/AdminUsers'));
-const AdminRefunds = lazy(() => import('../pages/admin/AdminRefunds'));
-const AdminFeedback = lazy(() => import('../pages/admin/AdminFeedback'));
+const AdminLayout = lazy(() => import("../pages/admin/AdminLayout"));
+const AdminConcerts = lazy(() => import("../pages/admin/AdminConcerts"));
+const AdminUsers = lazy(() => import("../pages/admin/AdminUsers"));
+const AdminRefunds = lazy(() => import("../pages/admin/AdminRefunds"));
+const AdminFeedback = lazy(() => import("../pages/admin/AdminFeedback"));
 
 // Inspector
 const InspectorVerify = lazy(
-  () => import('../pages/inspector/InspectorVerify'),
+  () => import("../pages/inspector/InspectorVerify"),
 );
-const InspectorVerifyHistory = lazy(()=> import('../pages/inspector/VerifyHistory.tsx'))
+const InspectorVerifyHistory = lazy(
+  () => import("../pages/inspector/VerifyHistory.tsx"),
+);
 
 const router = createBrowserRouter([
   {
-    path: '/',
+    path: "/",
     element: <App />,
     errorElement: <ErrorPage />,
     children: [
@@ -42,7 +44,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: 'login',
+        path: "login",
         element: (
           <Suspense fallback={null}>
             <LoginPage />
@@ -50,7 +52,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: 'register',
+        path: "register",
         element: (
           <Suspense fallback={null}>
             <RegisterPage />
@@ -58,7 +60,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: 'concerts/:id',
+        path: "concerts/:id",
         element: (
           <Suspense fallback={null}>
             <ConcertDetail />
@@ -66,9 +68,9 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: 'purchase/:id',
+        path: "purchase/:id",
         element: (
-          <Protected roles={['USER', 'ADMIN', 'INSPECTOR']}>
+          <Protected roles={["USER", "ADMIN", "INSPECTOR"]}>
             <Suspense fallback={null}>
               <PurchasePage />
             </Suspense>
@@ -76,9 +78,9 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: 'me/tickets',
+        path: "me/tickets",
         element: (
-          <Protected roles={['USER', 'ADMIN', 'INSPECTOR']}>
+          <Protected roles={["USER", "ADMIN", "INSPECTOR"]}>
             <Suspense fallback={null}>
               <UserTickets />
             </Suspense>
@@ -86,9 +88,9 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: 'me/tickets/:id',
+        path: "me/tickets/:id",
         element: (
-          <Protected roles={['USER', 'ADMIN', 'INSPECTOR']}>
+          <Protected roles={["USER", "ADMIN", "INSPECTOR"]}>
             <Suspense fallback={null}>
               <TicketDetail />
             </Suspense>
@@ -96,9 +98,9 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: 'me/profile',
+        path: "me/profile",
         element: (
-          <Protected roles={['USER', 'ADMIN', 'INSPECTOR']}>
+          <Protected roles={["USER", "ADMIN", "INSPECTOR"]}>
             <Suspense fallback={null}>
               <UserProfileView />
             </Suspense>
@@ -106,9 +108,9 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: 'me/profile/edit',
+        path: "me/profile/edit",
         element: (
-          <Protected roles={['USER', 'ADMIN', 'INSPECTOR']}>
+          <Protected roles={["USER", "ADMIN", "INSPECTOR"]}>
             <Suspense fallback={null}>
               <UserProfileEdit />
             </Suspense>
@@ -116,9 +118,9 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: 'admin',
+        path: "admin",
         element: (
-          <Protected roles={['ADMIN']}>
+          <Protected roles={["ADMIN"]}>
             <Suspense fallback={null}>
               <AdminLayout />
             </Suspense>
@@ -134,7 +136,7 @@ const router = createBrowserRouter([
             ),
           },
           {
-            path: 'concerts',
+            path: "concerts",
             element: (
               <Suspense fallback={null}>
                 <AdminConcerts />
@@ -142,7 +144,7 @@ const router = createBrowserRouter([
             ),
           },
           {
-            path: 'users',
+            path: "users",
             element: (
               <Suspense fallback={null}>
                 <AdminUsers />
@@ -150,7 +152,7 @@ const router = createBrowserRouter([
             ),
           },
           {
-            path: 'refunds',
+            path: "refunds",
             element: (
               <Suspense fallback={null}>
                 <AdminRefunds />
@@ -158,7 +160,7 @@ const router = createBrowserRouter([
             ),
           },
           {
-            path: 'feedback',
+            path: "feedback",
             element: (
               <Suspense fallback={null}>
                 <AdminFeedback />
@@ -168,9 +170,9 @@ const router = createBrowserRouter([
         ],
       },
       {
-        path: 'inspector',
+        path: "inspector",
         element: (
-          <Protected roles={['INSPECTOR', 'ADMIN']}>
+          <Protected roles={["INSPECTOR", "ADMIN"]}>
             <Suspense fallback={null}>
               <InspectorVerify />
             </Suspense>
@@ -178,9 +180,9 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: 'inspector/history',
+        path: "inspector/history",
         element: (
-          <Protected roles={['INSPECTOR', 'ADMIN']}>
+          <Protected roles={["INSPECTOR", "ADMIN"]}>
             <Suspense fallback={null}>
               <InspectorVerifyHistory />
             </Suspense>
@@ -190,7 +192,7 @@ const router = createBrowserRouter([
     ],
   },
   {
-    path: '*',
+    path: "*",
     element: (
       <Suspense fallback={null}>
         <Navigate to="/" replace />

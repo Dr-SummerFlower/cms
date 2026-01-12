@@ -9,9 +9,9 @@ import {
   Put,
   Query,
   Request,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
-  UploadedFiles,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import {
@@ -48,7 +48,7 @@ import { TicketsService } from './tickets.service';
 @Controller('tickets')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TicketsController {
-  constructor(private readonly ticketsService: TicketsService) { }
+  constructor(private readonly ticketsService: TicketsService) {}
 
   @ApiOperation({ summary: '创建票务订单' })
   @ApiBody({
@@ -126,7 +126,7 @@ export class TicketsController {
     @Request() req: { user: { userId: string } },
   ) {
     let createTicketOrderDto: CreateTicketOrderDto;
-    
+
     // 如果 body 中有 data 字段（JSON 字符串），则解析它
     if (body.data && typeof body.data === 'string') {
       try {
@@ -471,7 +471,7 @@ export class TicketsController {
 @Controller('verify')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class VerifyController {
-  constructor(private readonly ticketsService: TicketsService) { }
+  constructor(private readonly ticketsService: TicketsService) {}
 
   @ApiOperation({ summary: '验票' })
   @ApiBody({

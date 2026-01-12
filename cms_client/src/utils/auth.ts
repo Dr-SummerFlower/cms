@@ -1,8 +1,8 @@
-import type { Tokens } from '../types';
-import { setCookie, getCookie, deleteCookie } from './cookie';
+import type { Tokens } from "../types";
+import { deleteCookie, getCookie, setCookie } from "./cookie";
 
-const ACCESS_KEY = 'access_token';
-const REFRESH_KEY = 'refresh_token';
+const ACCESS_KEY = "access_token";
+const REFRESH_KEY = "refresh_token";
 
 // 内存缓存
 let memoryTokens: { access_token?: string; refresh_token?: string } = {};
@@ -26,7 +26,7 @@ export function getAccessToken(): string | null {
       return sessionToken;
     }
   } catch (error) {
-    console.warn('SessionStorage access failed:', error);
+    console.warn("SessionStorage access failed:", error);
   }
 
   // 3. 从 cookie 获取（兜底）
@@ -38,12 +38,12 @@ export function getAccessToken(): string | null {
       try {
         sessionStorage.setItem(ACCESS_KEY, cookieToken);
       } catch (error) {
-        console.warn('SessionStorage write failed:', error);
+        console.warn("SessionStorage write failed:", error);
       }
       return cookieToken;
     }
   } catch (error) {
-    console.warn('Cookie access failed:', error);
+    console.warn("Cookie access failed:", error);
   }
 
   return null;
@@ -68,7 +68,7 @@ export function getRefreshToken(): string | null {
       return cookieToken;
     }
   } catch (error) {
-    console.warn('Cookie access failed:', error);
+    console.warn("Cookie access failed:", error);
   }
 
   return null;
@@ -87,7 +87,7 @@ export function setTokens(tokens: Tokens): void {
   try {
     sessionStorage.setItem(ACCESS_KEY, tokens.access_token);
   } catch (error) {
-    console.warn('SessionStorage write failed:', error);
+    console.warn("SessionStorage write failed:", error);
   }
 
   // 3. 存储到 cookie（兜底，两个 token 都存储）
@@ -96,7 +96,7 @@ export function setTokens(tokens: Tokens): void {
     setCookie(ACCESS_KEY, tokens.access_token, {
       expires: 1,
       secure: true,
-      sameSite: 'Lax',
+      sameSite: "Lax",
       httpOnly: false, // 允许 JavaScript 访问
     });
 
@@ -104,11 +104,11 @@ export function setTokens(tokens: Tokens): void {
     setCookie(REFRESH_KEY, tokens.refresh_token, {
       expires: 7,
       secure: true,
-      sameSite: 'Lax',
+      sameSite: "Lax",
       httpOnly: false, // 允许 JavaScript 访问
     });
   } catch (error) {
-    console.warn('Cookie write failed:', error);
+    console.warn("Cookie write failed:", error);
   }
 }
 
@@ -124,7 +124,7 @@ export function clearTokens(): void {
   try {
     sessionStorage.removeItem(ACCESS_KEY);
   } catch (error) {
-    console.warn('SessionStorage clear failed:', error);
+    console.warn("SessionStorage clear failed:", error);
   }
 
   // 3. 清除 cookie
@@ -132,10 +132,9 @@ export function clearTokens(): void {
     deleteCookie(ACCESS_KEY);
     deleteCookie(REFRESH_KEY);
   } catch (error) {
-    console.warn('Cookie clear failed:', error);
+    console.warn("Cookie clear failed:", error);
   }
 }
-
 
 /**
  * 仅更新 access token（用于 token 刷新场景）
@@ -148,7 +147,7 @@ export function updateAccessToken(accessToken: string): void {
   try {
     sessionStorage.setItem(ACCESS_KEY, accessToken);
   } catch (error) {
-    console.warn('SessionStorage write failed:', error);
+    console.warn("SessionStorage write failed:", error);
   }
 
   // 更新 cookie
@@ -156,10 +155,10 @@ export function updateAccessToken(accessToken: string): void {
     setCookie(ACCESS_KEY, accessToken, {
       expires: 1,
       secure: true,
-      sameSite: 'Lax',
+      sameSite: "Lax",
       httpOnly: false,
     });
   } catch (error) {
-    console.warn('Cookie write failed:', error);
+    console.warn("Cookie write failed:", error);
   }
 }

@@ -1,9 +1,9 @@
-import { Button, Card, Space, Tag } from 'antd';
-import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { getConcert } from '../api/concerts';
-import type { Concert } from '../types';
+import { Button, Card, Space, Tag } from "antd";
+import dayjs from "dayjs";
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { getConcert } from "../api/concerts";
+import type { Concert } from "../types";
 
 export default function ConcertDetail(): JSX.Element {
   const { id } = useParams();
@@ -21,14 +21,14 @@ export default function ConcertDetail(): JSX.Element {
     <Card title={concert.name}>
       <Space direction="vertical" size={12}>
         <div>
-          时间：<Tag>{dayjs(concert.date).format('YYYY-MM-DD HH:mm')}</Tag>
+          时间：<Tag>{dayjs(concert.date).format("YYYY-MM-DD HH:mm")}</Tag>
         </div>
         <div>场馆：{concert.venue}</div>
         <div>
           票价：成人 ¥{concert.adultPrice}｜儿童 ¥{concert.childPrice}
         </div>
         <div>
-          单人限购：成人 {concert.maxAdultTicketsPerUser ?? 2} / 儿童{' '}
+          单人限购：成人 {concert.maxAdultTicketsPerUser ?? 2} / 儿童{" "}
           {concert.maxChildTicketsPerUser ?? 1}
         </div>
         <div>总票数：{concert.totalTickets}</div>

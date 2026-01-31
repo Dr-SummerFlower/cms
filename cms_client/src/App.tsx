@@ -1,14 +1,14 @@
-import { App as AntdApp, ConfigProvider, Layout, theme } from "antd";
-import { Outlet } from "react-router-dom";
-import ErrorBoundary from "./components/ErrorBoundary";
-import AppFooter from "./components/layout/Footer";
-import AppHeader from "./components/layout/Header";
-import { useThemeStore } from "./stores/themeStore";
+import {App as AntdApp, ConfigProvider, Layout, theme} from 'antd';
+import {Outlet} from 'react-router-dom';
+import ErrorBoundary from './components/ErrorBoundary';
+import AppFooter from './components/layout/Footer';
+import AppHeader from './components/layout/Header';
+import {useThemeStore} from './stores/themeStore';
 
-const { Content } = Layout;
+const {Content} = Layout;
 
 export default function App() {
-  const { theme: currentTheme } = useThemeStore();
+  const {theme: currentTheme} = useThemeStore();
   const isDark = currentTheme === "dark";
 
   return (
@@ -47,16 +47,16 @@ export default function App() {
               backgroundColor: isDark ? "#141414" : "#f0f2f5",
             }}
           >
-            <AppHeader />
+            <AppHeader/>
             <Content
               style={{
                 padding: 24,
                 backgroundColor: isDark ? "#141414" : "#f0f2f5",
               }}
             >
-              <Outlet />
+              <Outlet/>
             </Content>
-            <AppFooter />
+            <AppFooter/>
           </Layout>
         </ErrorBoundary>
       </AntdApp>

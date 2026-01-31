@@ -1,10 +1,10 @@
-import { App as AntdApp, Button, Card, Form, Input, Space, Upload } from "antd";
-import type { UploadChangeParam, UploadFile } from "antd/es/upload/interface";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { register as apiRegister, sendEmailCode } from "../api/auth";
-import { useAuthStore } from "../stores/authStore";
-import type { RegisterDto } from "../types";
+import {App as AntdApp, Button, Card, Form, Input, Space, Upload} from 'antd';
+import type {UploadChangeParam, UploadFile} from 'antd/es/upload/interface';
+import {useEffect, useMemo, useRef, useState} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {register as apiRegister, sendEmailCode} from '../api/auth';
+import {useAuthStore} from '../stores/authStore';
+import type {RegisterDto} from '../types';
 
 const PASSWORD_RULE =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d~!@#$%^&*()_\-+={}[\]|\\:;"'<>,.?/]{8,32}$/;
@@ -24,7 +24,7 @@ export default function RegisterPage(): JSX.Element {
   const [countdown, setCountdown] = useState(0);
   const timerRef = useRef<number | null>(null);
 
-  const { message } = AntdApp.useApp();
+  const {message} = AntdApp.useApp();
   const navigate = useNavigate();
   const applyAuth = useAuthStore((s) => s.applyAuth);
 
@@ -95,7 +95,7 @@ export default function RegisterPage(): JSX.Element {
   };
 
   return (
-    <Card style={{ maxWidth: 480, margin: "48px auto" }} title="注册">
+    <Card style={{maxWidth: 480, margin: "48px auto"}} title="注册">
       <Form
         layout="vertical"
         form={form}
@@ -115,7 +115,7 @@ export default function RegisterPage(): JSX.Element {
             const res = await apiRegister(dto, avatarFile);
             applyAuth(res);
             message.success("注册成功，已自动登录");
-            navigate("/", { replace: true });
+            navigate("/", {replace: true});
           } catch {
             message.error("注册失败，请检查信息或稍后重试");
           } finally {
@@ -144,35 +144,35 @@ export default function RegisterPage(): JSX.Element {
         <Form.Item
           label="用户名"
           name="username"
-          rules={[{ required: true }, { min: 4, max: 20 }]}
+          rules={[{required: true}, {min: 4, max: 20}]}
         >
-          <Input placeholder="4-20个字符" allowClear />
+          <Input placeholder="4-20个字符" allowClear/>
         </Form.Item>
         <Form.Item
           label="邮箱"
           name="email"
-          rules={[{ required: true }, { type: "email" }]}
+          rules={[{required: true}, {type: "email"}]}
         >
-          <Input placeholder="you@example.com" allowClear />
+          <Input placeholder="you@example.com" allowClear/>
         </Form.Item>
         <Form.Item
           label="密码"
           name="password"
           rules={[
-            { required: true },
-            { pattern: PASSWORD_RULE, message: "8-32位，需大小写字母和数字" },
+            {required: true},
+            {pattern: PASSWORD_RULE, message: "8-32位，需大小写字母和数字"},
           ]}
           hasFeedback
         >
-          <Input.Password placeholder="设置密码" />
+          <Input.Password placeholder="设置密码"/>
         </Form.Item>
         <Form.Item
           label="确认密码"
           name="confirmPassword"
           dependencies={["password"]}
           rules={[
-            { required: true },
-            ({ getFieldValue }) => ({
+            {required: true},
+            ({getFieldValue}) => ({
               validator(_, v?: string) {
                 return !v || v === (getFieldValue("password") as string)
                   ? Promise.resolve()
@@ -182,20 +182,20 @@ export default function RegisterPage(): JSX.Element {
           ]}
           hasFeedback
         >
-          <Input.Password placeholder="再次输入密码" />
+          <Input.Password placeholder="再次输入密码"/>
         </Form.Item>
 
         <Form.Item
           label="邮箱验证码"
           name="code"
           rules={[
-            { required: true },
-            { len: 6 },
-            { pattern: /^\d{6}$/, message: "验证码为6位数字" },
+            {required: true},
+            {len: 6},
+            {pattern: /^\d{6}$/, message: "验证码为6位数字"},
           ]}
         >
-          <Space.Compact style={{ width: "100%" }}>
-            <Input placeholder="6位数字" maxLength={6} />
+          <Space.Compact style={{width: "100%"}}>
+            <Input placeholder="6位数字" maxLength={6}/>
             <Button
               type="primary"
               onClick={() => void handleSendCode()}

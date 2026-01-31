@@ -1,25 +1,16 @@
-import {
-  App as AntdApp,
-  Button,
-  Input,
-  Modal,
-  Segmented,
-  Space,
-  Table,
-  Tooltip,
-} from "antd";
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { refundTicket } from "../api/tickets";
+import {App as AntdApp, Button, Input, Modal, Segmented, Space, Table, Tooltip,} from "antd";
+import {useEffect, useMemo, useState} from "react";
+import {useNavigate} from "react-router-dom";
+import {refundTicket} from "../api/tickets";
 import StatusTag from "../components/common/StatusTag.tsx";
-import { useTicketStore } from "../stores/ticketStore";
-import type { TicketItem } from "../types";
+import {useTicketStore} from "../stores/ticketStore";
+import type {TicketItem} from "../types";
 
 type StatusFilter = "all" | "valid" | "used" | "refunded";
 
 export default function UserTickets(): JSX.Element {
-  const { items, loading, fetch } = useTicketStore();
-  const { message } = AntdApp.useApp();
+  const {items, loading, fetch} = useTicketStore();
+  const {message} = AntdApp.useApp();
   const [status, setStatus] = useState<StatusFilter>("all");
   const navigate = useNavigate();
   const [refundOpen, setRefundOpen] = useState(false);
@@ -27,7 +18,7 @@ export default function UserTickets(): JSX.Element {
   const [refundTicketId, setRefundTicketId] = useState<string | null>(null);
 
   const queryParam = useMemo(
-    () => (status === "all" ? undefined : { status }),
+    () => (status === "all" ? undefined : {status}),
     [status],
   );
 
@@ -61,7 +52,7 @@ export default function UserTickets(): JSX.Element {
   };
 
   const columns = [
-    { title: "票据ID", dataIndex: "id", key: "id", width: 220 },
+    {title: "票据ID", dataIndex: "id", key: "id", width: 220},
     {
       title: "演唱会",
       key: "concert",
@@ -87,10 +78,10 @@ export default function UserTickets(): JSX.Element {
       key: "status",
       width: 120,
       render: (s: TicketItem["status"]) => (
-        <StatusTag kind="ticket" value={s} />
+        <StatusTag kind="ticket" value={s}/>
       ),
     },
-    { title: "购买时间", dataIndex: "createdAt", key: "createdAt", width: 200 },
+    {title: "购买时间", dataIndex: "createdAt", key: "createdAt", width: 200},
     {
       title: "操作",
       key: "actions",
@@ -115,15 +106,15 @@ export default function UserTickets(): JSX.Element {
   ];
 
   const filterOptions = [
-    { label: "全部", value: "all" },
-    { label: "未使用", value: "valid" },
-    { label: "已使用", value: "used" },
-    { label: "已退款", value: "refunded" },
+    {label: "全部", value: "all"},
+    {label: "未使用", value: "valid"},
+    {label: "已使用", value: "used"},
+    {label: "已退款", value: "refunded"},
   ];
 
   return (
     <>
-      <Space style={{ marginBottom: 12 }}>
+      <Space style={{marginBottom: 12}}>
         <Segmented
           options={filterOptions}
           value={status}
@@ -144,7 +135,7 @@ export default function UserTickets(): JSX.Element {
         onOk={() => void submitRefund()}
         okText="提交申请"
       >
-        <div style={{ marginBottom: 8, color: "#999" }}>
+        <div style={{marginBottom: 8, color: "#999"}}>
           请填写退票原因（必填）
         </div>
         <Input.TextArea
@@ -154,7 +145,7 @@ export default function UserTickets(): JSX.Element {
           onChange={(e) => setRefundReason(e.target.value)}
           maxLength={200}
           showCount
-          style={{ marginBottom: 16 }}
+          style={{marginBottom: 16}}
         />
       </Modal>
     </>

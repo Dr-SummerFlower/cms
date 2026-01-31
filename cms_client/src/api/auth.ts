@@ -29,7 +29,9 @@ export async function getCaptcha(): Promise<CaptchaResult> {
 }
 
 export async function login(dto: LoginDto): Promise<AuthResult> {
-  const payload = await postJson<AuthPayload, LoginDto>("/auth/login", dto);
+  const payload = await postJson<AuthPayload, LoginDto>("/auth/login", dto, {
+    skipGlobalErrorHandler: true,
+  });
   return {
     access_token: payload.access_token,
     refresh_token: payload.refresh_token,
@@ -47,7 +49,9 @@ export async function register(
   form.set("password", dto.password);
   form.set("code", dto.code);
   if (avatar) form.set("avatar", avatar);
-  const payload = await postForm<AuthPayload>("/auth/register", form);
+  const payload = await postForm<AuthPayload>("/auth/register", form, {
+    skipGlobalErrorHandler: true,
+  });
   return {
     access_token: payload.access_token,
     refresh_token: payload.refresh_token,
@@ -56,12 +60,14 @@ export async function register(
 }
 
 export async function refresh(refresh_token: string): Promise<Tokens> {
-  return await postJson<Tokens, RefreshDto>("/auth/refresh", { refresh_token });
+  return await postJson<Tokens, RefreshDto>("/auth/refresh", {refresh_token});
 }
 
 export async function sendEmailCode(
   email: string,
   type: "register" | "update",
 ): Promise<void> {
-  await postJson<unknown, SendCodeDto>("/email", { email, type });
+  await postJson<unknown, SendCodeDto>("/email", {email, type}, {
+    skipGlobalErrorHandler: true,
+  });
 }

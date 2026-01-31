@@ -1,21 +1,21 @@
-import { App as AntdApp, Button, Card, Form, Input } from 'antd';
+import {App as AntdApp, Button, Card, Form, Input} from 'antd';
 import axios from 'axios';
-import { useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { CaptchaInput, type CaptchaInputRef } from '../components/common/CaptchaInput';
-import { useAuthStore } from '../stores/authStore';
+import {useRef, useState} from 'react';
+import {useLocation, useNavigate} from 'react-router-dom';
+import {CaptchaInput, type CaptchaInputRef} from '../components/common/CaptchaInput';
+import {useAuthStore} from '../stores/authStore';
 
 export default function LoginPage(): JSX.Element {
   const [loading, setLoading] = useState(false);
   const login = useAuthStore((s) => s.login);
   const navigate = useNavigate();
   const location = useLocation() as { state?: { from?: Location } };
-  const { message } = AntdApp.useApp();
+  const {message} = AntdApp.useApp();
   const captchaRef = useRef<CaptchaInputRef>(null);
   const [form] = Form.useForm();
 
   return (
-    <Card style={{ maxWidth: 400, margin: '48px auto' }} title="登录">
+    <Card style={{maxWidth: 400, margin: '48px auto'}} title="登录">
       <Form
         form={form}
         layout="vertical"
@@ -32,7 +32,7 @@ export default function LoginPage(): JSX.Element {
             await login(vals.email, vals.password, captchaValue.captchaId, captchaValue.captchaCode);
             message.success('登录成功，欢迎回来！');
             const to = location.state?.from?.pathname ?? '/';
-            navigate(to, { replace: true });
+            navigate(to, {replace: true});
           } catch (error: unknown) {
             if (axios.isAxiosError(error)) {
               const status = error.response?.status;
@@ -81,17 +81,17 @@ export default function LoginPage(): JSX.Element {
         <Form.Item
           name="email"
           label="邮箱"
-          rules={[{ required: true }, { type: 'email' }]}
+          rules={[{required: true}, {type: 'email'}]}
         >
-          <Input placeholder="请填写您的邮箱" />
+          <Input placeholder="请填写您的邮箱"/>
         </Form.Item>
-        <Form.Item name="password" label="密码" rules={[{ required: true }]}>
-          <Input.Password placeholder="请填写您的密码" />
+        <Form.Item name="password" label="密码" rules={[{required: true}]}>
+          <Input.Password placeholder="请填写您的密码"/>
         </Form.Item>
         <Form.Item
           label="验证码"
           rules={[
-            { required: true, message: '请输入验证码' },
+            {required: true, message: '请输入验证码'},
             {
               validator: () => {
                 const captchaValue = captchaRef.current?.getValue();

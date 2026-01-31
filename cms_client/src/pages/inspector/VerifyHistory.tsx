@@ -1,9 +1,9 @@
-import { Button, Card, Table, Tag } from "antd";
-import type { ColumnsType } from "antd/es/table";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { verifyHistory } from "../../api/verify";
-import type { VerifyHistoryItem } from "../../types";
+import {Button, Card, Table, Tag} from 'antd';
+import type {ColumnsType} from 'antd/es/table';
+import {useCallback, useEffect, useMemo, useState} from 'react';
+import {Link} from 'react-router-dom';
+import {verifyHistory} from '../../api/verify';
+import type {VerifyHistoryItem} from '../../types';
 
 export default function VerifyHistory(): JSX.Element {
   const [rows, setRows] = useState<ReadonlyArray<VerifyHistoryItem>>([]);
@@ -101,7 +101,7 @@ export default function VerifyHistory(): JSX.Element {
         columns={columns}
         dataSource={rows}
         loading={loading}
-        pagination={{ pageSize: 10 }}
+        pagination={{pageSize: 10}}
       />
     </Card>
   );

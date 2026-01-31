@@ -7,8 +7,8 @@ import type {
   FeedbackStatus,
   UpdateFeedbackStatusDto,
 } from "../types";
-import { delJson, getJson, patchJson, postJson } from "../utils/http";
-import { toFeedback } from "./_transform"; // 提交错误反馈（无需认证）
+import {delJson, getJson, patchJson, postJson} from "../utils/http";
+import {toFeedback} from "./_transform"; // 提交错误反馈（无需认证）
 
 // 提交错误反馈（无需认证）
 export async function createFeedback(
@@ -65,7 +65,7 @@ export async function updateFeedbackStatus(
 ): Promise<Feedback> {
   const result = await patchJson<FeedbackRaw, UpdateFeedbackStatusDto>(
     `/feedback/${id}/status`,
-    { status },
+    {status},
   );
   return toFeedback(result);
 }

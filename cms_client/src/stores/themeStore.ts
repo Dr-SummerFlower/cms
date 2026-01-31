@@ -1,5 +1,5 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import {create} from 'zustand';
+import {persist} from 'zustand/middleware';
 
 export type Theme = "light" | "dark";
 
@@ -13,7 +13,7 @@ export const useThemeStore = create<ThemeState>()(
     (set) => ({
       theme: "light",
       toggleTheme: () =>
-        set((state) => ({ theme: state.theme === "light" ? "dark" : "light" })),
+        set((state) => ({theme: state.theme === "light" ? "dark" : "light"})),
     }),
     {
       name: "theme-storage",

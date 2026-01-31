@@ -1,8 +1,8 @@
-import { Spin } from "antd";
-import { useEffect } from "react";
-import { Navigate, useLocation } from "react-router-dom";
-import { useAuthStore } from "../stores/authStore";
-import type { Role } from "../types";
+import {Spin} from 'antd';
+import {useEffect} from 'react';
+import {Navigate, useLocation} from 'react-router-dom';
+import {useAuthStore} from '../stores/authStore';
+import type {Role} from '../types';
 
 interface ProtectedProps {
   children: JSX.Element;
@@ -10,9 +10,9 @@ interface ProtectedProps {
 }
 
 export default function Protected({
-  children,
-  roles,
-}: ProtectedProps): JSX.Element {
+                                    children,
+                                    roles,
+                                  }: ProtectedProps): JSX.Element {
   const location = useLocation();
 
   const user = useAuthStore((s) => s.user);
@@ -36,17 +36,17 @@ export default function Protected({
           justifyContent: "center",
         }}
       >
-        <Spin />
+        <Spin/>
       </div>
     );
   }
 
   if (!isAuthed) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/login" state={{from: location}} replace/>;
   }
 
   if (roles && user && !roles.includes(user.role)) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/" replace/>;
   }
 
   return children;

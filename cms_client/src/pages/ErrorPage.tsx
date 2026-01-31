@@ -1,8 +1,8 @@
-import { Button, Result } from "antd";
-import { useMemo, useState } from "react";
-import { isRouteErrorResponse, useRouteError } from "react-router-dom";
-import { createFeedback } from "../api/feedback";
-import type { ErrorType } from "../types";
+import {Button, Result} from 'antd';
+import {useMemo, useState} from 'react';
+import {isRouteErrorResponse, useRouteError} from 'react-router-dom';
+import {createFeedback} from '../api/feedback';
+import type {ErrorType, RouteData} from '../types';
 
 interface ErrorFeedback {
   timestamp: string;
@@ -13,11 +13,17 @@ interface ErrorFeedback {
   stack?: string;
   routeStatus?: number;
   routeStatusText?: string;
-  routeData?: any;
+  routeData?: RouteData;
 }
 
-export default function ErrorPage(): JSX.Element {
-  const err = useRouteError();
+interface ErrorPageProps {
+  error?: unknown;
+}
+
+export default function ErrorPage({error: propError}: ErrorPageProps = {}): JSX.Element {
+  const routeError = useRouteError();
+  // 优先使用 prop 传递的错误(来自 ErrorBoundary),其次使用路由错误
+  const err = propError ?? routeError;
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -78,7 +84,7 @@ export default function ErrorPage(): JSX.Element {
       feedback.errorType = "string_error";
     }
 
-    return { title, subTitle, displayInfo, feedback };
+    return {title, subTitle, displayInfo, feedback};
   }, [err]);
 
   const isDev = import.meta.env.MODE === "development";
@@ -119,10 +125,10 @@ export default function ErrorPage(): JSX.Element {
       ]}
     >
       {isDev && (errorInfo.displayInfo || errorInfo.feedback.stack) && (
-        <div style={{ marginTop: 16, textAlign: "left" }}>
+        <div style={{marginTop: 16, textAlign: "left"}}>
           <details>
             <summary>错误详情（开发模式）</summary>
-            <pre style={{ whiteSpace: "pre-wrap", fontSize: "12px" }}>
+            <pre style={{whiteSpace: "pre-wrap", fontSize: "12px"}}>
               {errorInfo.feedback.stack || errorInfo.displayInfo}
             </pre>
           </details>

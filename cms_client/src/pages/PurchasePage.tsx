@@ -1,5 +1,5 @@
-import { UploadOutlined } from "@ant-design/icons";
-import type { UploadFile } from "antd";
+import {UploadOutlined} from "@ant-design/icons";
+import type {UploadFile} from "antd";
 import {
   Alert,
   App as AntdApp,
@@ -14,23 +14,18 @@ import {
   Typography,
   Upload,
 } from "antd";
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { getConcert } from "../api/concerts";
-import { createOrder, myTickets } from "../api/tickets";
-import type {
-  Concert,
-  CreateTicketOrderDto,
-  TicketAttendeeInfo,
-  TicketItem,
-} from "../types";
+import {useEffect, useMemo, useState} from "react";
+import {useNavigate, useParams} from "react-router-dom";
+import {getConcert} from "../api/concerts";
+import {createOrder, myTickets} from "../api/tickets";
+import type {Concert, CreateTicketOrderDto, TicketAttendeeInfo, TicketItem,} from "../types";
 
 export default function PurchasePage(): JSX.Element {
-  const { id } = useParams();
+  const {id} = useParams();
   const [concert, setConcert] = useState<Concert | null>(null);
   const [ownedAdult, setOwnedAdult] = useState<number>(0);
   const [ownedChild, setOwnedChild] = useState<number>(0);
-  const { message } = AntdApp.useApp();
+  const {message} = AntdApp.useApp();
   const navigate = useNavigate();
   const [form] = Form.useForm<{ adultQty?: number; childQty?: number }>();
 
@@ -41,7 +36,7 @@ export default function PurchasePage(): JSX.Element {
       setConcert(c);
       try {
         // 获取所有 valid 和 used 状态的票（与后端检查逻辑一致）
-        const allTickets = await myTickets({ concertId: id });
+        const allTickets = await myTickets({concertId: id});
         const validAndUsedTickets = allTickets.filter(
           (t: TicketItem) => t.status === "valid" || t.status === "used",
         );
@@ -54,7 +49,7 @@ export default function PurchasePage(): JSX.Element {
             if (t.type === "child") acc.child += 1;
             return acc;
           },
-          { adult: 0, child: 0 },
+          {adult: 0, child: 0},
         );
         setOwnedAdult(counts.adult);
         setOwnedChild(counts.child);
@@ -82,7 +77,7 @@ export default function PurchasePage(): JSX.Element {
   const totalTickets = useMemo(() => adultQty + childQty, [adultQty, childQty]);
 
   if (!concert)
-    return <Card loading style={{ maxWidth: 720, margin: "24px auto" }} />;
+    return <Card loading style={{maxWidth: 720, margin: "24px auto"}}/>;
 
   const onFinish = async (vals: Record<string, unknown>): Promise<void> => {
     const a = Number(vals.adultQty ?? 0);
@@ -134,7 +129,7 @@ export default function PurchasePage(): JSX.Element {
         return;
       }
 
-      attendees.push({ realName, idCard });
+      attendees.push({realName, idCard});
       faceImages.push(faceFile.originFileObj);
     }
 
@@ -171,7 +166,7 @@ export default function PurchasePage(): JSX.Element {
     try {
       await createOrder(dto, faceImages);
       message.success("下单成功，电子票已生成");
-      navigate("/me/tickets", { replace: true });
+      navigate("/me/tickets", {replace: true});
     } catch {
       message.error("下单失败，请稍后再试");
     }
@@ -180,7 +175,7 @@ export default function PurchasePage(): JSX.Element {
   return (
     <Card
       title="确认购票"
-      style={{ maxWidth: 720, margin: "24px auto" }}
+      style={{maxWidth: 720, margin: "24px auto"}}
       extra={
         <Typography.Text type="secondary">
           {new Date(concert.date).toLocaleString()}
@@ -192,8 +187,8 @@ export default function PurchasePage(): JSX.Element {
         bordered
         size="small"
         items={[
-          { key: "name", label: "演唱会", children: concert.name },
-          { key: "venue", label: "场馆", children: concert.venue },
+          {key: "name", label: "演唱会", children: concert.name},
+          {key: "venue", label: "场馆", children: concert.venue},
           {
             key: "limit",
             label: "单人限购",
@@ -210,7 +205,7 @@ export default function PurchasePage(): JSX.Element {
       <Alert
         type="info"
         showIcon
-        style={{ marginTop: 12 }}
+        style={{marginTop: 12}}
         message="购票须知"
         description="为保障广大消费者的购票需求，我们对每位用户的购票数量进行了限制，对您造成的不便敬请谅解，感谢您的配合。请您根据剩余可购票数量进行购买，超出限制将无法完成下单。"
       />
@@ -218,8 +213,8 @@ export default function PurchasePage(): JSX.Element {
       <Form
         form={form}
         layout="vertical"
-        style={{ marginTop: 16 }}
-        initialValues={{ adultQty: 0, childQty: 0 }}
+        style={{marginTop: 16}}
+        initialValues={{adultQty: 0, childQty: 0}}
         onFinish={onFinish}
       >
         <Space size="large" wrap>
@@ -227,37 +222,37 @@ export default function PurchasePage(): JSX.Element {
             label={`成人票（¥${concert.adultPrice}）`}
             name="adultQty"
             rules={[
-              { type: "number", min: 0, message: "请输入不小于 0 的整数" },
+              {type: "number", min: 0, message: "请输入不小于 0 的整数"},
             ]}
             help={`限购 ${maxAdult} 张/人，您还可购买 ${remainAdult} 张`}
           >
-            <InputNumber min={0} max={remainAdult} style={{ width: 160 }} />
+            <InputNumber min={0} max={remainAdult} style={{width: 160}}/>
           </Form.Item>
 
           <Form.Item
             label={`儿童票（¥${concert.childPrice}）`}
             name="childQty"
             rules={[
-              { type: "number", min: 0, message: "请输入不小于 0 的整数" },
+              {type: "number", min: 0, message: "请输入不小于 0 的整数"},
             ]}
             help={`限购 ${maxChild} 张/人，您还可购买 ${remainChild} 张`}
           >
-            <InputNumber min={0} max={remainChild} style={{ width: 160 }} />
+            <InputNumber min={0} max={remainChild} style={{width: 160}}/>
           </Form.Item>
 
-          <Statistic title="合计金额" value={total} prefix="¥" />
+          <Statistic title="合计金额" value={total} prefix="¥"/>
         </Space>
 
         {totalTickets > 0 && (
-          <div style={{ marginTop: 24 }}>
+          <div style={{marginTop: 24}}>
             <Alert
               type="warning"
               showIcon
               message="实名制购票提醒"
               description="根据实名制购票要求，请您为每张票填写实际观演人的真实姓名、身份证号，并上传清晰的人脸照片。入场时将进行身份核验，信息不符将无法入场，感谢您的理解与配合。"
-              style={{ marginBottom: 16 }}
+              style={{marginBottom: 16}}
             />
-            {Array.from({ length: totalTickets }).map((_, index) => {
+            {Array.from({length: totalTickets}).map((_, index) => {
               const ticketType = index < adultQty ? "adult" : "child";
               const ticketTypeName =
                 ticketType === "adult" ? "成人票" : "儿童票";
@@ -266,27 +261,27 @@ export default function PurchasePage(): JSX.Element {
                   key={index}
                   size="small"
                   title={`第 ${index + 1} 张票（${ticketTypeName}）`}
-                  style={{ marginBottom: 16 }}
+                  style={{marginBottom: 16}}
                 >
                   <Space
                     direction="vertical"
-                    style={{ width: "100%" }}
+                    style={{width: "100%"}}
                     size="middle"
                   >
                     <Form.Item
                       label="观演人姓名"
                       name={`attendee_${index}_realName`}
                       rules={[
-                        { required: true, message: "请您输入观演人的真实姓名" },
+                        {required: true, message: "请您输入观演人的真实姓名"},
                       ]}
                     >
-                      <Input placeholder="请输入与身份证一致的姓名" />
+                      <Input placeholder="请输入与身份证一致的姓名"/>
                     </Form.Item>
                     <Form.Item
                       label="身份证号码"
                       name={`attendee_${index}_idCard`}
                       rules={[
-                        { required: true, message: "请您输入身份证号码" },
+                        {required: true, message: "请您输入身份证号码"},
                         {
                           pattern:
                             /^[1-9]\d{5}(18|19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[\dXx]$/,
@@ -323,8 +318,8 @@ export default function PurchasePage(): JSX.Element {
                         accept="image/*"
                       >
                         <div>
-                          <UploadOutlined />
-                          <div style={{ marginTop: 8 }}>上传照片</div>
+                          <UploadOutlined/>
+                          <div style={{marginTop: 8}}>上传照片</div>
                         </div>
                       </Upload>
                     </Form.Item>
@@ -340,7 +335,7 @@ export default function PurchasePage(): JSX.Element {
           htmlType="submit"
           block
           disabled={adultQty + childQty <= 0}
-          style={{ marginTop: 12 }}
+          style={{marginTop: 12}}
         >
           立即支付并出票
         </Button>

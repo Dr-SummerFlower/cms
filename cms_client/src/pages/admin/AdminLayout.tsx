@@ -1,13 +1,13 @@
-import { Layout, Menu } from "antd";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useThemeStore } from "../../stores/themeStore";
+import {Layout, Menu} from 'antd';
+import {Outlet, useLocation, useNavigate} from 'react-router-dom';
+import {useThemeStore} from '../../stores/themeStore';
 
-const { Sider, Content } = Layout;
+const {Sider, Content} = Layout;
 
 export default function AdminLayout(): JSX.Element {
   const location = useLocation();
   const navigate = useNavigate();
-  const { theme } = useThemeStore();
+  const {theme} = useThemeStore();
 
   const isDark = theme === "dark";
   const selected = location.pathname.startsWith("/admin/users")
@@ -62,7 +62,7 @@ export default function AdminLayout(): JSX.Element {
           ]}
         />
       </Sider>
-      <Layout style={{ backgroundColor: "transparent" }}>
+      <Layout style={{backgroundColor: "transparent"}}>
         <Content
           style={{
             padding: 24,
@@ -71,7 +71,7 @@ export default function AdminLayout(): JSX.Element {
             margin: "0",
           }}
         >
-          <Outlet />
+          <Outlet/>
         </Content>
       </Layout>
     </Layout>

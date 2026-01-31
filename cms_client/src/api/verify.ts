@@ -1,9 +1,5 @@
-import type {
-  VerifyHistoryItem,
-  VerifyQrCodeDto,
-  VerifyTicketResponse,
-} from "../types";
-import { getJson, postJson } from "../utils/http";
+import type {VerifyHistoryItem, VerifyQrCodeDto, VerifyTicketResponse,} from "../types";
+import {getJson, postJson} from "../utils/http";
 
 export async function verifyTicket(
   payload: VerifyQrCodeDto,
@@ -25,7 +21,7 @@ export async function confirmVerification(
 ): Promise<{ success: boolean; message: string }> {
   return postJson<{ success: boolean; message: string }, { ticketId: string }>(
     "/verify/confirm",
-    { ticketId },
+    {ticketId},
   );
 }
 

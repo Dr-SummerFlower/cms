@@ -1,9 +1,9 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { AuthResult } from '../api/auth';
-import { login as apiLogin, refresh as apiRefresh } from '../api/auth';
-import type { User } from '../types';
-import { clearTokens, getRefreshToken, setTokens, updateAccessToken } from '../utils/auth';
+import {create} from 'zustand';
+import {persist} from 'zustand/middleware';
+import type {AuthResult} from '../api/auth';
+import {login as apiLogin, refresh as apiRefresh} from '../api/auth';
+import type {User} from '../types';
+import {clearTokens, getRefreshToken, setTokens, updateAccessToken} from '../utils/auth';
 
 interface AuthState {
   user: User | null;
@@ -26,12 +26,12 @@ export const useAuthStore = create<AuthState>()(
       bootstrapped: false,
 
       async login(email: string, password: string, captchaId: string, captchaCode: string) {
-        const res: AuthResult = await apiLogin({ email, password, captchaId, captchaCode });
+        const res: AuthResult = await apiLogin({email, password, captchaId, captchaCode});
         setTokens({
           access_token: res.access_token,
           refresh_token: res.refresh_token,
         });
-        set({ user: res.user, isAuthed: true });
+        set({user: res.user, isAuthed: true});
       },
 
       applyAuth(res) {
@@ -39,35 +39,35 @@ export const useAuthStore = create<AuthState>()(
           access_token: res.access_token,
           refresh_token: res.refresh_token,
         });
-        set({ user: res.user, isAuthed: true });
+        set({user: res.user, isAuthed: true});
       },
 
       logout() {
         clearTokens();
         try {
-          import('./ticketStore').then(({ useTicketStore }) => {
+          import('./ticketStore').then(({useTicketStore}) => {
             (useTicketStore.getState() as { reset: () => void }).reset();
           });
         } catch {
           /* ignore */
         }
-        set({ user: null, isAuthed: false });
+        set({user: null, isAuthed: false});
       },
 
       setUser(u: User) {
-        set({ user: u, isAuthed: true });
+        set({user: u, isAuthed: true});
       },
 
       async bootstrap() {
         if (get().bootstrapped) {
-          if (!get().ready) set({ ready: true });
+          if (!get().ready) set({ready: true});
           return;
         }
-        set({ bootstrapped: true });
+        set({bootstrapped: true});
 
         const refresh = getRefreshToken();
         if (!refresh) {
-          set({ ready: true });
+          set({ready: true});
           return;
         }
 
@@ -78,18 +78,18 @@ export const useAuthStore = create<AuthState>()(
           } else {
             updateAccessToken(tokens.access_token);
           }
-          set({ isAuthed: true });
+          set({isAuthed: true});
         } catch {
           clearTokens();
-          set({ user: null, isAuthed: false });
+          set({user: null, isAuthed: false});
         } finally {
-          set({ ready: true });
+          set({ready: true});
         }
       },
     }),
     {
       name: 'auth-storage',
-      partialize: (s) => ({ user: s.user, isAuthed: s.isAuthed }),
+      partialize: (s) => ({user: s.user, isAuthed: s.isAuthed}),
     },
   ),
 );

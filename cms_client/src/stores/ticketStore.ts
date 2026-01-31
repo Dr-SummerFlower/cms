@@ -1,6 +1,6 @@
-import { create } from "zustand";
-import { myTickets } from "../api/tickets";
-import type { TicketItem } from "../types";
+import {create} from 'zustand';
+import {myTickets} from '../api/tickets';
+import type {TicketItem} from '../types';
 
 interface TicketState {
   loading: boolean;
@@ -16,15 +16,15 @@ export const useTicketStore = create<TicketState>((set) => ({
   loading: false,
   items: [],
   async fetch(params) {
-    set({ loading: true });
+    set({loading: true});
     try {
       const items = await myTickets(params);
-      set({ items, loading: false });
+      set({items, loading: false});
     } catch {
-      set({ items: [], loading: false });
+      set({items: [], loading: false});
     }
   },
   reset() {
-    set({ items: [], loading: false });
+    set({items: [], loading: false});
   },
 }));

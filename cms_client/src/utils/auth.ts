@@ -1,5 +1,5 @@
-import type { Tokens } from "../types";
-import { deleteCookie, getCookie, setCookie } from "./cookie";
+import type {Tokens} from '../types';
+import {deleteCookie, getCookie, setCookie} from './cookie';
 
 const ACCESS_KEY = "access_token";
 const REFRESH_KEY = "refresh_token";

@@ -1,6 +1,6 @@
-import type { Paginated, Role, UpdateUserDto, User, UserRaw } from "../types";
-import { delJson, getJson, patchForm, patchJson } from "../utils/http";
-import { toPaginated, toUser } from "./_transform.ts";
+import type {Paginated, Role, UpdateUserDto, User, UserRaw} from '../types';
+import {delJson, getJson, patchForm, patchJson} from '../utils/http';
+import {toPaginated, toUser} from './_transform.ts';
 
 export interface UserQuery {
   page?: number;

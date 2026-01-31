@@ -1,12 +1,12 @@
-import { Button, Card, Space, Tag } from "antd";
-import dayjs from "dayjs";
-import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { getConcert } from "../api/concerts";
-import type { Concert } from "../types";
+import {Button, Card, Space, Tag} from 'antd';
+import dayjs from 'dayjs';
+import {useEffect, useState} from 'react';
+import {Link, useParams} from 'react-router-dom';
+import {getConcert} from '../api/concerts';
+import type {Concert} from '../types';
 
 export default function ConcertDetail(): JSX.Element {
-  const { id } = useParams();
+  const {id} = useParams();
   const [concert, setConcert] = useState<Concert | null>(null);
 
   useEffect(() => {
@@ -15,7 +15,7 @@ export default function ConcertDetail(): JSX.Element {
     }
   }, [id]);
 
-  if (!concert) return <Card loading />;
+  if (!concert) return <Card loading/>;
 
   return (
     <Card title={concert.name}>

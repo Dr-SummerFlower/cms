@@ -1,14 +1,14 @@
-import { Button, Card, Tag } from "antd";
-import dayjs from "dayjs";
-import React from "react";
-import { Link } from "react-router-dom";
-import type { Concert } from "../../types";
+import {Button, Card, Tag} from 'antd';
+import dayjs from 'dayjs';
+import React from 'react';
+import {Link} from 'react-router-dom';
+import type {Concert} from '../../types';
 
 interface Props {
   concert: Concert;
 }
 
-export default function ConcertCard({ concert }: Props): JSX.Element {
+export default function ConcertCard({concert}: Props): JSX.Element {
   const dateText = dayjs(concert.date).format("YYYY年MM月DD日 HH:mm");
 
   return (
@@ -16,7 +16,7 @@ export default function ConcertCard({ concert }: Props): JSX.Element {
       hoverable
       cover={
         concert.poster ? (
-          <div style={{ height: "200px", overflow: "hidden" }}>
+          <div style={{height: "200px", overflow: "hidden"}}>
             <img
               src={concert.poster}
               alt={concert.name}
@@ -90,7 +90,7 @@ export default function ConcertCard({ concert }: Props): JSX.Element {
           >
             {concert.name}
           </strong>
-          <Tag color="blue" style={{ flexShrink: 0 }}>
+          <Tag color="blue" style={{flexShrink: 0}}>
             {dateText}
           </Tag>
         </div>
@@ -107,15 +107,15 @@ export default function ConcertCard({ concert }: Props): JSX.Element {
           场馆：{concert.venue}
         </div>
 
-        <div style={{ marginBottom: "12px" }}>
+        <div style={{marginBottom: "12px"}}>
           票价：
-          <Tag color="geekblue" style={{ margin: "0 4px 0 4px" }}>
+          <Tag color="geekblue" style={{margin: "0 4px 0 4px"}}>
             成人 ¥{concert.adultPrice}
           </Tag>
           <Tag color="cyan">儿童 ¥{concert.childPrice}</Tag>
         </div>
 
-        <div style={{ marginTop: "auto" }}>
+        <div style={{marginTop: "auto"}}>
           <Link to={`/concerts/${concert.id}`}>
             <Button type="primary" block>
               查看详情

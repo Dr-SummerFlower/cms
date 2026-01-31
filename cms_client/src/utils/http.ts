@@ -1,8 +1,13 @@
-import { message } from 'antd';
-import axios, { type AxiosError, type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios';
-import { useAuthStore } from '../stores/authStore';
-import type { ApiResponse, Tokens } from '../types';
-import { clearTokens, getAccessToken, getRefreshToken, setTokens, updateAccessToken } from './auth';
+import {message} from 'antd';
+import axios, {type AxiosError, type AxiosInstance, type AxiosRequestConfig, type AxiosResponse} from 'axios';
+import {useAuthStore} from '../stores/authStore';
+import type {ApiResponse, Tokens} from '../types';
+import {clearTokens, getAccessToken, getRefreshToken, setTokens, updateAccessToken} from './auth';
+
+// 扩展 AxiosRequestConfig 以支持跳过全局错误处理
+export interface ExtendedAxiosRequestConfig extends AxiosRequestConfig {
+  skipGlobalErrorHandler?: boolean;
+}
 
 // 全局错误处理函数
 function handleGlobalError(error: unknown) {
@@ -80,7 +85,7 @@ function notifyAll(token: string): void {
   subscribers = [];
 }
 
-interface RetryConfig extends AxiosRequestConfig {
+interface RetryConfig extends ExtendedAxiosRequestConfig {
   _retry?: boolean;
 }
 
@@ -93,7 +98,7 @@ http.interceptors.request.use((config) => {
 http.interceptors.response.use(
   (resp) => resp,
   async (error) => {
-    const { response, config } = error as {
+    const {response, config} = error as {
       response?: AxiosResponse<ApiResponse<unknown>>;
       config: RetryConfig;
     };
@@ -126,9 +131,21 @@ http.interceptors.response.use(
       try {
         const resp = await refreshClient.post<ApiResponse<Tokens>>(
           "/auth/refresh",
-          { refresh_token: refresh },
+          {refresh_token: refresh},
         );
+
+        // 校验响应数据
+        if (!resp.data || !resp.data.data) {
+          throw new Error("Token 刷新失败：响应数据为空");
+        }
+
         const tokens = resp.data.data;
+
+        // 校验 tokens 对象的必要字段
+        if (!tokens.access_token) {
+          throw new Error("Token 刷新失败：缺少 access_token");
+        }
+
         // 如果服务器返回了新的refresh_token，使用setTokens；否则只更新access_token
         if (tokens.refresh_token && tokens.refresh_token !== refresh) {
           setTokens(tokens);
@@ -154,58 +171,95 @@ http.interceptors.response.use(
       }
     }
 
-    // 对于非401错误，使用全局错误处理
-    handleGlobalError(error);
+    // 对于非401错误，使用全局错误处理（除非请求配置了 skipGlobalErrorHandler）
+    if (!config.skipGlobalErrorHandler) {
+      handleGlobalError(error);
+    }
     return Promise.reject(error);
   },
 );
+
+// 数据校验辅助函数
+function validateResponseData<T>(resp: AxiosResponse<ApiResponse<T>>, method: string): T {
+  if (!resp.data) {
+    throw new Error(`${method}: 响应数据为空`);
+  }
+
+  // 检查 data 字段是否存在
+  if (!('data' in resp.data)) {
+    throw new Error(`${method}: 响应缺少 data 字段`);
+  }
+
+  // 允许 null/undefined 作为有效响应,但需要类型上明确处理
+  const data = resp.data.data;
+  if (data === null || data === undefined) {
+    console.warn(`${method}: 响应 data 为 null 或 undefined`);
+  }
+
+  return data;
+}
 
 // 统一 JSON/Form 方法
 export async function getJson<T>(
   url: string,
   params?: Record<string, unknown>,
+  config?: ExtendedAxiosRequestConfig,
 ): Promise<T> {
-  const resp = await http.get<ApiResponse<T>>(url, { params });
-  return resp.data.data;
+  const resp = await http.get<ApiResponse<T>>(url, {...config, params});
+  return validateResponseData(resp, 'GET');
 }
 
 export async function postJson<T, B extends object>(
   url: string,
   body: B,
+  config?: ExtendedAxiosRequestConfig,
 ): Promise<T> {
-  const resp = await http.post<ApiResponse<T>>(url, body);
-  return resp.data.data;
+  const resp = await http.post<ApiResponse<T>>(url, body, config);
+  return validateResponseData(resp, 'POST');
 }
 
 export async function patchJson<T, B extends object>(
   url: string,
   body: B,
+  config?: ExtendedAxiosRequestConfig,
 ): Promise<T> {
-  const resp = await http.patch<ApiResponse<T>>(url, body);
-  return resp.data.data;
+  const resp = await http.patch<ApiResponse<T>>(url, body, config);
+  return validateResponseData(resp, 'PATCH');
 }
 
 export async function putJson<T, B extends object>(
   url: string,
   body: B,
+  config?: ExtendedAxiosRequestConfig,
 ): Promise<T> {
-  const resp = await http.put<ApiResponse<T>>(url, body);
-  return resp.data.data;
+  const resp = await http.put<ApiResponse<T>>(url, body, config);
+  return validateResponseData(resp, 'PUT');
 }
 
-export async function delJson<T>(url: string): Promise<T> {
-  const resp = await http.delete<ApiResponse<T>>(url);
-  return resp.data.data;
+export async function delJson<T>(
+  url: string,
+  config?: ExtendedAxiosRequestConfig,
+): Promise<T> {
+  const resp = await http.delete<ApiResponse<T>>(url, config);
+  return validateResponseData(resp, 'DELETE');
 }
 
-export async function postForm<T>(url: string, form: FormData): Promise<T> {
-  const resp = await http.post<ApiResponse<T>>(url, form);
-  return resp.data.data;
+export async function postForm<T>(
+  url: string,
+  form: FormData,
+  config?: ExtendedAxiosRequestConfig,
+): Promise<T> {
+  const resp = await http.post<ApiResponse<T>>(url, form, config);
+  return validateResponseData(resp, 'POST_FORM');
 }
 
-export async function patchForm<T>(url: string, form: FormData): Promise<T> {
-  const resp = await http.patch<ApiResponse<T>>(url, form);
-  return resp.data.data;
+export async function patchForm<T>(
+  url: string,
+  form: FormData,
+  config?: ExtendedAxiosRequestConfig,
+): Promise<T> {
+  const resp = await http.patch<ApiResponse<T>>(url, form, config);
+  return validateResponseData(resp, 'PATCH_FORM');
 }
 
 export default http;

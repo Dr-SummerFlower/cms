@@ -1,27 +1,11 @@
-import {
-  App as AntdApp,
-  Button,
-  Descriptions,
-  Drawer,
-  Empty,
-  Popconfirm,
-  Select,
-  Skeleton,
-  Space,
-  Table,
-} from "antd";
-import type { ColumnsType } from "antd/es/table";
-import { useCallback, useEffect, useState } from "react";
-import {
-  deleteUser,
-  getUser,
-  listUsers,
-  updateUserRole,
-} from "../../api/users";
-import type { Paginated, Role, User } from "../../types";
+import {App as AntdApp, Button, Descriptions, Drawer, Empty, Popconfirm, Select, Skeleton, Space, Table,} from "antd";
+import type {ColumnsType} from "antd/es/table";
+import {useCallback, useEffect, useState} from "react";
+import {deleteUser, getUser, listUsers, updateUserRole,} from "../../api/users";
+import type {Paginated, Role, User} from "../../types";
 
 export default function AdminUsers(): JSX.Element {
-  const { message } = AntdApp.useApp();
+  const {message} = AntdApp.useApp();
   const [data, setData] = useState<Paginated<User> | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
@@ -34,7 +18,7 @@ export default function AdminUsers(): JSX.Element {
   const fetch = useCallback(async (p: number, ps: number): Promise<void> => {
     setLoading(true);
     try {
-      const res = await listUsers({ page: p, limit: ps });
+      const res = await listUsers({page: p, limit: ps});
       setData(res);
     } finally {
       setLoading(false);
@@ -71,8 +55,8 @@ export default function AdminUsers(): JSX.Element {
   };
 
   const columns: ColumnsType<User> = [
-    { title: "用户名", dataIndex: "username", key: "username" },
-    { title: "邮箱", dataIndex: "email", key: "email" },
+    {title: "用户名", dataIndex: "username", key: "username"},
+    {title: "邮箱", dataIndex: "email", key: "email"},
     {
       title: "角色",
       key: "role",
@@ -82,11 +66,11 @@ export default function AdminUsers(): JSX.Element {
           value={row.role}
           onChange={(val) => void updateRole(row.id, val)}
           options={[
-            { label: "普通用户", value: "USER" },
-            { label: "验票员", value: "INSPECTOR" },
-            { label: "管理员", value: "ADMIN" },
+            {label: "普通用户", value: "USER"},
+            {label: "验票员", value: "INSPECTOR"},
+            {label: "管理员", value: "ADMIN"},
           ]}
-          style={{ width: 220 }}
+          style={{width: 220}}
         />
       ),
     },
@@ -101,7 +85,7 @@ export default function AdminUsers(): JSX.Element {
           </Button>
           <Popconfirm
             title="确认删除该用户？"
-            okButtonProps={{ danger: true }}
+            okButtonProps={{danger: true}}
             onConfirm={async () => {
               try {
                 await deleteUser(row.id);
@@ -123,7 +107,7 @@ export default function AdminUsers(): JSX.Element {
 
   return (
     <>
-      <Space style={{ marginBottom: 12 }}>
+      <Space style={{marginBottom: 12}}>
         <Button onClick={() => void fetch(page, pageSize)}>刷新</Button>
       </Space>
 
@@ -153,17 +137,17 @@ export default function AdminUsers(): JSX.Element {
         width={520}
       >
         {detailLoading ? (
-          <Skeleton active paragraph={{ rows: 6 }} />
+          <Skeleton active paragraph={{rows: 6}}/>
         ) : detail ? (
           <Descriptions
             column={1}
             bordered
             size="small"
             items={[
-              { key: "id", label: "ID", children: detail.id },
-              { key: "username", label: "用户名", children: detail.username },
-              { key: "email", label: "邮箱", children: detail.email },
-              { key: "role", label: "角色", children: detail.role },
+              {key: "id", label: "ID", children: detail.id},
+              {key: "username", label: "用户名", children: detail.username},
+              {key: "email", label: "邮箱", children: detail.email},
+              {key: "role", label: "角色", children: detail.role},
               {
                 key: "created",
                 label: "注册时间",
@@ -177,7 +161,7 @@ export default function AdminUsers(): JSX.Element {
             ]}
           />
         ) : (
-          <Empty description="暂无数据" />
+          <Empty description="暂无数据"/>
         )}
       </Drawer>
     </>

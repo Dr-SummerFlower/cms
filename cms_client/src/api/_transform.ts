@@ -9,7 +9,7 @@ import type {
   User,
   UserRaw,
 } from "../types";
-import { getImageUrl } from "../utils/image";
+import {getImageUrl} from "../utils/image";
 
 export function toUser(u: UserRaw | User): User {
   if ("id" in u) return u;
@@ -49,11 +49,11 @@ export function toTicket(t: TicketItemRaw): TicketItem {
   const concertId = t.concert?._id ?? t.concertId ?? "";
   const concert = t.concert
     ? {
-        id: t.concert._id,
-        name: t.concert.name,
-        date: t.concert.date ?? "",
-        venue: t.concert.venue ?? "",
-      }
+      id: t.concert._id,
+      name: t.concert.name,
+      date: t.concert.date ?? "",
+      venue: t.concert.venue ?? "",
+    }
     : undefined;
 
   const userId =

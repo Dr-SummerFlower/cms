@@ -1,24 +1,12 @@
-import {
-  Alert,
-  App as AntdApp,
-  Button,
-  Card,
-  Descriptions,
-  Image,
-  Input,
-  Modal,
-  Select,
-  Space,
-  Typography,
-} from "antd";
-import { Html5Qrcode } from "html5-qrcode";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { confirmVerification, verifyTicket } from "../../api/verify";
-import { VerifyResultTag } from "../../components/common/StatusTag";
+import {Alert, App as AntdApp, Button, Card, Descriptions, Image, Input, Modal, Select, Space, Typography,} from "antd";
+import {Html5Qrcode} from "html5-qrcode";
+import {useCallback, useEffect, useMemo, useState} from "react";
+import {Link} from "react-router-dom";
+import {confirmVerification, verifyTicket} from "../../api/verify";
+import {VerifyResultTag} from "../../components/common/StatusTag";
 import Html5QrScanner from "../../components/qrcode/Html5QrScanner";
-import type { VerifyTicketResponse } from "../../types";
-import { getImageUrl } from "../../utils/image";
+import type {VerifyTicketResponse} from "../../types";
+import {getImageUrl} from "../../utils/image";
 
 type ScanState = "idle" | "ready" | "scanning" | "denied" | "error";
 
@@ -28,7 +16,7 @@ interface CameraDevice {
 }
 
 export default function InspectorVerify(): JSX.Element {
-  const { message } = AntdApp.useApp();
+  const {message} = AntdApp.useApp();
 
   const [locationText, setLocationText] = useState<string>("");
   const [manualQr, setManualQr] = useState<string>("");
@@ -85,7 +73,7 @@ export default function InspectorVerify(): JSX.Element {
 
   const preAuthorize = useCallback(async (): Promise<void> => {
     try {
-      await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      await navigator.mediaDevices.getUserMedia({video: true, audio: false});
       await refreshCameras();
       message.success("已授权摄像头");
     } catch {
@@ -95,7 +83,7 @@ export default function InspectorVerify(): JSX.Element {
   }, [message, refreshCameras]);
 
   const deviceOptions = useMemo(
-    () => cameras.map((d) => ({ label: d.label || "摄像头", value: d.id })),
+    () => cameras.map((d) => ({label: d.label || "摄像头", value: d.id})),
     [cameras],
   );
 
@@ -146,7 +134,7 @@ export default function InspectorVerify(): JSX.Element {
 
       setSubmitting(true);
       try {
-        const res = await verifyTicket({ qrData: data, location: loc });
+        const res = await verifyTicket({qrData: data, location: loc});
         setLastResult(res);
         setWasFromScan(isFromScan);
         if (res.valid) {
@@ -254,10 +242,10 @@ export default function InspectorVerify(): JSX.Element {
         </Space>
       }
     >
-      <Space align="center" wrap style={{ marginBottom: 12 }}>
-        <span style={{ color: "#999" }}>验票地点</span>
+      <Space align="center" wrap style={{marginBottom: 12}}>
+        <span style={{color: "#999"}}>验票地点</span>
         <Input
-          style={{ width: 260 }}
+          style={{width: 260}}
           placeholder="例如：东门闸机 / 看台A入口"
           value={locationText}
           onChange={(e) => setLocationText(e.target.value)}
@@ -268,10 +256,10 @@ export default function InspectorVerify(): JSX.Element {
         </Button>
       </Space>
 
-      <Space align="center" wrap style={{ marginBottom: 8 }}>
+      <Space align="center" wrap style={{marginBottom: 8}}>
         <Select
           placeholder="选择摄像头"
-          style={{ width: 280 }}
+          style={{width: 280}}
           options={deviceOptions}
           value={selectedDeviceId || undefined}
           onChange={(v) => setSelectedDeviceId(v)}
@@ -312,7 +300,7 @@ export default function InspectorVerify(): JSX.Element {
           type="warning"
           message={warn}
           showIcon
-          style={{ marginBottom: 12 }}
+          style={{marginBottom: 12}}
         />
       )}
 
@@ -338,14 +326,14 @@ export default function InspectorVerify(): JSX.Element {
           }}
           qrbox={280}
           fps={10}
-          style={{ minHeight: 260 }}
+          style={{minHeight: 260}}
         />
 
         <div>
           <Typography.Paragraph type="secondary">
             也可手动输入/粘贴二维码数据：
           </Typography.Paragraph>
-          <Space.Compact style={{ width: "100%" }}>
+          <Space.Compact style={{width: "100%"}}>
             <Input
               placeholder="输入或粘贴二维码数据"
               value={manualQr}
@@ -364,7 +352,7 @@ export default function InspectorVerify(): JSX.Element {
           {lastResult && (
             <Card
               size="small"
-              style={{ marginTop: 12 }}
+              style={{marginTop: 12}}
               title="最近一次验票结果"
             >
               <Descriptions
@@ -376,9 +364,9 @@ export default function InspectorVerify(): JSX.Element {
                     key: "valid",
                     label: "结果",
                     children: lastResult.valid ? (
-                      <VerifyResultTag result="valid" />
+                      <VerifyResultTag result="valid"/>
                     ) : (
-                      <VerifyResultTag result="invalid" />
+                      <VerifyResultTag result="invalid"/>
                     ),
                   },
                   {
@@ -458,7 +446,7 @@ export default function InspectorVerify(): JSX.Element {
         onCancel={handleCancelVerification}
         okText="确认通过"
         cancelText="取消"
-        okButtonProps={{ loading: confirming, type: "primary" }}
+        okButtonProps={{loading: confirming, type: "primary"}}
         width={600}
       >
         {pendingVerification && (
@@ -467,7 +455,7 @@ export default function InspectorVerify(): JSX.Element {
               type="info"
               message="请核验以下信息"
               description="请核对人脸图像与持票人是否一致，以及实名信息与身份证是否匹配。"
-              style={{ marginBottom: 16 }}
+              style={{marginBottom: 16}}
             />
             <Descriptions
               column={1}
@@ -510,7 +498,7 @@ export default function InspectorVerify(): JSX.Element {
                       src={getImageUrl(pendingVerification.ticket.faceImage)}
                       alt="人脸图像"
                       width={200}
-                      style={{ maxHeight: 200, objectFit: "contain" }}
+                      style={{maxHeight: 200, objectFit: "contain"}}
                     />
                   ) : (
                     "未上传"

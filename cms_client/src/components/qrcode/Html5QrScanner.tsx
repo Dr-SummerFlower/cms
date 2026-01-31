@@ -1,6 +1,6 @@
-import { Html5Qrcode, type Html5QrcodeCameraScanConfig } from "html5-qrcode";
-import type { CSSProperties } from "react";
-import { useEffect, useId, useRef } from "react";
+import {Html5Qrcode, type Html5QrcodeCameraScanConfig} from 'html5-qrcode';
+import type {CSSProperties} from 'react';
+import {useEffect, useId, useRef} from 'react';
 
 interface Html5QrScannerProps {
   active: boolean;
@@ -48,7 +48,8 @@ export default function Html5QrScanner(
         // 先停止扫描器实例（这会停止扫描但可能不会立即释放摄像头）
         if (qrcodeRef.current && runningRef.current) {
           try {
-            await qrcodeRef.current.stop().catch(() => {});
+            await qrcodeRef.current.stop().catch(() => {
+            });
           } catch {
             // 忽略停止错误
           }
@@ -112,8 +113,8 @@ export default function Html5QrScanner(
       };
 
       const cameraConfig = deviceId
-        ? { deviceId: { exact: deviceId } }
-        : { facingMode: "environment" as const };
+        ? {deviceId: {exact: deviceId}}
+        : {facingMode: "environment" as const};
 
       try {
         await inst.start(

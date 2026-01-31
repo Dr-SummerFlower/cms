@@ -14,27 +14,16 @@ import {
   Tag,
   Typography,
 } from "antd";
-import type { ColumnsType } from "antd/es/table";
-import { useCallback, useEffect, useState } from "react";
-import {
-  deleteFeedback,
-  getFeedbackById,
-  getFeedbackList,
-  updateFeedbackStatus,
-} from "../../api/feedback";
-import type {
-  ErrorType,
-  Feedback,
-  FeedbackListResponse,
-  FeedbackQueryDto,
-  FeedbackStatus,
-} from "../../types";
+import type {ColumnsType} from "antd/es/table";
+import {useCallback, useEffect, useState} from "react";
+import {deleteFeedback, getFeedbackById, getFeedbackList, updateFeedbackStatus,} from "../../api/feedback";
+import type {ErrorType, Feedback, FeedbackListResponse, FeedbackQueryDto, FeedbackStatus,} from "../../types";
 
-const { Search } = Input;
-const { Text, Paragraph } = Typography;
+const {Search} = Input;
+const {Text, Paragraph} = Typography;
 
 export default function AdminFeedback(): JSX.Element {
-  const { message } = AntdApp.useApp();
+  const {message} = AntdApp.useApp();
   const [data, setData] = useState<FeedbackListResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [query, setQuery] = useState<FeedbackQueryDto>({
@@ -88,7 +77,7 @@ export default function AdminFeedback(): JSX.Element {
       message.success("状态更新成功");
       void fetch(query);
       if (detail && detail.id === id) {
-        setDetail({ ...detail, status });
+        setDetail({...detail, status});
       }
     } catch {
       message.error("状态更新失败");
@@ -182,10 +171,10 @@ export default function AdminFeedback(): JSX.Element {
         <Tag color={getErrorTypeColor(type)}>{getErrorTypeText(type)}</Tag>
       ),
       filters: [
-        { text: "路由错误", value: "route_error" },
-        { text: "运行时错误", value: "runtime_error" },
-        { text: "字符串错误", value: "string_error" },
-        { text: "未知错误", value: "unknown" },
+        {text: "路由错误", value: "route_error"},
+        {text: "运行时错误", value: "runtime_error"},
+        {text: "字符串错误", value: "string_error"},
+        {text: "未知错误", value: "unknown"},
       ],
     },
     {
@@ -194,7 +183,7 @@ export default function AdminFeedback(): JSX.Element {
       key: "message",
       ellipsis: true,
       render: (message: string) => (
-        <Text ellipsis={{ tooltip: message }} style={{ maxWidth: 300 }}>
+        <Text ellipsis={{tooltip: message}} style={{maxWidth: 300}}>
           {message}
         </Text>
       ),
@@ -206,7 +195,7 @@ export default function AdminFeedback(): JSX.Element {
       width: 200,
       ellipsis: true,
       render: (url: string) => (
-        <Text ellipsis={{ tooltip: url }} style={{ maxWidth: 180 }}>
+        <Text ellipsis={{tooltip: url}} style={{maxWidth: 180}}>
           {url}
         </Text>
       ),
@@ -220,9 +209,9 @@ export default function AdminFeedback(): JSX.Element {
         <Tag color={getStatusColor(status)}>{getStatusText(status)}</Tag>
       ),
       filters: [
-        { text: "待处理", value: "pending" },
-        { text: "已解决", value: "resolved" },
-        { text: "已忽略", value: "ignored" },
+        {text: "待处理", value: "pending"},
+        {text: "已解决", value: "resolved"},
+        {text: "已忽略", value: "ignored"},
       ],
     },
     {
@@ -237,7 +226,7 @@ export default function AdminFeedback(): JSX.Element {
           <Select
             size="small"
             value={record.status}
-            style={{ width: 90 }}
+            style={{width: 90}}
             onChange={(status: FeedbackStatus) =>
               updateStatus(record.id, status)
             }
@@ -263,19 +252,19 @@ export default function AdminFeedback(): JSX.Element {
 
   return (
     <div>
-      <Card title="错误反馈管理" style={{ marginBottom: 16 }}>
-        <Space style={{ marginBottom: 16 }}>
+      <Card title="错误反馈管理" style={{marginBottom: 16}}>
+        <Space style={{marginBottom: 16}}>
           <Search
             placeholder="搜索错误消息、URL或用户代理"
             allowClear
-            style={{ width: 300 }}
-            onSearch={(value) => setQuery({ ...query, search: value, page: 1 })}
+            style={{width: 300}}
+            onSearch={(value) => setQuery({...query, search: value, page: 1})}
           />
           <Select
             placeholder="错误类型"
             allowClear
-            style={{ width: 120 }}
-            onChange={(errorType) => setQuery({ ...query, errorType, page: 1 })}
+            style={{width: 120}}
+            onChange={(errorType) => setQuery({...query, errorType, page: 1})}
           >
             <Select.Option value="route_error">路由错误</Select.Option>
             <Select.Option value="runtime_error">运行时错误</Select.Option>
@@ -285,8 +274,8 @@ export default function AdminFeedback(): JSX.Element {
           <Select
             placeholder="状态"
             allowClear
-            style={{ width: 100 }}
-            onChange={(status) => setQuery({ ...query, status, page: 1 })}
+            style={{width: 100}}
+            onChange={(status) => setQuery({...query, status, page: 1})}
           >
             <Select.Option value="pending">待处理</Select.Option>
             <Select.Option value="resolved">已解决</Select.Option>
@@ -308,10 +297,10 @@ export default function AdminFeedback(): JSX.Element {
             showTotal: (total, range) =>
               `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
             onChange: (page, pageSize) =>
-              setQuery({ ...query, page, limit: pageSize }),
+              setQuery({...query, page, limit: pageSize}),
           }}
           locale={{
-            emptyText: <Empty description="暂无错误反馈" />,
+            emptyText: <Empty description="暂无错误反馈"/>,
           }}
         />
       </Card>
@@ -327,7 +316,7 @@ export default function AdminFeedback(): JSX.Element {
             <Space>
               <Select
                 value={detail.status}
-                style={{ width: 100 }}
+                style={{width: 100}}
                 onChange={(status: FeedbackStatus) =>
                   updateStatus(detail.id, status)
                 }
@@ -349,7 +338,7 @@ export default function AdminFeedback(): JSX.Element {
         }
       >
         {detailLoading ? (
-          <Skeleton active />
+          <Skeleton active/>
         ) : detail ? (
           <Descriptions column={1} bordered>
             <Descriptions.Item label="错误时间">
@@ -369,12 +358,12 @@ export default function AdminFeedback(): JSX.Element {
               <Text copyable>{detail.url}</Text>
             </Descriptions.Item>
             <Descriptions.Item label="用户代理">
-              <Paragraph copyable ellipsis={{ rows: 2, expandable: true }}>
+              <Paragraph copyable ellipsis={{rows: 2, expandable: true}}>
                 {detail.userAgent}
               </Paragraph>
             </Descriptions.Item>
             <Descriptions.Item label="错误消息">
-              <Paragraph copyable ellipsis={{ rows: 3, expandable: true }}>
+              <Paragraph copyable ellipsis={{rows: 3, expandable: true}}>
                 {detail.message}
               </Paragraph>
             </Descriptions.Item>
@@ -383,8 +372,8 @@ export default function AdminFeedback(): JSX.Element {
                 <Paragraph
                   copyable
                   code
-                  ellipsis={{ rows: 10, expandable: true }}
-                  style={{ whiteSpace: "pre-wrap" }}
+                  ellipsis={{rows: 10, expandable: true}}
+                  style={{whiteSpace: "pre-wrap"}}
                 >
                   {detail.stack}
                 </Paragraph>
@@ -400,8 +389,8 @@ export default function AdminFeedback(): JSX.Element {
                 <Paragraph
                   copyable
                   code
-                  ellipsis={{ rows: 5, expandable: true }}
-                  style={{ whiteSpace: "pre-wrap" }}
+                  ellipsis={{rows: 5, expandable: true}}
+                  style={{whiteSpace: "pre-wrap"}}
                 >
                   {(() => {
                     try {

@@ -1,9 +1,9 @@
-import { Button, Input, message, Modal, Space, Table } from "antd";
-import type { ColumnsType } from "antd/es/table";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { listRefundRequests, reviewRefund } from "../../api/tickets";
-import StatusTag from "../../components/common/StatusTag.tsx";
-import type { RefundRequest, RefundStatus } from "../../types";
+import {Button, Input, message, Modal, Space, Table} from 'antd';
+import type {ColumnsType} from 'antd/es/table';
+import {useCallback, useEffect, useMemo, useState} from 'react';
+import {listRefundRequests, reviewRefund} from '../../api/tickets';
+import StatusTag from '../../components/common/StatusTag.tsx';
+import type {RefundRequest, RefundStatus} from '../../types';
 
 type ReviewAction = { ticketId: string; approved: boolean };
 
@@ -33,7 +33,7 @@ export default function AdminRefunds(): JSX.Element {
   }, [fetch]);
 
   const askNoteAndReview = (ticketId: string, approved: boolean): void => {
-    setPendingAction({ ticketId, approved });
+    setPendingAction({ticketId, approved});
     setNoteText("");
     setNoteOpen(true);
   };
@@ -64,7 +64,7 @@ export default function AdminRefunds(): JSX.Element {
 
   const columns: ColumnsType<RefundRequest> = useMemo(
     () => [
-      { title: "票据ID", dataIndex: "ticketId", key: "ticketId", width: 220 },
+      {title: "票据ID", dataIndex: "ticketId", key: "ticketId", width: 220},
       {
         title: "用户",
         dataIndex: ["userInfo", "username"],
@@ -94,7 +94,7 @@ export default function AdminRefunds(): JSX.Element {
         dataIndex: "status",
         key: "status",
         width: 120,
-        render: (v: RefundStatus) => <StatusTag kind="refund" value={v} />,
+        render: (v: RefundStatus) => <StatusTag kind="refund" value={v}/>,
       },
       {
         title: "申请时间",
@@ -132,7 +132,7 @@ export default function AdminRefunds(): JSX.Element {
 
   return (
     <>
-      <Space style={{ marginBottom: 12 }}>
+      <Space style={{marginBottom: 12}}>
         <Button onClick={() => void fetch()}>刷新</Button>
       </Space>
       <Table<RefundRequest>
@@ -140,7 +140,7 @@ export default function AdminRefunds(): JSX.Element {
         loading={loading}
         dataSource={rows}
         columns={columns}
-        pagination={{ pageSize: 10 }}
+        pagination={{pageSize: 10}}
       />
 
       <Modal
@@ -156,7 +156,7 @@ export default function AdminRefunds(): JSX.Element {
           onChange={(e) => setNoteText(e.target.value)}
           maxLength={200}
           showCount
-          style={{ marginBottom: 16 }}
+          style={{marginBottom: 16}}
           placeholder="记录通过/拒绝的理由"
         />
       </Modal>
@@ -167,9 +167,9 @@ export default function AdminRefunds(): JSX.Element {
         onCancel={() => setReasonOpen(false)}
         onOk={() => setReasonOpen(false)}
         okText="关闭"
-        cancelButtonProps={{ style: { display: "none" } }}
+        cancelButtonProps={{style: {display: "none"}}}
       >
-        <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+        <div style={{whiteSpace: "pre-wrap", wordBreak: "break-word"}}>
           {reasonText || "-"}
         </div>
       </Modal>

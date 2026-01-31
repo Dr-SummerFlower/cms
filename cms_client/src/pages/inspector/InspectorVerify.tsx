@@ -1,12 +1,27 @@
-import {Alert, App as AntdApp, Button, Card, Descriptions, Image, Input, Modal, Select, Space, Typography,} from "antd";
-import {Html5Qrcode} from "html5-qrcode";
-import {useCallback, useEffect, useMemo, useState} from "react";
-import {Link} from "react-router-dom";
-import {confirmVerification, verifyTicket} from "../../api/verify";
-import {VerifyResultTag} from "../../components/common/StatusTag";
+import { UploadOutlined } from "@ant-design/icons";
+import type { UploadFile } from "antd";
+import {
+  Alert,
+  App as AntdApp,
+  Button,
+  Card,
+  Descriptions,
+  Image,
+  Input,
+  Modal,
+  Select,
+  Space,
+  Typography,
+  Upload,
+} from "antd";
+import { Html5Qrcode } from "html5-qrcode";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { confirmVerification, verifyTicket } from "../../api/verify";
+import { VerifyResultTag } from "../../components/common/StatusTag";
 import Html5QrScanner from "../../components/qrcode/Html5QrScanner";
-import type {VerifyTicketResponse} from "../../types";
-import {getImageUrl} from "../../utils/image";
+import type { VerifyTicketResponse } from "../../types";
+import { getImageUrl } from "../../utils/image";
 
 type ScanState = "idle" | "ready" | "scanning" | "denied" | "error";
 
@@ -16,11 +31,9 @@ interface CameraDevice {
 }
 
 export default function InspectorVerify(): JSX.Element {
-  const {message} = AntdApp.useApp();
+  const { message } = AntdApp.useApp();
 
   const [locationText, setLocationText] = useState<string>("");
-  const [manualQr, setManualQr] = useState<string>("");
-  const [submitting, setSubmitting] = useState<boolean>(false);
 
   const [scanState, setScanState] = useState<ScanState>("idle");
   const [cameras, setCameras] = useState<ReadonlyArray<CameraDevice>>([]);
@@ -37,6 +50,8 @@ export default function InspectorVerify(): JSX.Element {
     useState<VerifyTicketResponse | null>(null);
   const [confirming, setConfirming] = useState<boolean>(false);
   const [wasFromScan, setWasFromScan] = useState<boolean>(false);
+  const [uploadFileList, setUploadFileList] = useState<UploadFile[]>([]);
+  const [scanningImage, setScanningImage] = useState<boolean>(false);
 
   useEffect(() => {
     setLocationText(localStorage.getItem("verifyLocation") ?? "");
@@ -73,7 +88,7 @@ export default function InspectorVerify(): JSX.Element {
 
   const preAuthorize = useCallback(async (): Promise<void> => {
     try {
-      await navigator.mediaDevices.getUserMedia({video: true, audio: false});
+      await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       await refreshCameras();
       message.success("已授权摄像头");
     } catch {
@@ -83,7 +98,7 @@ export default function InspectorVerify(): JSX.Element {
   }, [message, refreshCameras]);
 
   const deviceOptions = useMemo(
-    () => cameras.map((d) => ({label: d.label || "摄像头", value: d.id})),
+    () => cameras.map((d) => ({ label: d.label || "摄像头", value: d.id })),
     [cameras],
   );
 
@@ -132,9 +147,8 @@ export default function InspectorVerify(): JSX.Element {
         // 不是 JSON，直接使用原始数据
       }
 
-      setSubmitting(true);
       try {
-        const res = await verifyTicket({qrData: data, location: loc});
+        const res = await verifyTicket({ qrData: data, location: loc });
         setLastResult(res);
         setWasFromScan(isFromScan);
         if (res.valid) {
@@ -171,7 +185,6 @@ export default function InspectorVerify(): JSX.Element {
             }, 3000);
           }
         }
-        setManualQr("");
       } catch {
         message.error("验票失败");
         // 只有从扫描触发时才自动重启扫描
@@ -181,8 +194,6 @@ export default function InspectorVerify(): JSX.Element {
             setScanState("scanning");
           }, 3000);
         }
-      } finally {
-        setSubmitting(false);
       }
     },
     [message, stopScan],
@@ -231,213 +242,332 @@ export default function InspectorVerify(): JSX.Element {
     }
   }, [wasFromScan]);
 
-  return (
-    <Card
-      title={
-        <Space>
-          <span>验票</span>
-          <Typography.Text type="secondary">
-            <Link to="/inspector/history">查看验票记录</Link>
-          </Typography.Text>
-        </Space>
+  const handleImageUpload = useCallback(
+    async (file: File): Promise<boolean> => {
+      const loc = (localStorage.getItem("verifyLocation") ?? "").trim();
+      if (!loc) {
+        message.error("请先在页面顶部设置验票地点");
+        return false;
       }
-    >
-      <Space align="center" wrap style={{marginBottom: 12}}>
-        <span style={{color: "#999"}}>验票地点</span>
-        <Input
-          style={{width: 260}}
-          placeholder="例如：东门闸机 / 看台A入口"
-          value={locationText}
-          onChange={(e) => setLocationText(e.target.value)}
-          onPressEnter={saveLocation}
-        />
-        <Button type="primary" onClick={saveLocation}>
-          保存地点
-        </Button>
-      </Space>
 
-      <Space align="center" wrap style={{marginBottom: 8}}>
-        <Select
-          placeholder="选择摄像头"
-          style={{width: 280}}
-          options={deviceOptions}
-          value={selectedDeviceId || undefined}
-          onChange={(v) => setSelectedDeviceId(v)}
-          onOpenChange={(open) => {
-            if (open) void refreshCameras();
-          }}
-        />
-        {(scanState === "idle" ||
-          scanState === "denied" ||
-          scanState === "error") && (
-          <Button onClick={() => void preAuthorize()}>授权摄像头</Button>
-        )}
-        {!active ? (
-          <Button type="primary" onClick={() => void startScan()}>
-            开始扫码
-          </Button>
-        ) : (
-          <Button danger onClick={stopScan}>
-            停止
-          </Button>
-        )}
-        <Typography.Text type="secondary">
-          状态：
-          {scanState === "scanning"
-            ? "扫描中"
-            : scanState === "ready"
-              ? "就绪"
-              : scanState === "denied"
-                ? "已拒绝"
-                : scanState === "error"
-                  ? "错误"
-                  : "待开始"}
-        </Typography.Text>
-      </Space>
+      setScanningImage(true);
+      try {
+        // 创建临时的 Html5Qrcode 实例用于扫描文件
+        const html5QrCode = new Html5Qrcode("temp-qr-scanner", false);
+        const qrCodeData = await html5QrCode.scanFile(file, true);
 
-      {warn && (
-        <Alert
-          type="warning"
-          message={warn}
-          showIcon
-          style={{marginBottom: 12}}
-        />
-      )}
+        message.success("成功识别二维码");
+        setUploadFileList([]);
+
+        // 使用识别到的二维码数据进行验票
+        await doVerify(qrCodeData, false);
+
+        return false; // 阻止上传
+      } catch (error) {
+        console.error("二维码识别失败:", error);
+        message.error(
+          "未能识别图片中的二维码，请确保图片清晰且包含有效的二维码",
+        );
+        setUploadFileList([]);
+        return false;
+      } finally {
+        setScanningImage(false);
+      }
+    },
+    [message, doVerify],
+  );
+
+  return (
+    <div style={{ padding: 24, maxWidth: 1400, margin: "0 auto" }}>
+      <Card
+        title={
+          <Space>
+            <span>验票管理</span>
+            <Typography.Text type="secondary">
+              <Link to="/inspector/history">查看验票记录</Link>
+            </Typography.Text>
+          </Space>
+        }
+        style={{ marginBottom: 24 }}
+      >
+        <Space direction="vertical" size="large" style={{ width: "100%" }}>
+          <div>
+            <Typography.Title level={5} style={{ marginBottom: 12 }}>
+              验票地点设置
+            </Typography.Title>
+            <Space align="center" wrap>
+              <Input
+                style={{ width: 300 }}
+                placeholder="例如：东门闸机 / 看台A入口"
+                value={locationText}
+                onChange={(e) => setLocationText(e.target.value)}
+                onPressEnter={saveLocation}
+                size="large"
+              />
+              <Button type="primary" size="large" onClick={saveLocation}>
+                保存地点
+              </Button>
+            </Space>
+          </div>
+        </Space>
+      </Card>
 
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "minmax(280px, 420px) 1fr",
-          gap: 16,
-          alignItems: "start",
-          marginBottom: 16,
+          gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))",
+          gap: 24,
+          marginBottom: 24,
         }}
       >
-        <Html5QrScanner
-          active={active}
-          deviceId={selectedDeviceId || undefined}
-          onDecoded={(text) => {
-            // 立即停止扫描，避免重复触发
-            stopScan();
-            // 延迟验证，确保扫描器已停止
-            setTimeout(() => {
-              void doVerify(text, true);
-            }, 200);
+        {/* 摄像头扫码 */}
+        <Card
+          title={
+            <Space>
+              <span>摄像头扫码</span>
+              <Typography.Text
+                type={
+                  scanState === "scanning"
+                    ? "success"
+                    : scanState === "ready"
+                      ? "secondary"
+                      : scanState === "denied" || scanState === "error"
+                        ? "danger"
+                        : "secondary"
+                }
+              >
+                {scanState === "scanning"
+                  ? "● 扫描中"
+                  : scanState === "ready"
+                    ? "● 就绪"
+                    : scanState === "denied"
+                      ? "● 已拒绝"
+                      : scanState === "error"
+                        ? "● 错误"
+                        : "● 待开始"}
+              </Typography.Text>
+            </Space>
+          }
+          style={{
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
           }}
-          qrbox={280}
-          fps={10}
-          style={{minHeight: 260}}
-        />
-
-        <div>
-          <Typography.Paragraph type="secondary">
-            也可手动输入/粘贴二维码数据：
-          </Typography.Paragraph>
-          <Space.Compact style={{width: "100%"}}>
-            <Input
-              placeholder="输入或粘贴二维码数据"
-              value={manualQr}
-              onChange={(e) => setManualQr(e.target.value)}
-              onPressEnter={() => void doVerify(manualQr, false)}
+        >
+          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+            <Select
+              placeholder="选择摄像头"
+              style={{ width: "100%" }}
+              options={deviceOptions}
+              value={selectedDeviceId || undefined}
+              onChange={(v) => setSelectedDeviceId(v)}
+              onOpenChange={(open) => {
+                if (open) void refreshCameras();
+              }}
+              size="large"
             />
-            <Button
-              type="primary"
-              loading={submitting}
-              onClick={() => void doVerify(manualQr, false)}
-            >
-              验证
-            </Button>
-          </Space.Compact>
 
-          {lastResult && (
-            <Card
-              size="small"
-              style={{marginTop: 12}}
-              title="最近一次验票结果"
+            <Space wrap>
+              {(scanState === "idle" ||
+                scanState === "denied" ||
+                scanState === "error") && (
+                <Button size="large" onClick={() => void preAuthorize()}>
+                  授权摄像头
+                </Button>
+              )}
+              {!active ? (
+                <Button
+                  type="primary"
+                  size="large"
+                  onClick={() => void startScan()}
+                >
+                  开始扫码
+                </Button>
+              ) : (
+                <Button danger size="large" onClick={stopScan}>
+                  停止扫描
+                </Button>
+              )}
+            </Space>
+
+            {warn && <Alert type="warning" message={warn} showIcon closable />}
+
+            <Html5QrScanner
+              active={active}
+              deviceId={selectedDeviceId || undefined}
+              onDecoded={(text) => {
+                stopScan();
+                setTimeout(() => {
+                  void doVerify(text, true);
+                }, 200);
+              }}
+              qrbox={280}
+              fps={10}
+              style={{ minHeight: 320, borderRadius: 8 }}
+            />
+          </Space>
+        </Card>
+
+        {/* 图片上传 */}
+        <Card
+          title="上传图片验票"
+          style={{
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+          }}
+        >
+          <Space direction="vertical" size="large" style={{ width: "100%" }}>
+            <div
+              style={{
+                border: "2px dashed #d9d9d9",
+                borderRadius: 8,
+                padding: "60px 20px",
+                textAlign: "center",
+                background: "#fafafa",
+                transition: "all 0.3s",
+              }}
             >
-              <Descriptions
-                size="small"
-                column={1}
-                bordered
-                items={[
-                  {
-                    key: "valid",
-                    label: "结果",
-                    children: lastResult.valid ? (
-                      <VerifyResultTag result="valid"/>
-                    ) : (
-                      <VerifyResultTag result="invalid"/>
-                    ),
-                  },
-                  {
-                    key: "ticketId",
-                    label: "票据ID",
-                    children: lastResult.ticket.id,
-                  },
-                  {
-                    key: "concert",
-                    label: "演唱会",
-                    children: lastResult.ticket.concertName,
-                  },
-                  {
-                    key: "concertDate",
-                    label: "演出时间",
-                    children: new Date(
-                      lastResult.ticket.concertDate,
-                    ).toLocaleString("zh-CN"),
-                  },
-                  {
-                    key: "concertVenue",
-                    label: "演出地点",
-                    children: lastResult.ticket.concertVenue,
-                  },
-                  {
-                    key: "type",
-                    label: "票据类型",
-                    children:
-                      lastResult.ticket.type === "adult" ? "成人票" : "儿童票",
-                  },
-                  {
-                    key: "price",
-                    label: "票价",
-                    children: `¥${lastResult.ticket.price}`,
-                  },
-                  {
-                    key: "userName",
-                    label: "持票人",
-                    children: lastResult.ticket.userName,
-                  },
-                  {
-                    key: "userEmail",
-                    label: "联系邮箱",
-                    children: lastResult.ticket.userEmail,
-                  },
-                  {
-                    key: "status",
-                    label: "票据状态",
-                    children:
-                      lastResult.ticket.status === "valid"
-                        ? "未使用"
-                        : lastResult.ticket.status === "used"
-                          ? "已使用"
-                          : "已退款",
-                  },
-                  {
-                    key: "user",
-                    label: "购票人",
-                    children: lastResult.ticket.userName,
-                  },
-                  {
-                    key: "time",
-                    label: "验证时间",
-                    children: lastResult.verifiedAt,
-                  },
-                ]}
-              />
-            </Card>
-          )}
-        </div>
+              <Upload
+                accept="image/*"
+                fileList={uploadFileList}
+                beforeUpload={(file) => {
+                  void handleImageUpload(file);
+                  return false;
+                }}
+                onChange={({ fileList }) => setUploadFileList(fileList)}
+                maxCount={1}
+                showUploadList={false}
+              >
+                <div>
+                  <UploadOutlined
+                    style={{ fontSize: 48, color: "#1890ff", marginBottom: 16 }}
+                  />
+                  <div>
+                    <Button
+                      type="primary"
+                      size="large"
+                      loading={scanningImage}
+                      disabled={scanningImage}
+                      icon={<UploadOutlined />}
+                    >
+                      {scanningImage ? "识别中..." : "选择图片"}
+                    </Button>
+                  </div>
+                  <Typography.Text
+                    type="secondary"
+                    style={{ fontSize: 14, marginTop: 12, display: "block" }}
+                  >
+                    支持 JPG、PNG 等常见图片格式
+                  </Typography.Text>
+                  <Typography.Text
+                    type="secondary"
+                    style={{ fontSize: 12, display: "block" }}
+                  >
+                    点击按钮选择包含二维码的图片
+                  </Typography.Text>
+                </div>
+              </Upload>
+            </div>
+
+            <Alert
+              type="info"
+              message="使用说明"
+              description="支持上传包含票务二维码的图片，系统会自动识别并验证。请确保图片清晰，二维码完整可见。"
+              showIcon
+            />
+          </Space>
+        </Card>
       </div>
+
+      {/* 验票结果 */}
+      {lastResult && (
+        <Card
+          title="最近一次验票结果"
+          style={{
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+          }}
+        >
+          <Descriptions
+            size="middle"
+            column={2}
+            bordered
+            items={[
+              {
+                key: "valid",
+                label: "结果",
+                children: lastResult.valid ? (
+                  <VerifyResultTag result="valid" />
+                ) : (
+                  <VerifyResultTag result="invalid" />
+                ),
+              },
+              {
+                key: "ticketId",
+                label: "票据ID",
+                children: lastResult.ticket.id,
+              },
+              {
+                key: "concert",
+                label: "演唱会",
+                children: lastResult.ticket.concertName,
+              },
+              {
+                key: "concertDate",
+                label: "演出时间",
+                children: new Date(
+                  lastResult.ticket.concertDate,
+                ).toLocaleString("zh-CN"),
+              },
+              {
+                key: "concertVenue",
+                label: "演出地点",
+                children: lastResult.ticket.concertVenue,
+              },
+              {
+                key: "type",
+                label: "票据类型",
+                children:
+                  lastResult.ticket.type === "adult" ? "成人票" : "儿童票",
+              },
+              {
+                key: "price",
+                label: "票价",
+                children: `¥${lastResult.ticket.price}`,
+              },
+              {
+                key: "userName",
+                label: "持票人",
+                children: lastResult.ticket.userName,
+              },
+              {
+                key: "userEmail",
+                label: "联系邮箱",
+                children: lastResult.ticket.userEmail,
+              },
+              {
+                key: "status",
+                label: "票据状态",
+                children:
+                  lastResult.ticket.status === "valid"
+                    ? "未使用"
+                    : lastResult.ticket.status === "used"
+                      ? "已使用"
+                      : "已退款",
+              },
+              {
+                key: "user",
+                label: "购票人",
+                children: lastResult.ticket.userName,
+              },
+              {
+                key: "time",
+                label: "验证时间",
+                children: lastResult.verifiedAt,
+              },
+            ]}
+          />
+        </Card>
+      )}
+
+      {/* 隐藏的临时二维码扫描器容器 */}
+      <div id="temp-qr-scanner" style={{ display: "none" }} />
 
       <Modal
         title="人工审核验票"
@@ -446,7 +576,7 @@ export default function InspectorVerify(): JSX.Element {
         onCancel={handleCancelVerification}
         okText="确认通过"
         cancelText="取消"
-        okButtonProps={{loading: confirming, type: "primary"}}
+        okButtonProps={{ loading: confirming, type: "primary" }}
         width={600}
       >
         {pendingVerification && (
@@ -455,7 +585,7 @@ export default function InspectorVerify(): JSX.Element {
               type="info"
               message="请核验以下信息"
               description="请核对人脸图像与持票人是否一致，以及实名信息与身份证是否匹配。"
-              style={{marginBottom: 16}}
+              style={{ marginBottom: 16 }}
             />
             <Descriptions
               column={1}
@@ -498,7 +628,7 @@ export default function InspectorVerify(): JSX.Element {
                       src={getImageUrl(pendingVerification.ticket.faceImage)}
                       alt="人脸图像"
                       width={200}
-                      style={{maxHeight: 200, objectFit: "contain"}}
+                      style={{ maxHeight: 200, objectFit: "contain" }}
                     />
                   ) : (
                     "未上传"
@@ -509,6 +639,6 @@ export default function InspectorVerify(): JSX.Element {
           </div>
         )}
       </Modal>
-    </Card>
+    </div>
   );
 }

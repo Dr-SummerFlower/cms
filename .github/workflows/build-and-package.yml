@@ -60,8 +60,9 @@ jobs:
           # template 拷贝到 cms/template，并忽略 *.html
           rsync -a --delete --exclude='*.html' cms_server/template/ cms/template/
 
-          # 拷贝 package.json 到 cms 根
+          # 拷贝 package.json、package-lock.json 到 cms 根
           cp cms_server/package.json cms/
+          cp cms_server/package-lock.json cms/
 
       - name: 📦 生成压缩包（不包含 cms 文件夹本身）
         run: |

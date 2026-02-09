@@ -1,0 +1,115 @@
+services:
+  # MongoDB 数据库服务
+  mongodb:
+    image: mongo:8.0.13
+    container_name: cms_mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    volumes:
+      - ./cms_data/mongodb:/data/db
+    networks:
+      - cms_network
+    healthcheck:
+      test: ["CMD", "mongosh", "mongodb://${MONGO_USER}:${MONGO_PASSWORD}@localhost:27017/admin?authSource=admin", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis 缓存服务
+  redis:
+    image: redis:8.2.1
+    container_name: cms_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "/etc/redis/redis.conf", "--requirepass", "${REDIS_PASSWORD}"]
+    volumes:
+      - ./cms_data/redis:/data
+      - ./cms_data/redis/conf/redis.conf:/etc/redis/redis.conf
+      - ./cms_data/logs:/logs
+    networks:
+      - cms_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MinIO 对象存储服务
+  minio:
+    image: minio/minio:RELEASE.2024-06-13T22-53-53Z
+    container_name: cms_minio
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    command: server /data --console-address ":9001"
+    volumes:
+      - ./cms_data/minio:/data
+    networks:
+      - cms_network
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # CMS 应用服务（前后端合并）
+  cms_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cms_app
+    restart: always
+    ports:
+      - "3001:${APP_PORT}"
+    environment:
+      PORT: ${APP_PORT}
+      ADMIN_USER: ${ADMIN_USER}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PWD: ${ADMIN_PWD}
+      DB_URI: "mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/cms?authSource=admin"
+      REDIS_URI: "redis://redis:6379"
+      REDIS_PWD: ${REDIS_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN}
+      AVATAR_URL_SECRET: ${AVATAR_URL_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      NOTIFY_EMAIL_USER: ${NOTIFY_EMAIL_USER}
+      NOTIFY_EMAIL_PWD: ${NOTIFY_EMAIL_PWD}
+      MINIO_END_POINT: minio
+      MINIO_PORT: "9000"
+      MINIO_USE_SSL: "false"
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_PUBLIC_HOST: ${MINIO_PUBLIC_HOST}
+      MINIO_BUCKET: ${MINIO_BUCKET}
+      LOGIN_LIMIT_SHORT_WINDOW_SECONDS: ${LOGIN_LIMIT_SHORT_WINDOW_SECONDS}
+      LOGIN_LIMIT_SHORT_MAX_ATTEMPTS: ${LOGIN_LIMIT_SHORT_MAX_ATTEMPTS}
+      LOGIN_LIMIT_SHORT_LOCK_SECONDS: ${LOGIN_LIMIT_SHORT_LOCK_SECONDS}
+      LOGIN_LIMIT_LONG_WINDOW_SECONDS: ${LOGIN_LIMIT_LONG_WINDOW_SECONDS}
+      LOGIN_LIMIT_LONG_MAX_ATTEMPTS: ${LOGIN_LIMIT_LONG_MAX_ATTEMPTS}
+      LOGIN_LIMIT_LONG_LOCK_SECONDS: ${LOGIN_LIMIT_LONG_LOCK_SECONDS}
+    networks:
+      - cms_network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+# 定义网络
+networks:
+  cms_network:
+    driver: bridge

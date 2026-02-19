@@ -4,8 +4,8 @@
 
 ## 技术栈
 
-| 部分 | 技术 |
-|------|------|
+| 部分 | 技术                                                             |
+|----|----------------------------------------------------------------|
 | 前端 | React 18、TypeScript、Vite 7、Ant Design 5、Zustand、React Router 7 |
 | 后端 | NestJS 11、MongoDB（Mongoose）、Redis、JWT、Swagger、MinIO、Nodemailer |
 

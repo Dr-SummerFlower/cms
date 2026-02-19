@@ -29,7 +29,7 @@ services:
     command: ["redis-server", "/etc/redis/redis.conf", "--requirepass", "${REDIS_PASSWORD}"]
     volumes:
       - ./cms_data/redis:/data
-      - ./cms_data/redis/conf/redis.conf:/etc/redis/redis.conf
+      - ./cms_data/redis/:/etc/redis/
       - ./cms_data/logs:/logs
     networks:
       - cms_network

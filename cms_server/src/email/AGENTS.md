@@ -15,5 +15,6 @@
 
 ## 约定
 
-- 邮件模板放在 **cms_server 根目录**下的 `template/`（如 verification-code.pug、concert-reminder.pug、refund-rejection.pug），与 Mailer 配置中的路径一致。
+- 邮件模板放在 **cms_server 根目录**下的 `template/`（如
+  verification-code.pug、concert-reminder.pug、refund-rejection.pug），与 Mailer 配置中的路径一致。
 - 发信失败需记录或抛出，便于排查；敏感配置从环境变量读取。

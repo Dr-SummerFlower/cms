@@ -2,7 +2,18 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { Client as MinioClient } from 'minio';
-import * as path from 'path';
+import * as sharp from 'sharp';
+
+const IMAGE_MAX_WIDTH: Record<
+  'avatar' | 'poster' | 'face' | 'avatars' | 'posters',
+  number
+> = {
+  avatar: 400,
+  avatars: 400,
+  poster: 1200,
+  posters: 1200,
+  face: 600,
+};
 
 @Injectable()
 export class StoragesService {
@@ -34,13 +45,17 @@ export class StoragesService {
     if (!file || !file.buffer || !file.originalname) {
       throw new InternalServerErrorException('上传文件无效');
     }
-    const ext = path.extname(file.originalname) || '';
-    const objectName = `${folder}/${new Date().toISOString().slice(0, 10)}/${randomUUID()}${ext}`;
+    const { buffer, mimetype } = await this.compressImage(
+      file.buffer,
+      file.mimetype,
+      folder,
+    );
+    const objectName = `${folder}/${new Date().toISOString().slice(0, 10)}/${randomUUID()}.webp`;
     return await this.putObjectAndGetPath(
       objectName,
-      file.buffer,
-      file.buffer.length,
-      file.mimetype,
+      buffer,
+      buffer.length,
+      mimetype,
     );
   }
 
@@ -53,14 +68,34 @@ export class StoragesService {
     if (buffer.length === 0) {
       throw new InternalServerErrorException('上传内容为空');
     }
-    const ext = path.extname(filename) || '';
+    const compressed = await this.compressImage(buffer, mimetype, folder);
+    const ext =
+      compressed.mimetype === 'image/webp'
+        ? '.webp'
+        : `.${mimetype.split('/')[1] || 'bin'}`;
     const objectName = `${folder}/${new Date().toISOString().slice(0, 10)}/${randomUUID()}${ext}`;
     return await this.putObjectAndGetPath(
       objectName,
-      buffer,
-      buffer.length,
-      mimetype,
+      compressed.buffer,
+      compressed.buffer.length,
+      compressed.mimetype,
     );
+  }
+
+  private async compressImage(
+    buffer: Buffer,
+    mimetype: string,
+    folder: keyof typeof IMAGE_MAX_WIDTH,
+  ): Promise<{ buffer: Buffer; mimetype: string }> {
+    if (!mimetype.startsWith('image/') || mimetype === 'image/gif') {
+      return { buffer, mimetype };
+    }
+    const maxWidth = IMAGE_MAX_WIDTH[folder];
+    const converted = await sharp(buffer)
+      .resize(maxWidth, undefined, { withoutEnlargement: true })
+      .webp({ lossless: true })
+      .toBuffer();
+    return { buffer: converted, mimetype: 'image/webp' };
   }
 
   private async ensureBucket(): Promise<void> {
@@ -92,8 +127,8 @@ export class StoragesService {
 
   /**
    * 构建path格式的路径（用于数据库存储）
-   * @param objectName 对象名称，例如：avatar/2025-08-24/xxx.jpg
-   * @returns path格式，例如：/assets/avatar/2025-08-24/xxx.jpg
+   * @param objectName 对象名称，例如：avatar/2025-08-24/xxx.webp
+   * @returns path格式，例如：/assets/avatar/2025-08-24/xxx.webp
    */
   private buildPath(objectName: string): string {
     return `/${this.bucket}/${objectName}`;

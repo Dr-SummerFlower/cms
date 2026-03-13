@@ -1,6 +1,13 @@
-import type {CreateTicketOrderDto, RefundRequest, RefundStatus, TicketItem, TicketItemRaw, TicketQr,} from "../types";
-import {getJson, postForm, postJson, putJson} from "../utils/http";
-import {toTicket} from "./_transform.ts";
+import type {
+  CreateTicketOrderDto,
+  RefundRequest,
+  RefundStatus,
+  TicketItem,
+  TicketItemRaw,
+  TicketQr,
+} from "../types";
+import { getJson, postForm, postJson, putJson } from "../utils/http";
+import { toTicket } from "./_transform.ts";
 
 // 创建订单：返回每张票据
 export async function createOrder(
@@ -46,7 +53,7 @@ export async function refundTicket(
 ): Promise<{ success: boolean; message: string }> {
   return postJson<{ success: boolean; message: string }, { reason: string }>(
     `/tickets/${id}/refund`,
-    {reason},
+    { reason },
   );
 }
 
@@ -80,5 +87,5 @@ export async function reviewRefund(
   return putJson<
     { success: boolean; message: string },
     { approved: boolean; reviewNote?: string }
-  >(`/tickets/refund-requests/${ticketId}/review`, {approved, reviewNote});
+  >(`/tickets/refund-requests/${ticketId}/review`, { approved, reviewNote });
 }

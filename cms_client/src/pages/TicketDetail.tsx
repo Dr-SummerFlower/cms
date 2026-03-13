@@ -1,10 +1,19 @@
-import {ReloadOutlined} from "@ant-design/icons";
-import {App as AntdApp, Button, Card, Descriptions, Divider, Progress, Space, Typography,} from "antd";
-import {useCallback, useEffect, useRef, useState} from "react";
-import {Link, useParams} from "react-router-dom";
-import {ticketDetail, ticketQr} from "../api/tickets";
+import { ReloadOutlined } from "@ant-design/icons";
+import {
+  App as AntdApp,
+  Button,
+  Card,
+  Descriptions,
+  Divider,
+  Progress,
+  Space,
+  Typography,
+} from "antd";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { ticketDetail, ticketQr } from "../api/tickets";
 import StatusTag from "../components/common/StatusTag.tsx";
-import type {TicketItem, TicketQr as TicketQrType} from "../types";
+import type { TicketItem, TicketQr as TicketQrType } from "../types";
 
 interface ApiError {
   response?: {
@@ -15,11 +24,11 @@ interface ApiError {
   message?: string;
 }
 
-const {Text} = Typography;
+const { Text } = Typography;
 
 export default function TicketDetail(): JSX.Element {
-  const {id} = useParams<{ id: string }>();
-  const {message} = AntdApp.useApp();
+  const { id } = useParams<{ id: string }>();
+  const { message } = AntdApp.useApp();
   const [ticket, setTicket] = useState<TicketItem | null>(null);
   const [qr, setQr] = useState<{ png?: string; data?: string }>({});
   const [qrInfo, setQrInfo] = useState<TicketQrType | null>(null);
@@ -63,7 +72,7 @@ export default function TicketDetail(): JSX.Element {
       setButtonLoading(true);
       const res: TicketQrType = await ticketQr(id);
       const dataStr = JSON.stringify(res.data ?? {});
-      setQr({png: res.qrCode, data: dataStr});
+      setQr({ png: res.qrCode, data: dataStr });
       setQrInfo(res);
       setCountdown(Math.floor((res.refreshInterval || 30000) / 1000));
       setSmoothProgress(100);
@@ -196,12 +205,12 @@ export default function TicketDetail(): JSX.Element {
     };
   }, []);
 
-  if (!ticket) return <Card loading/>;
+  if (!ticket) return <Card loading />;
 
   return (
     <Card
       title="票据详情"
-      style={{maxWidth: 960, margin: "0 auto"}}
+      style={{ maxWidth: 960, margin: "0 auto" }}
       extra={
         <Link to="/me/tickets">
           <Button>返回</Button>
@@ -212,7 +221,7 @@ export default function TicketDetail(): JSX.Element {
         bordered
         column={2}
         items={[
-          {key: "id", label: "票据ID", children: ticket.id},
+          { key: "id", label: "票据ID", children: ticket.id },
           {
             key: "concert",
             label: "演唱会",
@@ -223,11 +232,11 @@ export default function TicketDetail(): JSX.Element {
             label: "类型",
             children: ticket.type === "adult" ? "成人" : "儿童",
           },
-          {key: "price", label: "价格", children: `¥${ticket.price}`},
+          { key: "price", label: "价格", children: `¥${ticket.price}` },
           {
             key: "status",
             label: "状态",
-            children: <StatusTag kind="ticket" value={ticket.status}/>,
+            children: <StatusTag kind="ticket" value={ticket.status} />,
           },
           {
             key: "createdAt",
@@ -236,18 +245,18 @@ export default function TicketDetail(): JSX.Element {
           },
         ]}
       />
-      <Divider/>
+      <Divider />
       <Space
         direction="vertical"
         size="middle"
-        style={{width: "100%", alignItems: "center"}}
+        style={{ width: "100%", alignItems: "center" }}
       >
         {/* 动态二维码显示 */}
         {!!qr.png && (
           <img
             src={qr.png}
             alt="ticket-qr"
-            style={{width: 240, height: 240}}
+            style={{ width: 240, height: 240 }}
           />
         )}
 
@@ -256,21 +265,21 @@ export default function TicketDetail(): JSX.Element {
           <Space
             direction="vertical"
             size="small"
-            style={{alignItems: "center"}}
+            style={{ alignItems: "center" }}
           >
-            <Text type="secondary" style={{fontSize: "12px"}}>
+            <Text type="secondary" style={{ fontSize: "12px" }}>
               动态二维码 · {countdown}秒后自动刷新
             </Text>
             <Progress
               percent={smoothProgress}
               size="small"
               showInfo={false}
-              style={{width: 200}}
+              style={{ width: 200 }}
             />
             <Button
               type="link"
               size="small"
-              icon={<ReloadOutlined/>}
+              icon={<ReloadOutlined />}
               loading={buttonLoading}
               onClick={refreshQrCode}
             >

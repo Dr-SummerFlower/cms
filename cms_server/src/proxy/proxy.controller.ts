@@ -10,7 +10,8 @@ export class ProxyController {
 
   @ApiOperation({
     summary: '代理minio文件',
-    description: '通过服务端代理访问minio存储桶中的文件',
+    description:
+      '通过服务端代理访问minio存储桶中的文件，保证 HTTPS 环境下无混合内容问题',
   })
   @Get('*path')
   async proxyFile(@Req() req: Request, @Res() res: Response): Promise<void> {

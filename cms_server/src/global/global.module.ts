@@ -60,9 +60,9 @@ if (IS_DEV) {
       useFactory: (config: ConfigService) => ({
         // SMTP传输配置
         transport: {
-          host: 'smtp.qq.com', // QQ邮箱SMTP服务器地址
-          port: 465, // SSL端口
-          secure: true, // 使用SSL加密
+          host: config.get<string>('NOTIFY_EMAIL_HOST'), // SMTP服务器地址
+          port: config.get<number>('NOTIFY_EMAIL_PORT'), // SMTP端口
+          secure: config.get<string>('NOTIFY_EMAIL_SECURE'), // 是否启用SSL/TLS加密
           auth: {
             user: config.get<string>('NOTIFY_EMAIL_USER'), // 发件人邮箱
             pass: config.get<string>('NOTIFY_EMAIL_PWD'), // 邮箱授权码
@@ -108,4 +108,4 @@ if (IS_DEV) {
     },
   ],
 })
-export class GlobalModule {}
+export class GlobalModule { }

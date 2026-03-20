@@ -1,24 +1,15 @@
-import {
-  App as AntdApp,
-  Avatar,
-  Button,
-  Card,
-  Form,
-  Input,
-  Space,
-  Upload,
-} from "antd";
-import type { UploadFile } from "antd/es/upload/interface";
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { sendEmailCode } from "../api/auth";
-import { updateUser, uploadAvatar } from "../api/users";
-import { useAuthStore } from "../stores/authStore";
-import type { UpdateUserDto } from "../types";
-import { getImageUrl } from "../utils/image";
+import {App as AntdApp, Avatar, Button, Card, Form, Input, Space, Upload,} from "antd";
+import type {UploadFile} from "antd/es/upload/interface";
+import {useState} from "react";
+import {Link} from "react-router-dom";
+import {sendEmailCode} from "../api/auth";
+import {updateUser, uploadAvatar} from "../api/users";
+import {useAuthStore} from "../stores/authStore";
+import type {UpdateUserDto} from "../types";
+import {getImageUrl} from "../utils/image";
 
 export default function UserProfileEdit(): JSX.Element {
-  const { message } = AntdApp.useApp();
+  const {message} = AntdApp.useApp();
   const user = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
 
@@ -34,7 +25,7 @@ export default function UserProfileEdit(): JSX.Element {
     newPassword?: string;
   }>();
 
-  if (!user) return <Card loading />;
+  if (!user) return <Card loading/>;
 
   const beforeUpload = (f: File) => {
     if (!f.type.startsWith("image/")) {
@@ -159,21 +150,21 @@ export default function UserProfileEdit(): JSX.Element {
   return (
     <Card
       title="编辑个人资料"
-      style={{ maxWidth: 960, margin: "0 auto" }}
+      style={{maxWidth: 960, margin: "0 auto"}}
       extra={
         <Link to="/me/profile">
           <Button>返回</Button>
         </Link>
       }
     >
-      <Space align="center" size="large" style={{ marginBottom: 12 }}>
+      <Space align="center" size="large" style={{marginBottom: 12}}>
         <Avatar src={getImageUrl(user.avatar)} size={64}>
           {user.username.at(0)}
         </Avatar>
         <span>当前头像</span>
       </Space>
 
-      <div style={{ marginBottom: 16 }}>
+      <div style={{marginBottom: 16}}>
         <Upload
           listType="picture-card"
           accept="image/*"
@@ -191,7 +182,7 @@ export default function UserProfileEdit(): JSX.Element {
         onClick={() => void onSaveAvatar()}
         disabled={!avatarFile}
         loading={savingAvatar}
-        style={{ marginBottom: 24 }}
+        style={{marginBottom: 24}}
       >
         保存头像
       </Button>
@@ -199,30 +190,30 @@ export default function UserProfileEdit(): JSX.Element {
       <Form
         form={baseForm}
         layout="vertical"
-        initialValues={{ username: user.username }}
+        initialValues={{username: user.username}}
         onFinish={onSaveBase}
       >
         <Form.Item
           label="用户名"
           name="username"
-          rules={[{ required: true }, { min: 4, max: 20 }]}
+          rules={[{required: true}, {min: 4, max: 20}]}
         >
-          <Input placeholder="4-20个字符" />
+          <Input placeholder="4-20个字符"/>
         </Form.Item>
         <Button type="primary" htmlType="submit">
           保存基本资料
         </Button>
       </Form>
 
-      <div style={{ height: 16 }} />
+      <div style={{height: 16}}/>
 
       <Form form={secForm} layout="vertical" onFinish={onSaveSecurity}>
-        <Form.Item label="新邮箱" name="email" rules={[{ type: "email" }]}>
-          <Input placeholder="更换邮箱（可选）" />
+        <Form.Item label="新邮箱" name="email" rules={[{type: "email"}]}>
+          <Input placeholder="更换邮箱（可选）"/>
         </Form.Item>
         <Form.Item label="邮箱验证码" name="emailCode">
-          <Space.Compact style={{ width: "100%" }}>
-            <Input placeholder="若修改邮箱需要验证码" maxLength={6} />
+          <Space.Compact style={{width: "100%"}}>
+            <Input placeholder="若修改邮箱需要验证码" maxLength={6}/>
             <Button onClick={() => void sendUpdateCode()} type="primary">
               发送验证码
             </Button>
@@ -231,16 +222,16 @@ export default function UserProfileEdit(): JSX.Element {
         <Form.Item
           label="当前密码"
           name="password"
-          rules={[{ min: 8, message: "至少 8 位" }]}
+          rules={[{min: 8, message: "至少 8 位"}]}
         >
-          <Input.Password placeholder="修改密码时必填当前密码" />
+          <Input.Password placeholder="修改密码时必填当前密码"/>
         </Form.Item>
         <Form.Item
           label="新密码"
           name="newPassword"
-          rules={[{ min: 8, message: "至少 8 位" }]}
+          rules={[{min: 8, message: "至少 8 位"}]}
         >
-          <Input.Password placeholder="新密码（可选）" />
+          <Input.Password placeholder="新密码（可选）"/>
         </Form.Item>
 
         <Button type="primary" htmlType="submit">

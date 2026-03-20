@@ -22,7 +22,7 @@ interface ConcertState {
 export const useConcertStore = create<ConcertState>((set, get) => ({
   loading: false,
   data: null,
-  filter: {page: 1, limit: 10},
+  filter: {page: 1, limit: 30},
   setFilter(patch) {
     set(({filter}) => ({filter: {...filter, ...patch}}));
   },

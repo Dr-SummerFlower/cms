@@ -19,7 +19,6 @@ const AdminLayout = lazy(() => import("../pages/admin/AdminLayout"));
 const AdminConcerts = lazy(() => import("../pages/admin/AdminConcerts"));
 const AdminUsers = lazy(() => import("../pages/admin/AdminUsers"));
 const AdminRefunds = lazy(() => import("../pages/admin/AdminRefunds"));
-const AdminFeedback = lazy(() => import("../pages/admin/AdminFeedback"));
 
 // Inspector
 const InspectorVerify = lazy(
@@ -156,14 +155,6 @@ const router = createBrowserRouter([
             element: (
               <Suspense fallback={null}>
                 <AdminRefunds/>
-              </Suspense>
-            ),
-          },
-          {
-            path: "feedback",
-            element: (
-              <Suspense fallback={null}>
-                <AdminFeedback/>
               </Suspense>
             ),
           },

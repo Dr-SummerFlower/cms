@@ -1,15 +1,6 @@
-import type {
-  AuthPayload,
-  CaptchaResult,
-  LoginDto,
-  RefreshDto,
-  RegisterDto,
-  SendCodeDto,
-  Tokens,
-  User,
-} from "../types";
-import http, { postForm, postJson } from "../utils/http";
-import { toUser } from "./_transform.ts";
+import type {AuthPayload, CaptchaResult, LoginDto, RefreshDto, RegisterDto, SendCodeDto, Tokens, User,} from "../types";
+import http, {postForm, postJson} from "../utils/http";
+import {toUser} from "./_transform.ts";
 
 export type AuthResult = {
   access_token: string;
@@ -69,7 +60,7 @@ export async function register(
 }
 
 export async function refresh(refresh_token: string): Promise<Tokens> {
-  return await postJson<Tokens, RefreshDto>("/auth/refresh", { refresh_token });
+  return await postJson<Tokens, RefreshDto>("/auth/refresh", {refresh_token});
 }
 
 export async function sendEmailCode(
@@ -78,7 +69,7 @@ export async function sendEmailCode(
 ): Promise<void> {
   await postJson<unknown, SendCodeDto>(
     "/email",
-    { email, type },
+    {email, type},
     {
       skipGlobalErrorHandler: true,
     },

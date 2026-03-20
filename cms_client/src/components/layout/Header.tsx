@@ -1,27 +1,18 @@
-import { HomeOutlined, MoonOutlined, SunOutlined } from "@ant-design/icons";
-import {
-  App as AntdApp,
-  Avatar,
-  Button,
-  Dropdown,
-  Layout,
-  type MenuProps,
-  Space,
-  Switch,
-} from "antd";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuthStore } from "../../stores/authStore";
-import { useThemeStore } from "../../stores/themeStore";
-import { getImageUrl } from "../../utils/image";
+import {HomeOutlined, MoonOutlined, SunOutlined} from "@ant-design/icons";
+import {App as AntdApp, Avatar, Button, Dropdown, Layout, type MenuProps, Space, Switch,} from "antd";
+import {Link, useLocation, useNavigate} from "react-router-dom";
+import {useAuthStore} from "../../stores/authStore";
+import {useThemeStore} from "../../stores/themeStore";
+import {getImageUrl} from "../../utils/image";
 
-const { Header } = Layout;
+const {Header} = Layout;
 
 export default function AppHeader(): JSX.Element {
-  const { isAuthed, user, logout } = useAuthStore();
-  const { theme, toggleTheme } = useThemeStore();
+  const {isAuthed, user, logout} = useAuthStore();
+  const {theme, toggleTheme} = useThemeStore();
   const location = useLocation();
   const navigate = useNavigate();
-  const { message } = AntdApp.useApp();
+  const {message} = AntdApp.useApp();
 
   const isDark = theme === "dark";
   const isMobile = window.innerWidth <= 768;
@@ -44,11 +35,11 @@ export default function AppHeader(): JSX.Element {
   const getUserMenuItems = (): MenuProps["items"] => [
     ...(user?.role !== "INSPECTOR"
       ? [
-          {
-            key: "tickets",
-            label: "我的票务",
-          },
-        ]
+        {
+          key: "tickets",
+          label: "我的票务",
+        },
+      ]
       : []),
     {
       key: "profile",
@@ -56,19 +47,19 @@ export default function AppHeader(): JSX.Element {
     },
     ...(user?.role === "ADMIN"
       ? [
-          {
-            key: "admin",
-            label: "管理后台",
-          },
-        ]
+        {
+          key: "admin",
+          label: "管理后台",
+        },
+      ]
       : []),
     ...(user?.role === "INSPECTOR"
       ? [
-          {
-            key: "inspector",
-            label: "验票入口",
-          },
-        ]
+        {
+          key: "inspector",
+          label: "验票入口",
+        },
+      ]
       : []),
     {
       type: "divider",
@@ -154,20 +145,20 @@ export default function AppHeader(): JSX.Element {
 
       {/* 非首页时显示返回主页按钮，提供清晰引导 */}
       {location.pathname !== "/" && (
-        <div style={{ marginLeft: "8px" }}>
+        <div style={{marginLeft: "8px"}}>
           {isMobile ? (
             <Button
               type="text"
-              icon={<HomeOutlined />}
+              icon={<HomeOutlined/>}
               onClick={() => navigate("/")}
-              style={{ color: isDark ? "#f0f0f0" : "#fff" }}
+              style={{color: isDark ? "#f0f0f0" : "#fff"}}
             />
           ) : (
             <Button
               type="link"
-              icon={<HomeOutlined />}
+              icon={<HomeOutlined/>}
               onClick={() => navigate("/")}
-              style={{ color: isDark ? "#f0f0f0" : "#fff", fontWeight: 600 }}
+              style={{color: isDark ? "#f0f0f0" : "#fff", fontWeight: 600}}
             >
               返回主页
             </Button>
@@ -211,8 +202,8 @@ export default function AppHeader(): JSX.Element {
         <Switch
           checked={isDark}
           onChange={toggleTheme}
-          checkedChildren={<MoonOutlined style={{ fontSize: "14px" }} />}
-          unCheckedChildren={<SunOutlined style={{ fontSize: "14px" }} />}
+          checkedChildren={<MoonOutlined style={{fontSize: "14px"}}/>}
+          unCheckedChildren={<SunOutlined style={{fontSize: "14px"}}/>}
           size={isMobile ? "small" : "default"}
           style={{
             backgroundColor: isDark ? "#434343" : "#f0f0f0",

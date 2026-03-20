@@ -13,11 +13,11 @@ type State = {
 export default class ErrorBoundary extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = {hasError: false};
   }
 
   static getDerivedStateFromError(error: unknown): State {
-    return { hasError: true, error };
+    return {hasError: true, error};
   }
 
   componentDidCatch(error: unknown, errorInfo: React.ErrorInfo): void {
@@ -28,7 +28,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
 
   render(): React.ReactNode {
     if (this.state.hasError) {
-      return <ErrorPage error={this.state.error} />;
+      return <ErrorPage error={this.state.error}/>;
     }
 
     return this.props.children;

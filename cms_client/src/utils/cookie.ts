@@ -99,7 +99,7 @@ export function deleteCookie(
   name: string,
   options: Pick<CookieOptions, "path" | "domain"> = {},
 ): void {
-  const { path = "/", domain } = options;
+  const {path = "/", domain} = options;
 
   let cookieString = `${encodeURIComponent(name)}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}`;
 

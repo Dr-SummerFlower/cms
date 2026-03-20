@@ -1,13 +1,7 @@
-import { ReloadOutlined } from "@ant-design/icons";
-import { Input, Space } from "antd";
-import React, {
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from "react";
-import { getCaptcha } from "../../api/auth";
+import {ReloadOutlined} from "@ant-design/icons";
+import {Input, Space} from "antd";
+import React, {useCallback, useEffect, useImperativeHandle, useRef, useState,} from "react";
+import {getCaptcha} from "../../api/auth";
 
 export interface CaptchaInputRef {
   /** 获取当前验证码ID和用户输入的验证码 */
@@ -77,10 +71,10 @@ export const CaptchaInput = React.forwardRef<
       setLoading(true);
       onLoadingChange?.(true);
       try {
-        const { id, image } = await getCaptcha();
+        const {id, image} = await getCaptcha();
         setCaptchaId(id);
         // 将图片 ArrayBuffer 转换为 Blob URL
-        const blob = new Blob([image], { type: "image/png" });
+        const blob = new Blob([image], {type: "image/png"});
         const url = URL.createObjectURL(blob);
         // 清理旧的 URL
         if (imageUrlRef.current) {
@@ -168,7 +162,7 @@ export const CaptchaInput = React.forwardRef<
           }}
         >
           {loading ? (
-            <ReloadOutlined spin style={{ fontSize: 16, padding: "0 8px" }} />
+            <ReloadOutlined spin style={{fontSize: 16, padding: "0 8px"}}/>
           ) : imageUrl ? (
             <img
               src={imageUrl}
@@ -187,7 +181,7 @@ export const CaptchaInput = React.forwardRef<
               }}
             />
           ) : (
-            <ReloadOutlined style={{ fontSize: 16, padding: "0 8px" }} />
+            <ReloadOutlined style={{fontSize: 16, padding: "0 8px"}}/>
           )}
         </div>
       </Space.Compact>

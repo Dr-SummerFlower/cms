@@ -1,15 +1,5 @@
-import type {
-  Concert,
-  ConcertRaw,
-  Feedback,
-  FeedbackRaw,
-  Paginated,
-  TicketItem,
-  TicketItemRaw,
-  User,
-  UserRaw,
-} from "../types";
-import { getImageUrl } from "../utils/image";
+import type {Concert, ConcertRaw, Paginated, TicketItem, TicketItemRaw, User, UserRaw,} from "../types";
+import {getImageUrl} from "../utils/image";
 
 export function toUser(u: UserRaw | User): User {
   if ("id" in u) return u;
@@ -49,11 +39,11 @@ export function toTicket(t: TicketItemRaw): TicketItem {
   const concertId = t.concert?._id ?? t.concertId ?? "";
   const concert = t.concert
     ? {
-        id: t.concert._id,
-        name: t.concert.name,
-        date: t.concert.date ?? "",
-        venue: t.concert.venue ?? "",
-      }
+      id: t.concert._id,
+      name: t.concert.name,
+      date: t.concert.date ?? "",
+      venue: t.concert.venue ?? "",
+    }
     : undefined;
 
   const userId =
@@ -73,24 +63,6 @@ export function toTicket(t: TicketItemRaw): TicketItem {
     qrCodeData: t.qrCodeData,
     createdAt: t.createdAt,
     updatedAt: t.updatedAt,
-  };
-}
-
-export function toFeedback(f: FeedbackRaw): Feedback {
-  return {
-    id: f._id,
-    timestamp: f.timestamp,
-    userAgent: f.userAgent,
-    url: f.url,
-    errorType: f.errorType,
-    message: f.message,
-    stack: f.stack,
-    routeStatus: f.routeStatus,
-    routeStatusText: f.routeStatusText,
-    routeData: f.routeData,
-    status: f.status,
-    createdAt: f.createdAt,
-    updatedAt: f.updatedAt,
   };
 }
 

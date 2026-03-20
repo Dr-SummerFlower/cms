@@ -1,18 +1,12 @@
-import { App as AntdApp, Button, Popconfirm, Space, Table } from "antd";
-import { useCallback, useEffect, useState } from "react";
-import {
-  createConcert,
-  deleteConcert,
-  listConcerts,
-  updateConcert,
-  updateConcertPoster,
-} from "../../api/concerts";
-import { ConcertStatusTag } from "../../components/common/StatusTag";
-import type { Concert, CreateConcertDto, Paginated } from "../../types";
+import {App as AntdApp, Button, Popconfirm, Space, Table} from "antd";
+import {useCallback, useEffect, useState} from "react";
+import {createConcert, deleteConcert, listConcerts, updateConcert, updateConcertPoster,} from "../../api/concerts";
+import {ConcertStatusTag} from "../../components/common/StatusTag";
+import type {Concert, CreateConcertDto, Paginated} from "../../types";
 import ConcertFormModal from "./ConcertFormModal";
 
 export default function AdminConcerts(): JSX.Element {
-  const { message } = AntdApp.useApp();
+  const {message} = AntdApp.useApp();
   const [data, setData] = useState<Paginated<Concert> | null>(null);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -24,7 +18,7 @@ export default function AdminConcerts(): JSX.Element {
     async (p = page, ps = pageSize): Promise<void> => {
       setLoading(true);
       try {
-        const res = await listConcerts({ page: p, limit: ps });
+        const res = await listConcerts({page: p, limit: ps});
         setData(res);
       } finally {
         setLoading(false);
@@ -39,7 +33,7 @@ export default function AdminConcerts(): JSX.Element {
 
   return (
     <>
-      <Space style={{ marginBottom: 12 }}>
+      <Space style={{marginBottom: 12}}>
         <Button
           type="primary"
           onClick={() => {
@@ -56,18 +50,18 @@ export default function AdminConcerts(): JSX.Element {
         loading={loading}
         dataSource={data?.items ?? []}
         columns={[
-          { title: "名称", dataIndex: "name" },
-          { title: "时间", dataIndex: "date" },
-          { title: "场馆", dataIndex: "venue" },
+          {title: "名称", dataIndex: "name"},
+          {title: "时间", dataIndex: "date"},
+          {title: "场馆", dataIndex: "venue"},
           {
             title: "成人/儿童票价",
             render: (_, r) => `¥${r.adultPrice} / ¥${r.childPrice}`,
           },
-          { title: "总票数", dataIndex: "totalTickets", width: 100 },
+          {title: "总票数", dataIndex: "totalTickets", width: 100},
           {
             title: "状态",
             dataIndex: "status",
-            render: (s) => <ConcertStatusTag status={s} />,
+            render: (s) => <ConcertStatusTag status={s}/>,
           },
           {
             title: "操作",

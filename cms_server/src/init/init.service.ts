@@ -5,6 +5,9 @@ import { Model } from 'mongoose';
 import { StoragesService } from '../storages/storages.service';
 import { User } from '../users/entities/user.entity';
 
+/**
+ * 负责应用启动阶段初始化默认数据的服务。
+ */
 @Injectable()
 export class InitService implements OnModuleInit {
   private readonly logger: Logger = new Logger(InitService.name);
@@ -17,10 +20,20 @@ export class InitService implements OnModuleInit {
     private storagesService: StoragesService,
   ) {}
 
+  /**
+   * 在模块初始化时执行启动检查和默认数据准备。
+   *
+   * @returns 初始化完成时不返回内容
+   */
   async onModuleInit(): Promise<void> {
     await this.createDefaultAdmin();
   }
 
+  /**
+   * 在系统中不存在管理员时创建默认管理员账户。
+   *
+   * @returns 创建流程结束时不返回内容
+   */
   private async createDefaultAdmin(): Promise<void> {
     try {
       const existingAdmin = (await this.userModel.findOne({
@@ -28,6 +41,7 @@ export class InitService implements OnModuleInit {
       })) as User;
       if (existingAdmin) return;
 
+      // 将内置默认头像转换为二进制后上传到对象存储。
       const avatarBuffer = Buffer.from(this.avatarBase64, 'base64');
 
       const username = this.configService.get<string>('ADMIN_USER', 'admin');
@@ -43,6 +57,7 @@ export class InitService implements OnModuleInit {
       );
       const password = this.configService.get<string>('ADMIN_PWD', 'admin123');
 
+      // 使用环境变量覆盖默认凭据，便于不同部署环境自定义初始化管理员。
       const defaultAdmin = {
         username,
         avatar,

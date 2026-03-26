@@ -10,8 +10,18 @@ import { Request } from 'express';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { Response } from '../types/';
 
+/**
+ * 将成功响应包装为统一结构，并透传异常处理流程的全局拦截器。
+ */
 @Injectable()
 export class GlobalInterceptor<T> implements NestInterceptor<T, Response<T>> {
+  /**
+   * 对控制器返回值进行统一格式化。
+   *
+   * @param context - 当前请求的执行上下文
+   * @param next - 后续处理器
+   * @returns 包装后的标准响应流
+   */
   intercept(
     context: ExecutionContext,
     next: CallHandler,
@@ -64,6 +74,8 @@ export class GlobalInterceptor<T> implements NestInterceptor<T, Response<T>> {
           if (err instanceof HttpException) {
             throw err;
           }
+
+          // 非 HttpException 统一转换为标准 HTTP 异常，交给全局过滤器继续处理。
           throw new HttpException(message, status);
         });
       }),

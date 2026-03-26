@@ -12,17 +12,26 @@ import {
 } from 'class-validator';
 import { TicketType } from '../../types';
 
+/**
+ * 单张票对应的实名购票人信息。
+ */
 export class TicketAttendeeInfoDto {
+  /** 购票人真实姓名。 */
   @ApiProperty({ description: '购票人姓名', example: '张三' })
   @IsNotEmpty({ message: '姓名不能为空' })
   realName: string;
 
+  /** 购票人身份证号。 */
   @ApiProperty({ description: '购票人身份证号', example: '110101199001011234' })
   @IsNotEmpty({ message: '身份证号不能为空' })
   idCard: string;
 }
 
+/**
+ * 一种票型的下单项数据传输对象。
+ */
 export class TicketOrderItemDto {
+  /** 票据类型。 */
   @ApiProperty({
     description: '票据类型',
     enum: ['adult', 'child'],
@@ -31,7 +40,9 @@ export class TicketOrderItemDto {
   @IsIn(['adult', 'child'], { message: '票据类型必须是adult或child' })
   type: TicketType;
 
+  /** 当前票型购买数量。 */
   @ApiProperty({ description: '票据数量(至少1)', example: 1, minimum: 1 })
+  // 兼容表单字符串输入，统一转换为数字后再校验。
   @Transform(({ value }) => {
     const num = Number(value);
     return isNaN(num) ? value : num;
@@ -40,6 +51,7 @@ export class TicketOrderItemDto {
   @Min(1, { message: '票据数量至少为1' })
   quantity: number;
 
+  /** 与购买数量一一对应的实名信息列表。 */
   @ApiProperty({
     description: '购票人实名信息列表（每张票对应一个）',
     type: [TicketAttendeeInfoDto],
@@ -54,12 +66,17 @@ export class TicketOrderItemDto {
   attendees: TicketAttendeeInfoDto[];
 }
 
+/**
+ * 创建票务订单接口的请求体数据传输对象。
+ */
 export class CreateTicketOrderDto {
+  /** 演唱会 ID。 */
   @ApiProperty({ description: '演唱会ID', example: '66c1234567890abcdef0456' })
   @IsMongoId({ message: '演唱会ID格式不正确' })
   @IsNotEmpty({ message: '演唱会ID不能为空' })
   concertId: string;
 
+  /** 购买的票据下单项列表。 */
   @ApiProperty({
     description: '购买的票据列表',
     type: [TicketOrderItemDto],

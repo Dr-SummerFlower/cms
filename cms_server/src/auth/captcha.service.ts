@@ -5,6 +5,9 @@ import { createCanvas } from 'canvas';
 import { randomUUID } from 'crypto';
 import { CaptchaResult } from '../types';
 
+/**
+ * 负责生成、缓存与校验图形验证码的服务。
+ */
 @Injectable()
 export class CaptchaService {
   private readonly CAPTCHA_EXPIRE_SECONDS: number;
@@ -25,18 +28,20 @@ export class CaptchaService {
   }
 
   /**
-   * 生成验证码图片和文本
-   * @returns 返回验证码ID、图片Buffer和验证码文本
+   * 生成一组新的图形验证码。
+   *
+   * @returns 包含验证码标识和图片二进制数据的结果
+   * @throws InternalServerErrorException 当验证码生成失败时抛出
    */
   async generate(): Promise<CaptchaResult> {
     try {
       const code: string = this.generateRandomCode();
       const id: string = randomUUID();
 
-      // 生成图片
+      // 前端只拿到验证码图片和 ID，真正答案只保存在服务端缓存里。
       const image: Buffer<ArrayBufferLike> = this.generateImage(code);
 
-      // 存储验证码到Redis，5分钟过期
+      // 统一转小写后写入 Redis，后续校验时即可自然忽略大小写差异。
       await this.redisService.setEx(
         `captcha:${id}`,
         this.CAPTCHA_EXPIRE_SECONDS,
@@ -53,7 +58,11 @@ export class CaptchaService {
   }
 
   /**
-   * 验证验证码
+   * 校验指定验证码是否正确。
+   *
+   * @param id - 验证码唯一标识
+   * @param code - 用户输入的验证码文本
+   * @returns 验证通过时返回 `true`
    */
   async validate(id: string, code: string): Promise<boolean> {
     if (!id || !code) {
@@ -67,15 +76,17 @@ export class CaptchaService {
       return false; // 验证码已过期或不存在
     }
 
-    // 验证后删除验证码（一次性使用）
+    // 验证码采用一次性消费，用过就删，避免同一张图被重复提交。
     await this.redisService.del(key);
 
-    // 不区分大小写比较
+    // 输入前后空格和大小写都不影响校验结果。
     return storedCode.toLowerCase() === code.toLowerCase().trim();
   }
 
   /**
-   * 生成随机验证码字符串
+   * 生成指定长度的随机验证码字符串。
+   *
+   * @returns 随机验证码文本
    */
   private generateRandomCode(): string {
     const numArr = '0123456789'.split('');
@@ -91,7 +102,10 @@ export class CaptchaService {
   }
 
   /**
-   * 生成验证码图片
+   * 根据验证码文本绘制 PNG 图片。
+   *
+   * @param code - 需要绘制到图片中的验证码文本
+   * @returns PNG 格式的图片缓冲区
    */
   private generateImage(code: string): Buffer {
     try {
@@ -102,7 +116,7 @@ export class CaptchaService {
       ctx.fillStyle = 'rgba(206, 244, 196)';
       ctx.fillRect(0, 0, this.CAPTCHA_WIDTH, this.CAPTCHA_HEIGHT);
 
-      // 绘制验证码文字
+      // 每个字符都做随机字号、颜色和旋转，降低 OCR 识别成功率。
       ctx.textBaseline = 'middle';
 
       for (let i = 0; i < code.length; i++) {
@@ -127,7 +141,7 @@ export class CaptchaService {
         ctx.translate(-x, -y);
       }
 
-      // 绘制干扰线
+      // 额外加入干扰线，进一步增加自动识别成本。
       for (let i = 0; i < 4; i++) {
         ctx.strokeStyle = this.randomColor(40, 180);
         ctx.beginPath();
@@ -155,14 +169,22 @@ export class CaptchaService {
   }
 
   /**
-   * 生成随机数
+   * 生成指定区间内的随机整数。
+   *
+   * @param min - 区间下界（含）
+   * @param max - 区间上界（不含）
+   * @returns 随机整数
    */
   private randomNum(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min) + min);
   }
 
   /**
-   * 生成随机颜色
+   * 生成指定亮度范围内的随机 RGB 颜色。
+   *
+   * @param min - 每个颜色通道的最小值
+   * @param max - 每个颜色通道的最大值
+   * @returns CSS `rgb(...)` 字符串
    */
   private randomColor(min: number, max: number): string {
     const r = this.randomNum(min, max);

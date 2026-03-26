@@ -2,7 +2,11 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsIn, IsMongoId, IsOptional } from 'class-validator';
 import { TicketStatus } from '../../types';
 
+/**
+ * 用户票据列表查询参数数据传输对象。
+ */
 export class TicketQueryDto {
+  /** 按票据状态筛选。 */
   @ApiProperty({
     description: '票据状态（可选）',
     required: false,
@@ -15,6 +19,7 @@ export class TicketQueryDto {
   })
   status?: TicketStatus;
 
+  /** 按演唱会筛选。 */
   @ApiProperty({
     description: '演唱会ID（可选）',
     required: false,

@@ -4,6 +4,9 @@ import { EmailService } from '../email/email.service';
 import { ConcertsReminder } from '../types';
 import { ConcertsService } from './concerts.service';
 
+/**
+ * 负责执行演唱会状态维护与提醒邮件发送的定时任务服务。
+ */
 @Injectable()
 export class ConcertsSchedulerService {
   private readonly logger: Logger = new Logger(ConcertsSchedulerService.name);
@@ -13,6 +16,11 @@ export class ConcertsSchedulerService {
     private readonly emailService: EmailService,
   ) {}
 
+  /**
+   * 每小时执行一次演唱会状态更新任务。
+   *
+   * @returns 任务执行完成时不返回内容
+   */
   @Cron(CronExpression.EVERY_HOUR)
   async handleConcertStatusUpdate(): Promise<void> {
     this.logger.log('开始执行演唱会状态更新任务');
@@ -25,12 +33,22 @@ export class ConcertsSchedulerService {
     }
   }
 
+  /**
+   * 每日凌晨额外执行一次演唱会状态更新任务。
+   *
+   * @returns 任务执行完成时不返回内容
+   */
   @Cron('0 2 * * *')
-  async handleDailyConcertStatusUpdate() {
+  async handleDailyConcertStatusUpdate(): Promise<void> {
     await this.concertsService.updateConcertStatuses();
     this.logger.log('演唱会状态更新成功');
   }
 
+  /**
+   * 每小时检查并发送即将开场演唱会的提醒邮件。
+   *
+   * @returns 任务执行完成时不返回内容
+   */
   @Cron(CronExpression.EVERY_HOUR)
   async handleConcertReminderEmails(): Promise<void> {
     const concertsForReminder: ConcertsReminder[] =
@@ -41,6 +59,7 @@ export class ConcertsSchedulerService {
     }
 
     for (const { concert, userEmails } of concertsForReminder) {
+      // 同一场演唱会的提醒邮件并发发送，单封失败不阻断其他用户通知。
       const emailPromises: Promise<{
         success: boolean;
       }>[] = userEmails.map(

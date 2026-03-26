@@ -8,9 +8,18 @@ import { HttpArgumentsHost } from '@nestjs/common/interfaces';
 import { Request, Response } from 'express';
 import { ErrorResponse } from '../types';
 
+/**
+ * 将 HTTP 异常统一转换为前端约定的错误响应结构。
+ */
 @Catch(HttpException)
 export class GlobalFilter implements ExceptionFilter {
-  catch(exception: HttpException, host: ArgumentsHost) {
+  /**
+   * 捕获请求处理过程中抛出的 HTTP 异常并格式化响应。
+   *
+   * @param exception - 当前捕获到的 HTTP 异常
+   * @param host - Nest 参数宿主对象
+   */
+  catch(exception: HttpException, host: ArgumentsHost): void {
     // 获取HTTP上下文
     const ctx: HttpArgumentsHost = host.switchToHttp();
     // 获取响应对象
@@ -28,7 +37,7 @@ export class GlobalFilter implements ExceptionFilter {
     if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
       // 将异常响应转换为记录类型
       const responseObj = exceptionResponse as Record<string, unknown>;
-      // 提取错误消息，优先使用响应对象中的message
+      // 优先复用异常对象中的 message，保证校验错误等信息不丢失。
       errorMessage = (responseObj.message as string) || exception.message;
     } else {
       // 直接使用字符串类型的异常响应

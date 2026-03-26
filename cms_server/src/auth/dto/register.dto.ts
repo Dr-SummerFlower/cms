@@ -8,7 +8,11 @@ import {
   MinLength,
 } from 'class-validator';
 
+/**
+ * 注册接口的请求体数据传输对象。
+ */
 export class RegisterDto {
+  /** 注册用户名。 */
   @ApiProperty({
     description: '用户名',
     example: 'user001',
@@ -21,10 +25,12 @@ export class RegisterDto {
   @MaxLength(20, { message: '用户名最多20个字符' })
   username: string;
 
+  /** 注册邮箱。 */
   @ApiProperty({ description: '邮箱', example: 'user@user.com' })
   @IsEmail({}, { message: '请输入有效的邮箱地址' })
   email: string;
 
+  /** 满足强度要求的账户密码。 */
   @ApiProperty({ description: '密码', example: '@User123456', minLength: 8 })
   @IsString({ message: '密码必须是字符串' })
   @IsNotEmpty({ message: '密码不能为空' })
@@ -34,6 +40,7 @@ export class RegisterDto {
   })
   password: string;
 
+  /** 发送到注册邮箱的 6 位验证码。 */
   @ApiProperty({
     description: '邮箱验证码',
     example: '123456',

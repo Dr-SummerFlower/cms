@@ -9,7 +9,11 @@ import {
   MinLength,
 } from 'class-validator';
 
+/**
+ * 更新用户资料接口的请求体数据传输对象。
+ */
 export class UpdateUserDto {
+  /** 新用户名。 */
   @ApiProperty({
     description: '用户名',
     required: false,
@@ -23,6 +27,7 @@ export class UpdateUserDto {
   @MaxLength(20, { message: '用户名最多20个字符' })
   username?: string;
 
+  /** 新邮箱地址。 */
   @ApiProperty({
     description: '邮箱',
     required: false,
@@ -32,6 +37,7 @@ export class UpdateUserDto {
   @IsEmail({}, { message: '请输入有效的邮箱地址' })
   email?: string;
 
+  /** 更新密码时提供的旧密码。 */
   @ApiProperty({
     description: '旧密码',
     required: false,
@@ -46,6 +52,7 @@ export class UpdateUserDto {
   })
   password?: string;
 
+  /** 准备更新的新密码。 */
   @ApiProperty({
     description: '新密码',
     required: false,
@@ -60,6 +67,7 @@ export class UpdateUserDto {
   })
   newPassword?: string;
 
+  /** 邮箱验证码。 */
   @ApiProperty({
     description: '邮箱验证码',
     required: false,

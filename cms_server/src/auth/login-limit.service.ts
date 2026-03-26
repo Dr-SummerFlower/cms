@@ -2,11 +2,15 @@ import { InjectRedis, Redis } from '@nestjs-redis/client';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
+/** Redis 中保存的登录锁定信息。 */
 interface LockData {
   type: string;
   until: number;
 }
 
+/**
+ * 基于 Redis 维护登录失败次数与锁定状态的限流服务。
+ */
 @Injectable()
 export class LoginLimitService {
   private readonly SHORT_WINDOW_SECONDS: number; // 登录失败尝试的窗口时间（秒）
@@ -46,6 +50,13 @@ export class LoginLimitService {
     );
   }
 
+  /**
+   * 检查指定邮箱当前是否处于登录锁定状态。
+   *
+   * @param email - 待登录用户的邮箱地址
+   * @returns 未被锁定时不返回内容
+   * @throws HttpException 当用户仍处于锁定期时抛出
+   */
   async checkLimit(email: string): Promise<void> {
     const lockKey = `login:lock:${email}`;
     const lockInfo: string | null = await this.redisService.get(lockKey);
@@ -63,17 +74,25 @@ export class LoginLimitService {
           HttpStatus.TOO_MANY_REQUESTS,
         );
       } else {
+        // 锁定时间已过时主动清理旧状态，避免后续重复解析过期数据。
         await this.redisService.del(lockKey);
       }
     }
   }
 
+  /**
+   * 记录一次登录失败，并在达到阈值时写入锁定信息。
+   *
+   * @param email - 登录失败用户的邮箱地址
+   * @returns 记录完成时不返回内容
+   */
   async recordFailure(email: string): Promise<void> {
     const now: number = Date.now();
     const shortKey = `login:failure:short:${email}`;
     const longKey = `login:failure:long:${email}`;
     const lockKey = `login:lock:${email}`;
 
+    // 同时维护短周期与长周期两套失败窗口，兼顾突发暴力尝试与长期穷举。
     const shortWindowStart: number = now - this.SHORT_WINDOW_SECONDS * 1000;
     const longWindowStart: number = now - this.LONG_WINDOW_SECONDS * 1000;
 
@@ -87,6 +106,7 @@ export class LoginLimitService {
       this.redisService.expire(longKey, this.LONG_WINDOW_SECONDS),
     ]);
 
+    // 读取两个窗口内的失败时间戳，并剔除已经滑出窗口的数据。
     const [shortTimestamps, longTimestamps] = await Promise.all([
       this.redisService.lRange(shortKey, 0, -1),
       this.redisService.lRange(longKey, 0, -1),
@@ -103,6 +123,7 @@ export class LoginLimitService {
     const longCount: number = longValidTimestamps.length;
 
     if (shortCount >= this.SHORT_MAX_ATTEMPTS) {
+      // 短时间高频失败，触发短期锁定，主要拦截突发暴力尝试。
       const lockUntil: number = now + this.SHORT_LOCK_SECONDS * 1000;
       const lockData: LockData = { type: 'short', until: lockUntil };
       await this.redisService.setEx(
@@ -111,6 +132,7 @@ export class LoginLimitService {
         JSON.stringify(lockData),
       );
     } else if (longCount >= this.LONG_MAX_ATTEMPTS) {
+      // 长周期累计过多失败，触发更长的锁定，拦截持续穷举。
       const lockUntil: number = now + this.LONG_LOCK_SECONDS * 1000;
       const lockData: LockData = { type: 'long', until: lockUntil };
       await this.redisService.setEx(
@@ -121,11 +143,18 @@ export class LoginLimitService {
     }
   }
 
+  /**
+   * 在登录成功后清理失败记录与锁定状态。
+   *
+   * @param email - 登录成功用户的邮箱地址
+   * @returns 清理完成时不返回内容
+   */
   async clearFailure(email: string): Promise<void> {
     const shortKey = `login:failure:short:${email}`;
     const longKey = `login:failure:long:${email}`;
     const lockKey = `login:lock:${email}`;
 
+    // 只要本次登录成功，就把失败历史与锁定状态一并清空。
     await Promise.all([
       this.redisService.del(shortKey),
       this.redisService.del(longKey),

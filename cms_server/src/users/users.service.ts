@@ -13,14 +13,26 @@ import { PaginationDto } from './dto/pagination.dto';
 import { UserListResponseDto } from './dto/user-list-response.dto';
 import { User, UserDocument } from './entities/user.entity';
 
+/**
+ * 负责用户创建、查询、更新与角色管理的服务。
+ */
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
   ) {}
 
+  /**
+   * 创建新用户。
+   *
+   * @param userData - 创建用户所需的基础信息
+   * @returns 新创建的用户实体
+   * @throws BadRequestException 当用户数据校验失败时抛出
+   * @throws ConflictException 当邮箱已存在时抛出
+   */
   async create(userData: UserData): Promise<User> {
     try {
+      // 用户创建时的密码加密与字段校验交由 schema / hook 统一处理。
       return (await this.userModel.create(userData)) as User;
     } catch (error) {
       if (error.name === 'ValidationError') {
@@ -33,6 +45,13 @@ export class UsersService {
     }
   }
 
+  /**
+   * 根据邮箱查询用户，并包含密码字段。
+   *
+   * @param email - 用户邮箱
+   * @returns 对应的用户实体
+   * @throws BadRequestException 当邮箱格式无效时抛出
+   */
   async findOne(email: string): Promise<User> {
     try {
       if (!email || !email.includes('@')) {
@@ -50,6 +69,14 @@ export class UsersService {
     }
   }
 
+  /**
+   * 根据 ID 查询用户详情。
+   *
+   * @param id - 用户 ID
+   * @returns 用户实体
+   * @throws BadRequestException 当 ID 格式无效时抛出
+   * @throws NotFoundException 当用户不存在时抛出
+   */
   async findOneById(id: string): Promise<User> {
     try {
       if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
@@ -72,6 +99,13 @@ export class UsersService {
     }
   }
 
+  /**
+   * 分页查询用户列表。
+   *
+   * @param paginationDto - 分页与搜索条件
+   * @returns 用户列表与分页信息
+   * @throws BadRequestException 当分页参数超出允许范围时抛出
+   */
   async findAll(paginationDto: PaginationDto): Promise<UserListResponseDto> {
     try {
       const { page = 1, limit = 10, search } = paginationDto;
@@ -86,6 +120,7 @@ export class UsersService {
 
       const query: FilterQuery<UserDocument> = {};
       if (search) {
+        // 管理端支持按用户名或邮箱统一搜索用户。
         query.$or = [
           { username: { $regex: search, $options: 'i' } },
           { email: { $regex: search, $options: 'i' } },
@@ -114,6 +149,15 @@ export class UsersService {
     }
   }
 
+  /**
+   * 更新用户基础信息或密码。
+   *
+   * @param id - 用户 ID
+   * @param updateData - 可更新的用户数据
+   * @returns 更新后的用户实体
+   * @throws BadRequestException 当参数非法、邮箱冲突或旧密码错误时抛出
+   * @throws NotFoundException 当用户不存在时抛出
+   */
   async update(id: string, updateData: UpdateData): Promise<User> {
     try {
       if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
@@ -140,6 +184,7 @@ export class UsersService {
           throw new BadRequestException('该邮箱已被使用');
         }
 
+        // 邮箱验证码在接口层校验，这里只负责真正写入新的邮箱地址。
         user.email = updateData.email;
       }
 
@@ -148,6 +193,7 @@ export class UsersService {
           throw new BadRequestException('更新密码需要提供旧密码');
         }
 
+        // 修改密码前先校验旧密码，避免越权重置。
         const isOldPasswordValid = await bcrypt.compare(
           updateData.password,
           user.password,
@@ -161,6 +207,7 @@ export class UsersService {
 
       await user.save();
 
+      // 重新读取一次最新用户数据，避免把带密码字段的实体直接返回给上层。
       const result = await this.userModel.findById(user._id).exec();
       if (!result) {
         throw new InternalServerErrorException('更新后的用户信息未找到');
@@ -182,6 +229,15 @@ export class UsersService {
     }
   }
 
+  /**
+   * 更新用户角色。
+   *
+   * @param id - 用户 ID
+   * @param role - 新角色
+   * @returns 更新后的用户实体
+   * @throws BadRequestException 当 ID 或角色无效时抛出
+   * @throws NotFoundException 当用户不存在时抛出
+   */
   async updateRole(id: string, role: string): Promise<User> {
     try {
       if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
@@ -198,6 +254,7 @@ export class UsersService {
         throw new NotFoundException('用户不存在');
       }
 
+      // 角色会直接影响角色守卫判断，因此修改后立即持久化。
       user.role = role;
       await user.save();
       return user;
@@ -215,6 +272,14 @@ export class UsersService {
     }
   }
 
+  /**
+   * 删除指定用户。
+   *
+   * @param id - 用户 ID
+   * @returns 删除成功时返回 `null`
+   * @throws BadRequestException 当 ID 格式无效时抛出
+   * @throws NotFoundException 当用户不存在时抛出
+   */
   async remove(id: string): Promise<null> {
     try {
       if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
@@ -225,6 +290,7 @@ export class UsersService {
       if (!user) {
         throw new NotFoundException('用户不存在');
       }
+      // 删除成功后返回 null，让上层按“已删除”处理即可。
       return null;
     } catch (error) {
       if (
@@ -237,6 +303,15 @@ export class UsersService {
     }
   }
 
+  /**
+   * 更新用户头像地址。
+   *
+   * @param id - 用户 ID
+   * @param avatarUrl - 新头像地址
+   * @returns 更新后的用户实体
+   * @throws BadRequestException 当 ID 格式无效时抛出
+   * @throws NotFoundException 当用户不存在时抛出
+   */
   async updateAvatar(id: string, avatarUrl: string): Promise<User> {
     try {
       if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
@@ -245,6 +320,7 @@ export class UsersService {
       const user = (await this.userModel.findById(id)) as User;
       if (!user) throw new NotFoundException('用户不存在');
 
+      // 头像文件上传由存储服务负责，这里只维护资料中的头像 URL。
       user.avatar = avatarUrl;
       await user.save();
       return user;

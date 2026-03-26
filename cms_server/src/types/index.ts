@@ -1,20 +1,20 @@
-// 认证相关接口
+// 聚合导出认证相关类型。
 export * from './auth';
 
-// 响应相关接口
+// 聚合导出统一响应相关类型。
 export * from './response';
 
-// 用户相关接口
+// 聚合导出用户相关类型。
 export * from './user';
 
-// 演唱会相关接口
+// 聚合导出演唱会相关类型。
 export * from './concert';
 
-// ECDSA签名相关接口
+// 聚合导出 ECDSA 签名相关类型。
 export * from './ecdsa';
 
-// 票据相关接口
+// 聚合导出票据相关类型。
 export * from './ticket';
 
-// 代理相关接口
+// 聚合导出代理相关类型。
 export * from './proxy';

@@ -7,6 +7,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { AppModule } from './app.module';
 
+/**
+ * 启动 NestJS 应用并完成全局中间件与文档初始化。
+ */
 async function bootstrap(): Promise<void> {
   const logger = new Logger('Applicaton');
   const app: INestApplication = await NestFactory.create(AppModule);
@@ -17,6 +20,7 @@ async function bootstrap(): Promise<void> {
 
   const staticPath = path.join(path.resolve(), 'public');
 
+  // 非 API 且不存在对应静态资源时回退到前端入口，支持前端路由直达。
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.path.startsWith('/api')) {
       return next();
@@ -72,6 +76,7 @@ async function bootstrap(): Promise<void> {
   logger.log(`Swagger文档地址：http://localhost:${port}/api-docs`);
 }
 
+// 启动失败时直接退出进程，避免服务在未完成初始化的状态下继续运行。
 bootstrap().catch((error: Error): never => {
   console.error('应用启动失败:', error);
   process.exit(1);

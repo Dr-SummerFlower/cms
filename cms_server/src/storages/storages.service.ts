@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto';
 import { Client as MinioClient } from 'minio';
 import * as sharp from 'sharp';
 
+/** 不同图片目录允许的最大宽度配置。 */
 const IMAGE_MAX_WIDTH: Record<
   'avatar' | 'poster' | 'face' | 'avatars' | 'posters',
   number
@@ -15,6 +16,9 @@ const IMAGE_MAX_WIDTH: Record<
   face: 600,
 };
 
+/**
+ * 封装 MinIO 上传与图片压缩逻辑的对象存储服务。
+ */
 @Injectable()
 export class StoragesService {
   private readonly client: MinioClient;
@@ -38,6 +42,14 @@ export class StoragesService {
     });
   }
 
+  /**
+   * 上传 Multer 文件并返回数据库中保存的对象路径。
+   *
+   * @param file - 上传的原始文件对象
+   * @param folder - 目标目录
+   * @returns 以桶名开头的路径字符串
+   * @throws InternalServerErrorException 当文件内容无效时抛出
+   */
   async uploadFile(
     file: Express.Multer.File,
     folder: 'avatar' | 'poster' | 'face',
@@ -45,6 +57,8 @@ export class StoragesService {
     if (!file || !file.buffer || !file.originalname) {
       throw new InternalServerErrorException('上传文件无效');
     }
+
+    // 上传前统一压缩并转码，减少对象存储体积与带宽开销。
     const { buffer, mimetype } = await this.compressImage(
       file.buffer,
       file.mimetype,
@@ -59,6 +73,16 @@ export class StoragesService {
     );
   }
 
+  /**
+   * 上传二进制缓冲区并返回数据库中保存的对象路径。
+   *
+   * @param buffer - 待上传的二进制内容
+   * @param filename - 原始文件名
+   * @param mimetype - 文件 MIME 类型
+   * @param folder - 目标目录
+   * @returns 以桶名开头的路径字符串
+   * @throws InternalServerErrorException 当上传内容为空时抛出
+   */
   async uploadBuffer(
     buffer: Buffer,
     filename: string,
@@ -69,6 +93,8 @@ export class StoragesService {
       throw new InternalServerErrorException('上传内容为空');
     }
     const compressed = await this.compressImage(buffer, mimetype, folder);
+
+    // 压缩后优先使用真实输出格式，保证文件扩展名与内容一致。
     const ext =
       compressed.mimetype === 'image/webp'
         ? '.webp'
@@ -82,12 +108,21 @@ export class StoragesService {
     );
   }
 
+  /**
+   * 按目录规则压缩图片，并将可转换图片统一转为 WebP。
+   *
+   * @param buffer - 原始二进制内容
+   * @param mimetype - 原始 MIME 类型
+   * @param folder - 上传目录
+   * @returns 压缩后的缓冲区与 MIME 类型
+   */
   private async compressImage(
     buffer: Buffer,
     mimetype: string,
     folder: keyof typeof IMAGE_MAX_WIDTH,
   ): Promise<{ buffer: Buffer; mimetype: string }> {
     if (!mimetype.startsWith('image/') || mimetype === 'image/gif') {
+      // GIF 动图和非图片文件保持原样，避免破坏内容结构。
       return { buffer, mimetype };
     }
     const maxWidth = IMAGE_MAX_WIDTH[folder];
@@ -98,12 +133,19 @@ export class StoragesService {
     return { buffer: converted, mimetype: 'image/webp' };
   }
 
+  /**
+   * 确保存储桶存在，并在首次创建时写入公开读取策略。
+   *
+   * @returns 检查完成时不返回内容
+   */
   private async ensureBucket(): Promise<void> {
     const exists = await this.client
       .bucketExists(this.bucket)
       .catch(() => false);
     if (!exists) {
       await this.client.makeBucket(this.bucket, 'us-east-1');
+
+      // 仅开放读取权限，上传仍然通过服务端凭证控制。
       const policy = {
         Version: '2012-10-17',
         Statement: [
@@ -126,17 +168,23 @@ export class StoragesService {
   }
 
   /**
-   * 构建path格式的路径（用于数据库存储）
-   * @param objectName 对象名称，例如：avatar/2025-08-24/xxx.webp
-   * @returns path格式，例如：/assets/avatar/2025-08-24/xxx.webp
+   * 构建用于数据库持久化的对象路径。
+   *
+   * @param objectName - 对象名称，例如 `avatar/2025-08-24/xxx.webp`
+   * @returns 以桶名前缀开头的路径，例如 `/assets/avatar/2025-08-24/xxx.webp`
    */
   private buildPath(objectName: string): string {
     return `/${this.bucket}/${objectName}`;
   }
 
   /**
-   * 上传文件并返回path格式（用于数据库存储）
-   * 前端需要通过 /api/proxy 路由访问
+   * 上传对象并返回数据库中保存的路径。
+   *
+   * @param objectName - 目标对象名
+   * @param buffer - 上传内容
+   * @param length - 内容长度
+   * @param contentType - 内容类型
+   * @returns 以桶名前缀开头的路径字符串
    */
   private async putObjectAndGetPath(
     objectName: string,
@@ -145,6 +193,7 @@ export class StoragesService {
     contentType: string,
   ): Promise<string> {
     await this.ensureBucket();
+    // 前端通过 `/api/proxy` 按该路径代理访问对象存储中的资源。
     await this.client.putObject(this.bucket, objectName, buffer, length, {
       'Content-Type': contentType,
     });

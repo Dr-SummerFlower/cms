@@ -1,9 +1,10 @@
-import {Avatar, Button, Card, Descriptions, Space} from 'antd';
-import {Link} from 'react-router-dom';
-import {useAuthStore} from '../stores/authStore';
-import {getImageUrl} from '../utils/image';
+import {Avatar, Button, Card, Descriptions, Space, theme as antdTheme,} from "antd";
+import {Link} from "react-router-dom";
+import {useAuthStore} from "../stores/authStore";
+import {getImageUrl} from "../utils/image";
 
 export default function UserProfileView(): JSX.Element {
+  const {token} = antdTheme.useToken();
   const user = useAuthStore((s) => s.user);
   if (!user) return <Card loading/>;
 
@@ -11,6 +12,12 @@ export default function UserProfileView(): JSX.Element {
     <Card
       title="个人资料"
       style={{maxWidth: 960, margin: "0 auto"}}
+      styles={{
+        header: {
+          background: token.colorPrimaryBg,
+          borderBottom: `1px solid ${token.colorPrimaryBorder}`,
+        },
+      }}
       extra={
         <Link to="/me/profile/edit">
           <Button type="primary">编辑资料</Button>
@@ -18,7 +25,11 @@ export default function UserProfileView(): JSX.Element {
       }
     >
       <Space align="center" size="large" style={{marginBottom: 12}}>
-        <Avatar src={getImageUrl(user.avatar)} size={64}>
+        <Avatar
+          src={getImageUrl(user.avatar)}
+          size={64}
+          style={{border: `2px solid ${token.colorPrimary}`}}
+        >
           {user.username.at(0)}
         </Avatar>
         <span>{user.username}</span>

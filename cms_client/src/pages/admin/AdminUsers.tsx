@@ -1,10 +1,23 @@
-import {App as AntdApp, Button, Descriptions, Drawer, Empty, Popconfirm, Select, Skeleton, Space, Table,} from "antd";
+import {
+  App as AntdApp,
+  Button,
+  Descriptions,
+  Drawer,
+  Empty,
+  Popconfirm,
+  Select,
+  Skeleton,
+  Space,
+  Table,
+  theme as antdTheme,
+} from "antd";
 import type {ColumnsType} from "antd/es/table";
 import {useCallback, useEffect, useState} from "react";
 import {deleteUser, getUser, listUsers, updateUserRole,} from "../../api/users";
 import type {Paginated, Role, User} from "../../types";
 
 export default function AdminUsers(): JSX.Element {
+  const {token} = antdTheme.useToken();
   const {message} = AntdApp.useApp();
   const [data, setData] = useState<Paginated<User> | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -135,6 +148,12 @@ export default function AdminUsers(): JSX.Element {
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
         width={520}
+        styles={{
+          header: {
+            background: token.colorPrimaryBg,
+            borderBottom: `1px solid ${token.colorPrimaryBorder}`,
+          },
+        }}
       >
         {detailLoading ? (
           <Skeleton active paragraph={{rows: 6}}/>

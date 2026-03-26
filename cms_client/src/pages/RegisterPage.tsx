@@ -1,15 +1,16 @@
-import {App as AntdApp, Button, Card, Form, Input, Space, Upload} from 'antd';
-import type {UploadChangeParam, UploadFile} from 'antd/es/upload/interface';
-import {useEffect, useMemo, useRef, useState} from 'react';
-import {useNavigate} from 'react-router-dom';
-import {register as apiRegister, sendEmailCode} from '../api/auth';
-import {useAuthStore} from '../stores/authStore';
-import type {RegisterDto} from '../types';
+import {App as AntdApp, Button, Card, Form, Input, Space, theme as antdTheme, Upload,} from "antd";
+import type {UploadChangeParam, UploadFile} from "antd/es/upload/interface";
+import {useEffect, useMemo, useRef, useState} from "react";
+import {useNavigate} from "react-router-dom";
+import {register as apiRegister, sendEmailCode} from "../api/auth";
+import {useAuthStore} from "../stores/authStore";
+import type {RegisterDto} from "../types";
 
 const PASSWORD_RULE =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d~!@#$%^&*()_\-+={}[\]|\\:;"'<>,.?/]{8,32}$/;
 
 export default function RegisterPage(): JSX.Element {
+  const {token} = antdTheme.useToken();
   const [form] = Form.useForm<{
     username: string;
     email: string;
@@ -95,7 +96,16 @@ export default function RegisterPage(): JSX.Element {
   };
 
   return (
-    <Card style={{maxWidth: 480, margin: "48px auto"}} title="注册">
+    <Card
+      style={{maxWidth: 480, margin: "48px auto"}}
+      title="注册"
+      styles={{
+        header: {
+          background: token.colorPrimaryBg,
+          borderBottom: `1px solid ${token.colorPrimaryBorder}`,
+        },
+      }}
+    >
       <Form
         layout="vertical"
         form={form}

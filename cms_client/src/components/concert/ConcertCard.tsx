@@ -1,4 +1,4 @@
-import {Button, Card, Tag} from "antd";
+import {Button, Card, Tag, theme as antdTheme} from "antd";
 import dayjs from "dayjs";
 import React from "react";
 import {Link} from "react-router-dom";
@@ -9,6 +9,7 @@ interface Props {
 }
 
 export default function ConcertCard({concert}: Props): JSX.Element {
+  const {token} = antdTheme.useToken();
   const dateText = dayjs(concert.date).format("YYYY年MM月DD日 HH:mm");
 
   return (
@@ -21,22 +22,18 @@ export default function ConcertCard({concert}: Props): JSX.Element {
               src={concert.poster}
               alt={concert.name}
               loading="lazy"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-              }}
+              style={{width: "100%", height: "100%", objectFit: "cover"}}
             />
           </div>
         ) : (
           <div
             style={{
               height: "200px",
-              backgroundColor: "#f5f5f5",
+              backgroundColor: token.colorFillSecondary,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#999",
+              color: token.colorTextPlaceholder,
             }}
           >
             暂无海报
@@ -86,6 +83,7 @@ export default function ConcertCard({concert}: Props): JSX.Element {
                 display: "-webkit-box",
                 WebkitLineClamp: 2,
                 WebkitBoxOrient: "vertical",
+                color: token.colorText,
               } as React.CSSProperties
             }
           >
@@ -99,7 +97,7 @@ export default function ConcertCard({concert}: Props): JSX.Element {
         <div
           style={{
             fontSize: "14px",
-            color: "#666",
+            color: token.colorTextSecondary,
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",

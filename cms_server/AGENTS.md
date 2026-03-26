@@ -12,6 +12,10 @@
 - **Nodemailer** 邮件
 - **Schedule** 定时任务
 
+#### AI专用技术文档
+
+[NestJS](https://github.com/quincarter/llms-txt-files-and-converters/blob/main/llms/nestjs_full.txt)
+
 ## 目录约定
 
 - 源码在 `src/` 下，入口为 `main.ts`，根模块为 `app.module.ts`。

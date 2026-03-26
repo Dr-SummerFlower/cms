@@ -1,22 +1,27 @@
-import {create} from 'zustand';
-import {persist} from 'zustand/middleware';
+import {create} from "zustand";
+import {persist} from "zustand/middleware";
 
-export type Theme = "light" | "dark";
+export type ThemeName =
+  | "星灰"
+  | "芽绿"
+  | "麦秆黄"
+  | "苹果红"
+  | "湖水蓝"
+  | "黄昏灰";
 
 interface ThemeState {
-  theme: Theme;
-  toggleTheme: () => void;
+  theme: ThemeName;
+  setTheme: (theme: ThemeName) => void;
 }
 
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
-      theme: "light",
-      toggleTheme: () =>
-        set((state) => ({theme: state.theme === "light" ? "dark" : "light"})),
+      theme: "星灰",
+      setTheme: (theme) => set({theme}),
     }),
     {
-      name: "theme-storage",
+      name: "theme-v2",
     },
   ),
 );

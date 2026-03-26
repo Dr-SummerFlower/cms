@@ -1,15 +1,13 @@
-import {Layout, Menu} from 'antd';
-import {Outlet, useLocation, useNavigate} from 'react-router-dom';
-import {useThemeStore} from '../../stores/themeStore';
+import {Layout, Menu, theme as antdTheme} from "antd";
+import {Outlet, useLocation, useNavigate} from "react-router-dom";
 
 const {Sider, Content} = Layout;
 
 export default function AdminLayout(): JSX.Element {
   const location = useLocation();
   const navigate = useNavigate();
-  const {theme} = useThemeStore();
+  const {token} = antdTheme.useToken();
 
-  const isDark = theme === "dark";
   const selected = location.pathname.startsWith("/admin/users")
     ? "users"
     : location.pathname.startsWith("/admin/refunds")
@@ -22,19 +20,16 @@ export default function AdminLayout(): JSX.Element {
         minHeight: "calc(100vh - 64px)",
         borderRadius: "8px",
         overflow: "hidden",
-        backgroundColor: isDark ? "#141414" : "#f0f2f5",
+        backgroundColor: token.colorBgLayout,
       }}
     >
       <Sider
         breakpoint="lg"
         collapsedWidth="0"
-        style={{
-          backgroundColor: isDark ? "#1f1f1f" : "#fff",
-        }}
+        style={{backgroundColor: token.colorBgContainer}}
       >
         <Menu
           mode="inline"
-          theme={isDark ? "dark" : "light"}
           selectedKeys={[selected]}
           items={[
             {
@@ -59,9 +54,8 @@ export default function AdminLayout(): JSX.Element {
         <Content
           style={{
             padding: 24,
-            backgroundColor: isDark ? "#141414" : "#ffffff",
+            backgroundColor: token.colorBgContainer,
             borderRadius: "0 8px 8px 0",
-            margin: "0",
           }}
         >
           <Outlet/>

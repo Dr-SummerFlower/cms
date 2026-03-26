@@ -1,5 +1,5 @@
 import {ReloadOutlined} from "@ant-design/icons";
-import {Input, Space} from "antd";
+import {Input, Space, theme as antdTheme} from "antd";
 import React, {useCallback, useEffect, useImperativeHandle, useRef, useState,} from "react";
 import {getCaptcha} from "../../api/auth";
 
@@ -58,25 +58,22 @@ export const CaptchaInput = React.forwardRef<
     },
     ref,
   ) => {
+    const {token} = antdTheme.useToken();
     const [captchaId, setCaptchaId] = useState<string>("");
     const [imageUrl, setImageUrl] = useState<string>("");
     const [inputValue, setInputValue] = useState<string>("");
     const [loading, setLoading] = useState(false);
     const inputRef = useRef<React.ComponentRef<typeof Input>>(null);
-    // 使用 ref 保存 imageUrl，避免在 useCallback 依赖项中包含它
     const imageUrlRef = useRef<string>("");
 
-    // 加载验证码
     const loadCaptcha = useCallback(async (): Promise<void> => {
       setLoading(true);
       onLoadingChange?.(true);
       try {
         const {id, image} = await getCaptcha();
         setCaptchaId(id);
-        // 将图片 ArrayBuffer 转换为 Blob URL
         const blob = new Blob([image], {type: "image/png"});
         const url = URL.createObjectURL(blob);
-        // 清理旧的 URL
         if (imageUrlRef.current) {
           URL.revokeObjectURL(imageUrlRef.current);
         }
@@ -94,10 +91,8 @@ export const CaptchaInput = React.forwardRef<
       }
     }, [onLoadingChange, onRefresh, onError]);
 
-    // 初始化加载验证码 - 只在组件挂载时执行一次
     useEffect(() => {
       loadCaptcha();
-      // 组件卸载时清理 Blob URL
       return () => {
         if (imageUrlRef.current) {
           URL.revokeObjectURL(imageUrlRef.current);
@@ -106,16 +101,12 @@ export const CaptchaInput = React.forwardRef<
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // 暴露方法给父组件
     useImperativeHandle(ref, () => ({
       getValue: () => {
         if (!captchaId || !inputValue.trim()) {
           return null;
         }
-        return {
-          captchaId,
-          captchaCode: inputValue.trim(),
-        };
+        return {captchaId, captchaCode: inputValue.trim()};
       },
       refresh: async () => {
         setInputValue("");
@@ -145,20 +136,20 @@ export const CaptchaInput = React.forwardRef<
             alignItems: "center",
             justifyContent: "center",
             cursor: disabled || loading ? "not-allowed" : "pointer",
-            border: "1px solid #d9d9d9",
+            border: `1px solid ${token.colorBorder}`,
             borderLeft: "none",
-            backgroundColor: "#fff",
+            backgroundColor: token.colorBgContainer,
             opacity: loading ? 0.6 : 1,
-            transition: "all 0.3s",
+            transition: "background-color 0.2s",
             ...imageStyle,
           }}
           onMouseEnter={(e) => {
             if (!disabled && !loading) {
-              e.currentTarget.style.backgroundColor = "#f5f5f5";
+              e.currentTarget.style.backgroundColor = token.colorFillSecondary;
             }
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "#fff";
+            e.currentTarget.style.backgroundColor = token.colorBgContainer;
           }}
         >
           {loading ? (

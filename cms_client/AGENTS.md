@@ -43,6 +43,11 @@
 - **ahooks** 常用 Hooks
 - **dayjs** 日期处理
 
+#### AI专用技术文档
+
+[Ant Design](https://ant.design/llms.txt)
+[Zustand](https://zustand.docs.pmnd.rs/llms.txt)
+
 ## 目录约定
 
 - 源码在 `src/` 下，入口为 `main.tsx`，根组件为 `App.tsx`。

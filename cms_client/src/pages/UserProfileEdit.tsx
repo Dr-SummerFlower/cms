@@ -1,4 +1,4 @@
-import {App as AntdApp, Avatar, Button, Card, Form, Input, Space, Upload,} from "antd";
+import {App as AntdApp, Avatar, Button, Card, Form, Input, Space, theme as antdTheme, Upload,} from "antd";
 import type {UploadFile} from "antd/es/upload/interface";
 import {useState} from "react";
 import {Link} from "react-router-dom";
@@ -9,6 +9,7 @@ import type {UpdateUserDto} from "../types";
 import {getImageUrl} from "../utils/image";
 
 export default function UserProfileEdit(): JSX.Element {
+  const {token} = antdTheme.useToken();
   const {message} = AntdApp.useApp();
   const user = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
@@ -151,6 +152,12 @@ export default function UserProfileEdit(): JSX.Element {
     <Card
       title="编辑个人资料"
       style={{maxWidth: 960, margin: "0 auto"}}
+      styles={{
+        header: {
+          background: token.colorPrimaryBg,
+          borderBottom: `1px solid ${token.colorPrimaryBorder}`,
+        },
+      }}
       extra={
         <Link to="/me/profile">
           <Button>返回</Button>
@@ -158,7 +165,11 @@ export default function UserProfileEdit(): JSX.Element {
       }
     >
       <Space align="center" size="large" style={{marginBottom: 12}}>
-        <Avatar src={getImageUrl(user.avatar)} size={64}>
+        <Avatar
+          src={getImageUrl(user.avatar)}
+          size={64}
+          style={{border: `2px solid ${token.colorPrimary}`}}
+        >
           {user.username.at(0)}
         </Avatar>
         <span>当前头像</span>

@@ -1,13 +1,14 @@
-import {Button, Input, message, Modal, Space, Table} from 'antd';
-import type {ColumnsType} from 'antd/es/table';
-import {useCallback, useEffect, useMemo, useState} from 'react';
-import {listRefundRequests, reviewRefund} from '../../api/tickets';
-import StatusTag from '../../components/common/StatusTag.tsx';
-import type {RefundRequest, RefundStatus} from '../../types';
+import {Button, Input, message, Modal, Space, Table, theme as antdTheme,} from "antd";
+import type {ColumnsType} from "antd/es/table";
+import {useCallback, useEffect, useMemo, useState} from "react";
+import {listRefundRequests, reviewRefund} from "../../api/tickets";
+import StatusTag from "../../components/common/StatusTag.tsx";
+import type {RefundRequest, RefundStatus} from "../../types";
 
 type ReviewAction = { ticketId: string; approved: boolean };
 
 export default function AdminRefunds(): JSX.Element {
+  const {token} = antdTheme.useToken();
   const [rows, setRows] = useState<ReadonlyArray<RefundRequest>>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -149,6 +150,12 @@ export default function AdminRefunds(): JSX.Element {
         onCancel={() => setNoteOpen(false)}
         onOk={() => void submitReview()}
         okText="提交审核"
+        styles={{
+          header: {
+            background: token.colorPrimaryBg,
+            borderBottom: `1px solid ${token.colorPrimaryBorder}`,
+          },
+        }}
       >
         <Input.TextArea
           rows={4}
@@ -168,6 +175,12 @@ export default function AdminRefunds(): JSX.Element {
         onOk={() => setReasonOpen(false)}
         okText="关闭"
         cancelButtonProps={{style: {display: "none"}}}
+        styles={{
+          header: {
+            background: token.colorPrimaryBg,
+            borderBottom: `1px solid ${token.colorPrimaryBorder}`,
+          },
+        }}
       >
         <div style={{whiteSpace: "pre-wrap", wordBreak: "break-word"}}>
           {reasonText || "-"}

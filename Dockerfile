@@ -2,12 +2,8 @@ FROM opencloudos/opencloudos9-minimal
 
 WORKDIR /app
 
-# 复制部署包
-COPY cms-*.tar.gz /tmp/
-
-# 解压包
-RUN tar -xzf /tmp/cms-*.tar.gz -C /app && \
-    rm -f /tmp/cms-*.tar.gz
+# 复制cms_server目录
+COPY cms_server /app/
 
 RUN yum install -y gcc-c++ cairo-devel pango-devel libjpeg-turbo-devel giflib-devel wget tar xz gzip
 
@@ -19,11 +15,13 @@ RUN wget --no-check-certificate -O /tmp/node.tar.xz https://registry.npmmirror.c
 ENV PATH=/usr/local/node/bin:$PATH
 
 # 安装依赖
-RUN npm install -g yarn
-RUN yarn install --registry=https://registry.npmmirror.com/
+RUN npm i -g @nestjs/cli@11.0.16 typescript@5.9.3
+RUN npm ci --omit=dev --registry=https://registry.npmmirror.com/
+
+RUN npm run build
 
 # 暴露应用端口
-EXPOSE 3001
+EXPOSE 3000
 
 # 启动应用
 CMD ["node", "dist/main"]

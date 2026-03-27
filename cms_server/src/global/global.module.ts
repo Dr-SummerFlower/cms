@@ -108,4 +108,4 @@ if (IS_DEV) {
     },
   ],
 })
-export class GlobalModule { }
+export class GlobalModule {}

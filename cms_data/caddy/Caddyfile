@@ -1,0 +1,18 @@
+:80 {
+  encode zstd gzip br
+
+  handle /api/* {
+      reverse_proxy cms_app:3000 {
+          health_uri /api/health
+          health_interval 10s
+          health_timeout 5s
+          health_status 2xx
+      }
+  }
+
+  handle {
+    root * /site
+    file_server
+    try_files {path} /index.html
+  }
+}

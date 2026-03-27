@@ -8,7 +8,6 @@
 
 - **cms_client/** — 前端应用（React + Vite + TypeScript）
 - **cms_server/** — 后端服务（NestJS + MongoDB）
-- **scripts/** — 构建/打包脚本
 - **docker-compose.yml** / **Dockerfile** — 容器化部署
 
 ## 构建/测试/Lint 命令

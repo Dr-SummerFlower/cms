@@ -1,4 +1,29 @@
 services:
+  # Caddy 服务
+  caddy:
+    image: caddy
+    container_name: cms_caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./cms_data/caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ./cms_data/site:/site
+      - ./cms_data/caddy/data:/data
+      - ./cms_data/caddy/config:/config
+    networks:
+      - cms_network
+    depends_on:
+      cms_app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "caddy", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # MongoDB 数据库服务
   mongodb:
     image: mongo:8.0.13
@@ -26,11 +51,14 @@ services:
     restart: always
     ports:
       - "6379:6379"
-    command: ["redis-server", "/etc/redis/redis.conf", "--requirepass", "${REDIS_PASSWORD}"]
+    command:
+      - redis-server
+      - /usr/local/etc/redis/redis.conf
+      - --requirepass
+      - ${REDIS_PASSWORD}
     volumes:
       - ./cms_data/redis:/data
-      - ./cms_data/redis/:/etc/redis/
-      - ./cms_data/logs:/logs
+      - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
     networks:
       - cms_network
     healthcheck:
@@ -71,6 +99,7 @@ services:
     ports:
       - "3001:${APP_PORT}"
     environment:
+      RUNNING_ENV: prod
       PORT: ${APP_PORT}
       ADMIN_USER: ${ADMIN_USER}
       ADMIN_EMAIL: ${ADMIN_EMAIL}
@@ -108,6 +137,16 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'wget -q --spider http://127.0.0.1:$$PORT/api/health || exit 1',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
 
 # 定义网络
 networks:

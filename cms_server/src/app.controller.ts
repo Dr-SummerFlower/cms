@@ -1,19 +1,28 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { AppService } from './app.service';
+import { AppHealthStatus, AppService } from './app.service';
 
 @ApiTags('系统')
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @ApiOperation({ summary: '欢迎/健康检查', description: '返回应用的欢迎信息' })
-  @ApiOkResponse({
-    description: '请求成功',
-    schema: { type: 'string', example: 'Hello World!' },
+  @ApiOperation({
+    summary: '健康检查',
+    description: '用于健康检查',
   })
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  @ApiOkResponse({
+    description: '服务正常',
+    schema: {
+      type: 'object',
+      properties: {
+        status: { type: 'string', example: 'ok' },
+        uptime: { type: 'number', example: 42 },
+      },
+    },
+  })
+  @Get('health')
+  getHealth(): AppHealthStatus {
+    return this.appService.getHealth();
   }
 }

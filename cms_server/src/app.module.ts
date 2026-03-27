@@ -1,7 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import * as fs from 'node:fs';
-import * as path from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -23,10 +20,6 @@ if (IS_DEV) {
   envFilePath.unshift('.env.prod');
 }
 
-if (!fs.existsSync(path.join(path.resolve(), 'public'))) {
-  fs.mkdirSync(path.join(path.resolve(), 'public'));
-}
-
 @Module({
   imports: [
     GlobalModule,
@@ -39,17 +32,6 @@ if (!fs.existsSync(path.join(path.resolve(), 'public'))) {
     TicketsModule,
     StoragesModule,
     ProxyModule,
-    ServeStaticModule.forRootAsync({
-      useFactory: () => {
-        return [
-          {
-            rootPath: path.join(path.resolve(), 'public'),
-            serveRoot: '/',
-            exclude: ['/api/*'],
-          },
-        ];
-      },
-    }),
   ],
   controllers: [AppController],
   providers: [AppService],

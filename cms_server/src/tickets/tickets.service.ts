@@ -189,7 +189,6 @@ export class TicketsService {
       ) {
         throw error;
       }
-      console.log(error);
       throw new InternalServerErrorException('创建票务订单时发生错误');
     }
   }
@@ -971,7 +970,7 @@ export class TicketsService {
       throw new BadRequestException('私钥解密失败，请检查环境配置');
     }
 
-      // 票据落库前先完成签名，后续验票时以二维码原文和公钥进行反向校验。
+    // 票据落库前先完成签名，后续验票时以二维码原文和公钥进行反向校验。
     const { signature }: { signature: string } = this.ecdsaService.sign(
       signatureData,
       concert.privateKey,

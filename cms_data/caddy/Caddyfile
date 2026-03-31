@@ -1,18 +1,37 @@
 :80 {
-  encode zstd gzip br
+  encode zstd gzip
 
   handle /api/* {
-      reverse_proxy cms_app:3000 {
-          health_uri /api/health
-          health_interval 10s
-          health_timeout 5s
-          health_status 2xx
-      }
+    reverse_proxy cms_app:3000 {
+      health_uri /api/health
+      health_interval 10s
+      health_timeout 5s
+      health_status 2xx
+    }
+  }
+
+  # MinIO 对象存储代理（HTTP 模式）
+  handle /assets/* {
+    reverse_proxy minio:9000
   }
 
   handle {
     root * /site
-    file_server
     try_files {path} /index.html
+    file_server
   }
+}
+
+# MinIO 对象存储代理（HTTPS 模式，自签证书）
+{$SERVER_IP}:443 {
+  tls internal
+
+  handle /assets/* {
+    reverse_proxy minio:9000
+  }
+}
+
+# MinIO 管理控制台代理
+:9001 {
+  reverse_proxy minio:9001
 }

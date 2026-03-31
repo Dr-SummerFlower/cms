@@ -19,7 +19,7 @@
 ## 目录约定
 
 - 源码在 `src/` 下，入口为 `main.ts`，根模块为 `app.module.ts`。
-- 按业务拆分为模块：auth、concerts、tickets、users、feedback、email、ecdsa、proxy、storages、global、init 等。
+- 按业务拆分为模块：auth、concerts、tickets、users、feedback、email、ecdsa、storages、global、init 等。
 - 各模块内含 controller、service、dto、entities（如用 Mongoose 则含 schema）。
 - 公共类型与工具在 `src/types/`。
 

@@ -193,7 +193,6 @@ export class StoragesService {
     contentType: string,
   ): Promise<string> {
     await this.ensureBucket();
-    // 前端通过 `/api/proxy` 按该路径代理访问对象存储中的资源。
     await this.client.putObject(this.bucket, objectName, buffer, length, {
       'Content-Type': contentType,
     });

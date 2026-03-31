@@ -15,6 +15,3 @@ export * from './ecdsa';
 
 // 聚合导出票据相关类型。
 export * from './ticket';
-
-// 聚合导出代理相关类型。
-export * from './proxy';

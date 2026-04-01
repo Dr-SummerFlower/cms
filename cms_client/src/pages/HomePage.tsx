@@ -1,7 +1,9 @@
 import {Col, Empty, Pagination, Row, Skeleton} from 'antd';
 import {useEffect} from 'react';
 import ConcertCard from '../components/concert/ConcertCard';
+import ConcertTimeline from '../components/concert/ConcertTimeline';
 import SearchFilter from '../components/concert/SearchFilter';
+import StatsBar from '../components/home/StatsBar';
 import {useConcertStore} from '../stores/concertStore';
 
 export default function HomePage(): JSX.Element {
@@ -13,6 +15,9 @@ export default function HomePage(): JSX.Element {
 
   return (
     <div style={{padding: "0 16px"}}>
+      <StatsBar/>
+      <ConcertTimeline/>
+
       <div style={{marginBottom: "24px"}}>
         <SearchFilter
           value={{search: filter.search, status: filter.status}}

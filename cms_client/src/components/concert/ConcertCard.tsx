@@ -2,7 +2,13 @@ import {Button, Card, Tag, theme as antdTheme} from "antd";
 import dayjs from "dayjs";
 import React from "react";
 import {Link} from "react-router-dom";
-import type {Concert} from "../../types";
+import type {Concert, ConcertStatus} from "../../types";
+
+const STATUS_CONFIG: Record<ConcertStatus, {label: string; tagColor: string; dateTagColor: string}> = {
+  upcoming: {label: "售票中", tagColor: "processing", dateTagColor: "blue"},
+  ongoing: {label: "进行中", tagColor: "success", dateTagColor: "green"},
+  completed: {label: "已结束", tagColor: "default", dateTagColor: "default"},
+};
 
 interface Props {
   concert: Concert;
@@ -11,34 +17,52 @@ interface Props {
 export default function ConcertCard({concert}: Props): JSX.Element {
   const {token} = antdTheme.useToken();
   const dateText = dayjs(concert.date).format("YYYY年MM月DD日 HH:mm");
+  const statusCfg = STATUS_CONFIG[concert.status];
+
+  const coverContent = concert.poster ? (
+    <div style={{height: "200px", overflow: "hidden"}}>
+      <img
+        src={concert.poster}
+        alt={concert.name}
+        loading="lazy"
+        style={{width: "100%", height: "100%", objectFit: "cover"}}
+      />
+    </div>
+  ) : (
+    <div
+      style={{
+        height: "200px",
+        backgroundColor: token.colorFillSecondary,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: token.colorTextPlaceholder,
+      }}
+    >
+      暂无海报
+    </div>
+  );
 
   return (
     <Card
       hoverable
       cover={
-        concert.poster ? (
-          <div style={{height: "200px", overflow: "hidden"}}>
-            <img
-              src={concert.poster}
-              alt={concert.name}
-              loading="lazy"
-              style={{width: "100%", height: "100%", objectFit: "cover"}}
-            />
-          </div>
-        ) : (
-          <div
+        <div style={{position: "relative"}}>
+          {coverContent}
+          <Tag
+            color={statusCfg.tagColor}
             style={{
-              height: "200px",
-              backgroundColor: token.colorFillSecondary,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: token.colorTextPlaceholder,
+              position: "absolute",
+              top: 10,
+              right: 10,
+              margin: 0,
+              fontWeight: 600,
+              fontSize: 12,
             }}
           >
-            暂无海报
-          </div>
-        )
+            {statusCfg.label}
+          </Tag>
+        </div>
       }
       style={{
         width: "100%",
@@ -89,7 +113,7 @@ export default function ConcertCard({concert}: Props): JSX.Element {
           >
             {concert.name}
           </strong>
-          <Tag color="blue" style={{flexShrink: 0}}>
+          <Tag color={statusCfg.dateTagColor} style={{flexShrink: 0}}>
             {dateText}
           </Tag>
         </div>

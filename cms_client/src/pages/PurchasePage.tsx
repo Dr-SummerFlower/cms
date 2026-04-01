@@ -1,26 +1,35 @@
-import {UploadOutlined} from "@ant-design/icons";
+import {CalendarOutlined, EnvironmentOutlined, UploadOutlined} from "@ant-design/icons";
 import type {UploadFile} from "antd";
 import {
   Alert,
   App as AntdApp,
   Button,
   Card,
-  Descriptions,
+  Col,
+  Divider,
   Form,
   Input,
   InputNumber,
+  Row,
+  Skeleton,
   Space,
   Statistic,
+  Tag,
+  theme as antdTheme,
   Typography,
   Upload,
 } from "antd";
+import dayjs from "dayjs";
 import {useEffect, useMemo, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 import {getConcert} from "../api/concerts";
 import {createOrder, myTickets} from "../api/tickets";
 import type {Concert, CreateTicketOrderDto, TicketAttendeeInfo, TicketItem,} from "../types";
 
+const {Text} = Typography;
+
 export default function PurchasePage(): JSX.Element {
+  const {token} = antdTheme.useToken();
   const {id} = useParams();
   const [concert, setConcert] = useState<Concert | null>(null);
   const [ownedAdult, setOwnedAdult] = useState<number>(0);
@@ -77,7 +86,12 @@ export default function PurchasePage(): JSX.Element {
   const totalTickets = useMemo(() => adultQty + childQty, [adultQty, childQty]);
 
   if (!concert)
-    return <Card loading style={{maxWidth: 720, margin: "24px auto"}}/>;
+    return (
+      <div style={{maxWidth: 800, margin: "24px auto"}}>
+        <Skeleton.Image active style={{width: "100%", height: 160, borderRadius: token.borderRadiusLG, marginBottom: 16}}/>
+        <Skeleton active paragraph={{rows: 6}}/>
+      </div>
+    );
 
   const onFinish = async (vals: Record<string, unknown>): Promise<void> => {
     const a = Number(vals.adultQty ?? 0);
@@ -173,39 +187,87 @@ export default function PurchasePage(): JSX.Element {
   };
 
   return (
-    <Card
-      title="确认购票"
-      style={{maxWidth: 720, margin: "24px auto"}}
-      extra={
-        <Typography.Text type="secondary">
-          {new Date(concert.date).toLocaleString()}
-        </Typography.Text>
-      }
-    >
-      <Descriptions
-        column={1}
-        bordered
-        size="small"
-        items={[
-          {key: "name", label: "演唱会", children: concert.name},
-          {key: "venue", label: "场馆", children: concert.venue},
-          {
-            key: "limit",
-            label: "单人限购",
-            children: `成人 ${maxAdult} / 儿童 ${maxChild}`,
-          },
-          {
-            key: "remain",
-            label: "剩余额度",
-            children: `成人 ${remainAdult} / 儿童 ${remainChild}`,
-          },
-        ]}
-      />
+    <div style={{maxWidth: 800, margin: "0 auto", paddingBottom: 48}}>
+      {/* 演唱会信息 Banner */}
+      <Card
+        style={{
+          marginBottom: 24,
+          borderRadius: token.borderRadiusLG,
+          overflow: "hidden",
+        }}
+        styles={{body: {padding: 0}}}
+      >
+        <Row>
+          {/* 海报缩略图 */}
+          <Col xs={0} sm={6} style={{flexShrink: 0}}>
+            {concert.poster ? (
+              <img
+                src={concert.poster}
+                alt={concert.name}
+                style={{width: "100%", height: "100%", objectFit: "cover", display: "block", minHeight: 140}}
+              />
+            ) : (
+              <div
+                style={{
+                  width: "100%",
+                  minHeight: 140,
+                  height: "100%",
+                  background: token.colorFillSecondary,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: token.colorTextQuaternary,
+                  fontSize: 13,
+                }}
+              >
+                暂无海报
+              </div>
+            )}
+          </Col>
 
+          {/* 演唱会信息 */}
+          <Col xs={24} sm={18} style={{padding: "20px 24px"}}>
+            <div style={{display: "flex", alignItems: "center", gap: 8, marginBottom: 6}}>
+              <Tag color="processing" style={{fontWeight: 600}}>售票中</Tag>
+              <Text type="secondary" style={{fontSize: 12}}>确认购票信息</Text>
+            </div>
+            <Text strong style={{fontSize: 18, display: "block", marginBottom: 12, lineHeight: 1.4}}>
+              {concert.name}
+            </Text>
+            <div style={{display: "flex", flexWrap: "wrap", gap: "6px 24px"}}>
+              <Text type="secondary" style={{fontSize: 13}}>
+                <CalendarOutlined style={{marginRight: 5}}/>
+                {dayjs(concert.date).format("YYYY年MM月DD日 HH:mm")}
+              </Text>
+              <Text type="secondary" style={{fontSize: 13}}>
+                <EnvironmentOutlined style={{marginRight: 5}}/>
+                {concert.venue}
+              </Text>
+            </div>
+            <Divider style={{margin: "12px 0"}}/>
+            <div style={{display: "flex", gap: 24, flexWrap: "wrap"}}>
+              <Text type="secondary" style={{fontSize: 13}}>
+                成人票 <Text strong style={{color: token.colorPrimary}}>¥{concert.adultPrice}</Text>
+                &emsp;剩余可购 <Text strong>{remainAdult}</Text> 张
+              </Text>
+              <Text type="secondary" style={{fontSize: 13}}>
+                儿童票 <Text strong style={{color: token.colorInfo}}>¥{concert.childPrice}</Text>
+                &emsp;剩余可购 <Text strong>{remainChild}</Text> 张
+              </Text>
+            </div>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* 购票表单 */}
+      <Card
+        title="选择票数"
+        style={{borderRadius: token.borderRadiusLG}}
+      >
       <Alert
         type="info"
         showIcon
-        style={{marginTop: 12}}
+        style={{marginBottom: 16}}
         message="购票须知"
         description="为保障广大消费者的购票需求，我们对每位用户的购票数量进行了限制，对您造成的不便敬请谅解，感谢您的配合。请您根据剩余可购票数量进行购买，超出限制将无法完成下单。"
       />
@@ -213,7 +275,6 @@ export default function PurchasePage(): JSX.Element {
       <Form
         form={form}
         layout="vertical"
-        style={{marginTop: 16}}
         initialValues={{adultQty: 0, childQty: 0}}
         onFinish={onFinish}
       >
@@ -333,13 +394,15 @@ export default function PurchasePage(): JSX.Element {
         <Button
           type="primary"
           htmlType="submit"
+          size="large"
           block
           disabled={adultQty + childQty <= 0}
-          style={{marginTop: 12}}
+          style={{marginTop: 12, height: 48, fontSize: 16, fontWeight: 600}}
         >
           立即支付并出票
         </Button>
       </Form>
-    </Card>
+      </Card>
+    </div>
   );
 }

@@ -61,7 +61,7 @@ services:
       - ${REDIS_PASSWORD}
     volumes:
       - ./cms_data/redis:/data
-      - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./cms_data/redis/redis.conf:/usr/local/etc/redis/redis.conf
     networks:
       - cms_network
     healthcheck:

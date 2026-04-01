@@ -103,7 +103,7 @@ services:
       - ./cms_data/server/node_modules:/app/node_modules
     command: >
       sh -c "
-      cd /app/cms_server &&
+      cd /app &&
       npm ci --registry=https://registry.npmmirror.com/ &&
       npm run build &&
       node ./dist/main.js

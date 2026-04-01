@@ -10,10 +10,10 @@ jobs:
 
     steps:
       - name: 🧾 检出代码
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 🔧 安装 Node（前端）
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22.21.1
           cache: npm
@@ -28,7 +28,7 @@ jobs:
         run: npm run build
 
       - name: 🔧 安装 Node（后端）
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22.21.1
           cache: npm
@@ -68,7 +68,7 @@ jobs:
           echo "TAR_NAME=$TAR_NAME" >> $GITHUB_ENV
 
       - name: ⬆️ 上传打包文件
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.TAR_NAME }}
           path: ${{ env.TAR_NAME }}

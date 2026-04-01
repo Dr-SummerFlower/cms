@@ -11,7 +11,7 @@
   }
 
   # MinIO 对象存储代理（HTTP 模式）
-  handle /assets/* {
+  handle /media/* {
     reverse_proxy minio:9000
   }
 
@@ -26,7 +26,7 @@
 {$SERVER_IP}:443 {
   tls internal
 
-  handle /assets/* {
+  handle /media/* {
     reverse_proxy minio:9000
   }
 }

@@ -27,7 +27,11 @@ const {Title, Text, Paragraph} = Typography;
 
 const STATUS_CONFIG: Record<
   ConcertStatus,
-  {label: string; color: string; badgeStatus: "processing" | "success" | "default"}
+  {
+    label: string;
+    color: string;
+    badgeStatus: "processing" | "success" | "default";
+  }
 > = {
   upcoming: {label: "售票中", color: "blue", badgeStatus: "processing"},
   ongoing: {label: "进行中", color: "green", badgeStatus: "success"},
@@ -45,10 +49,22 @@ function InfoItem({
 }): JSX.Element {
   const {token} = antdTheme.useToken();
   return (
-    <div style={{display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 0"}}>
-      <span style={{color: token.colorPrimary, fontSize: 16, marginTop: 1}}>{icon}</span>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 10,
+        padding: "10px 0",
+      }}
+    >
+      <span style={{color: token.colorPrimary, fontSize: 16, marginTop: 1}}>
+        {icon}
+      </span>
       <div>
-        <Text type="secondary" style={{fontSize: 12, display: "block", lineHeight: 1.4}}>
+        <Text
+          type="secondary"
+          style={{fontSize: 12, display: "block", lineHeight: 1.4}}
+        >
           {label}
         </Text>
         <Text strong style={{fontSize: 15}}>
@@ -80,8 +96,17 @@ function NotesCard(): JSX.Element {
         border: `1px solid ${token.colorBorderSecondary}`,
       }}
     >
-      <div style={{display: "flex", alignItems: "center", gap: 6, marginBottom: 10}}>
-        <InfoCircleOutlined style={{color: token.colorWarning, fontSize: 14}}/>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          marginBottom: 10,
+        }}
+      >
+        <InfoCircleOutlined
+          style={{color: token.colorWarning, fontSize: 14}}
+        />
         <Text strong style={{fontSize: 13, color: token.colorTextSecondary}}>
           温馨提示
         </Text>
@@ -125,7 +150,14 @@ export default function ConcertDetail(): JSX.Element {
       <div style={{maxWidth: 1000, margin: "0 auto", padding: "24px 0"}}>
         <Row gutter={[32, 32]}>
           <Col xs={24} md={10}>
-            <Skeleton.Image active style={{width: "100%", height: 360, borderRadius: token.borderRadiusLG}}/>
+            <Skeleton.Image
+              active
+              style={{
+                width: "100%",
+                height: 360,
+                borderRadius: token.borderRadiusLG,
+              }}
+            />
           </Col>
           <Col xs={24} md={14}>
             <Skeleton active paragraph={{rows: 8}}/>
@@ -201,13 +233,22 @@ export default function ConcertDetail(): JSX.Element {
         <Col xs={24} md={14}>
           {/* 状态 + 标题 */}
           <div style={{marginBottom: 4}}>
-            <Badge status={statusCfg.badgeStatus} text={
-              <Tag color={statusCfg.color} style={{fontWeight: 600, fontSize: 13}}>
-                {statusCfg.label}
-              </Tag>
-            }/>
+            <Badge
+              status={statusCfg.badgeStatus}
+              text={
+                <Tag
+                  color={statusCfg.color}
+                  style={{fontWeight: 600, fontSize: 13}}
+                >
+                  {statusCfg.label}
+                </Tag>
+              }
+            />
           </div>
-          <Title level={2} style={{marginTop: 8, marginBottom: 4, lineHeight: 1.3}}>
+          <Title
+            level={2}
+            style={{marginTop: 8, marginBottom: 4, lineHeight: 1.3}}
+          >
             {concert.name}
           </Title>
 
@@ -225,7 +266,10 @@ export default function ConcertDetail(): JSX.Element {
 
           {/* 票价 */}
           <div style={{marginBottom: 16}}>
-            <Text type="secondary" style={{fontSize: 12, display: "block", marginBottom: 8}}>
+            <Text
+              type="secondary"
+              style={{fontSize: 12, display: "block", marginBottom: 8}}
+            >
               票价
             </Text>
             <div style={{display: "flex", gap: 12, flexWrap: "wrap"}}>
@@ -239,8 +283,16 @@ export default function ConcertDetail(): JSX.Element {
                   minWidth: 100,
                 }}
               >
-                <Text type="secondary" style={{fontSize: 12, display: "block"}}>成人票</Text>
-                <Text strong style={{fontSize: 22, color: token.colorPrimary}}>
+                <Text
+                  type="secondary"
+                  style={{fontSize: 12, display: "block"}}
+                >
+                  成人票
+                </Text>
+                <Text
+                  strong
+                  style={{fontSize: 22, color: token.colorPrimary}}
+                >
                   ¥{concert.adultPrice}
                 </Text>
               </div>
@@ -254,7 +306,12 @@ export default function ConcertDetail(): JSX.Element {
                   minWidth: 100,
                 }}
               >
-                <Text type="secondary" style={{fontSize: 12, display: "block"}}>儿童票</Text>
+                <Text
+                  type="secondary"
+                  style={{fontSize: 12, display: "block"}}
+                >
+                  儿童票
+                </Text>
                 <Text strong style={{fontSize: 22, color: token.colorInfo}}>
                   ¥{concert.childPrice}
                 </Text>
@@ -280,9 +337,16 @@ export default function ConcertDetail(): JSX.Element {
             <div style={{display: "flex", alignItems: "center", gap: 6}}>
               <UserOutlined style={{color: token.colorTextSecondary}}/>
               <Text type="secondary" style={{fontSize: 13}}>
-                剩余 <Text strong style={{color: remaining <= 20 ? token.colorError : undefined}}>
+                剩余{" "}
+                <Text
+                  strong
+                  style={{
+                    color: remaining <= 20 ? token.colorError : undefined,
+                  }}
+                >
                   {remaining}
-                </Text> 张
+                </Text>{" "}
+                张
               </Text>
             </div>
             {concert.soldTickets !== undefined && (
@@ -305,11 +369,18 @@ export default function ConcertDetail(): JSX.Element {
           {concert.description && (
             <>
               <Divider style={{margin: "12px 0"}}/>
-              <Text type="secondary" style={{fontSize: 12, display: "block", marginBottom: 6}}>
+              <Text
+                type="secondary"
+                style={{fontSize: 12, display: "block", marginBottom: 6}}
+              >
                 演出简介
               </Text>
               <Paragraph
-                style={{fontSize: 14, lineHeight: 1.8, color: token.colorTextSecondary}}
+                style={{
+                  fontSize: 14,
+                  lineHeight: 1.8,
+                  color: token.colorTextSecondary,
+                }}
                 ellipsis={{rows: 4, expandable: true, symbol: "展开"}}
               >
                 {concert.description}

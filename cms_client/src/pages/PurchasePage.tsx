@@ -1,4 +1,8 @@
-import {CalendarOutlined, EnvironmentOutlined, UploadOutlined} from "@ant-design/icons";
+import {
+  CalendarOutlined,
+  EnvironmentOutlined,
+  UploadOutlined,
+} from "@ant-design/icons";
 import type {UploadFile} from "antd";
 import {
   Alert,
@@ -24,7 +28,12 @@ import {useEffect, useMemo, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 import {getConcert} from "../api/concerts";
 import {createOrder, myTickets} from "../api/tickets";
-import type {Concert, CreateTicketOrderDto, TicketAttendeeInfo, TicketItem,} from "../types";
+import type {
+  Concert,
+  CreateTicketOrderDto,
+  TicketAttendeeInfo,
+  TicketItem,
+} from "../types";
 
 const {Text} = Typography;
 
@@ -88,7 +97,15 @@ export default function PurchasePage(): JSX.Element {
   if (!concert)
     return (
       <div style={{maxWidth: 800, margin: "24px auto"}}>
-        <Skeleton.Image active style={{width: "100%", height: 160, borderRadius: token.borderRadiusLG, marginBottom: 16}}/>
+        <Skeleton.Image
+          active
+          style={{
+            width: "100%",
+            height: 160,
+            borderRadius: token.borderRadiusLG,
+            marginBottom: 16,
+          }}
+        />
         <Skeleton active paragraph={{rows: 6}}/>
       </div>
     );
@@ -204,7 +221,13 @@ export default function PurchasePage(): JSX.Element {
               <img
                 src={concert.poster}
                 alt={concert.name}
-                style={{width: "100%", height: "100%", objectFit: "cover", display: "block", minHeight: 140}}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  display: "block",
+                  minHeight: 140,
+                }}
               />
             ) : (
               <div
@@ -227,11 +250,30 @@ export default function PurchasePage(): JSX.Element {
 
           {/* 演唱会信息 */}
           <Col xs={24} sm={18} style={{padding: "20px 24px"}}>
-            <div style={{display: "flex", alignItems: "center", gap: 8, marginBottom: 6}}>
-              <Tag color="processing" style={{fontWeight: 600}}>售票中</Tag>
-              <Text type="secondary" style={{fontSize: 12}}>确认购票信息</Text>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 6,
+              }}
+            >
+              <Tag color="processing" style={{fontWeight: 600}}>
+                售票中
+              </Tag>
+              <Text type="secondary" style={{fontSize: 12}}>
+                确认购票信息
+              </Text>
             </div>
-            <Text strong style={{fontSize: 18, display: "block", marginBottom: 12, lineHeight: 1.4}}>
+            <Text
+              strong
+              style={{
+                fontSize: 18,
+                display: "block",
+                marginBottom: 12,
+                lineHeight: 1.4,
+              }}
+            >
               {concert.name}
             </Text>
             <div style={{display: "flex", flexWrap: "wrap", gap: "6px 24px"}}>
@@ -247,11 +289,17 @@ export default function PurchasePage(): JSX.Element {
             <Divider style={{margin: "12px 0"}}/>
             <div style={{display: "flex", gap: 24, flexWrap: "wrap"}}>
               <Text type="secondary" style={{fontSize: 13}}>
-                成人票 <Text strong style={{color: token.colorPrimary}}>¥{concert.adultPrice}</Text>
+                成人票{" "}
+                <Text strong style={{color: token.colorPrimary}}>
+                  ¥{concert.adultPrice}
+                </Text>
                 &emsp;剩余可购 <Text strong>{remainAdult}</Text> 张
               </Text>
               <Text type="secondary" style={{fontSize: 13}}>
-                儿童票 <Text strong style={{color: token.colorInfo}}>¥{concert.childPrice}</Text>
+                儿童票{" "}
+                <Text strong style={{color: token.colorInfo}}>
+                  ¥{concert.childPrice}
+                </Text>
                 &emsp;剩余可购 <Text strong>{remainChild}</Text> 张
               </Text>
             </div>
@@ -260,148 +308,148 @@ export default function PurchasePage(): JSX.Element {
       </Card>
 
       {/* 购票表单 */}
-      <Card
-        title="选择票数"
-        style={{borderRadius: token.borderRadiusLG}}
-      >
-      <Alert
-        type="info"
-        showIcon
-        style={{marginBottom: 16}}
-        message="购票须知"
-        description="为保障广大消费者的购票需求，我们对每位用户的购票数量进行了限制，对您造成的不便敬请谅解，感谢您的配合。请您根据剩余可购票数量进行购买，超出限制将无法完成下单。"
-      />
+      <Card title="选择票数" style={{borderRadius: token.borderRadiusLG}}>
+        <Alert
+          type="info"
+          showIcon
+          style={{marginBottom: 16}}
+          message="购票须知"
+          description="为保障广大消费者的购票需求，我们对每位用户的购票数量进行了限制，对您造成的不便敬请谅解，感谢您的配合。请您根据剩余可购票数量进行购买，超出限制将无法完成下单。"
+        />
 
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={{adultQty: 0, childQty: 0}}
-        onFinish={onFinish}
-      >
-        <Space size="large" wrap>
-          <Form.Item
-            label={`成人票（¥${concert.adultPrice}）`}
-            name="adultQty"
-            rules={[
-              {type: "number", min: 0, message: "请输入不小于 0 的整数"},
-            ]}
-            help={`限购 ${maxAdult} 张/人，您还可购买 ${remainAdult} 张`}
-          >
-            <InputNumber min={0} max={remainAdult} style={{width: 160}}/>
-          </Form.Item>
-
-          <Form.Item
-            label={`儿童票（¥${concert.childPrice}）`}
-            name="childQty"
-            rules={[
-              {type: "number", min: 0, message: "请输入不小于 0 的整数"},
-            ]}
-            help={`限购 ${maxChild} 张/人，您还可购买 ${remainChild} 张`}
-          >
-            <InputNumber min={0} max={remainChild} style={{width: 160}}/>
-          </Form.Item>
-
-          <Statistic title="合计金额" value={total} prefix="¥"/>
-        </Space>
-
-        {totalTickets > 0 && (
-          <div style={{marginTop: 24}}>
-            <Alert
-              type="warning"
-              showIcon
-              message="实名制购票提醒"
-              description="根据实名制购票要求，请您为每张票填写实际观演人的真实姓名、身份证号，并上传清晰的人脸照片。入场时将进行身份核验，信息不符将无法入场，感谢您的理解与配合。"
-              style={{marginBottom: 16}}
-            />
-            {Array.from({length: totalTickets}).map((_, index) => {
-              const ticketType = index < adultQty ? "adult" : "child";
-              const ticketTypeName =
-                ticketType === "adult" ? "成人票" : "儿童票";
-              return (
-                <Card
-                  key={index}
-                  size="small"
-                  title={`第 ${index + 1} 张票（${ticketTypeName}）`}
-                  style={{marginBottom: 16}}
-                >
-                  <Space
-                    direction="vertical"
-                    style={{width: "100%"}}
-                    size="middle"
-                  >
-                    <Form.Item
-                      label="观演人姓名"
-                      name={`attendee_${index}_realName`}
-                      rules={[
-                        {required: true, message: "请您输入观演人的真实姓名"},
-                      ]}
-                    >
-                      <Input placeholder="请输入与身份证一致的姓名"/>
-                    </Form.Item>
-                    <Form.Item
-                      label="身份证号码"
-                      name={`attendee_${index}_idCard`}
-                      rules={[
-                        {required: true, message: "请您输入身份证号码"},
-                        {
-                          pattern:
-                            /^[1-9]\d{5}(18|19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[\dXx]$/,
-                          message: "身份证号码格式不正确，请您检查后重新输入",
-                        },
-                      ]}
-                    >
-                      <Input
-                        placeholder="请输入18位身份证号码"
-                        maxLength={18}
-                      />
-                    </Form.Item>
-                    <Form.Item
-                      label="人脸照片"
-                      name={`attendee_${index}_faceImage`}
-                      rules={[
-                        {
-                          required: true,
-                          message: "请您上传观演人的清晰人脸照片",
-                        },
-                      ]}
-                      valuePropName="fileList"
-                      getValueFromEvent={(e) => {
-                        if (Array.isArray(e)) {
-                          return e;
-                        }
-                        return e?.fileList;
-                      }}
-                    >
-                      <Upload
-                        listType="picture-card"
-                        maxCount={1}
-                        beforeUpload={() => false}
-                        accept="image/*"
-                      >
-                        <div>
-                          <UploadOutlined/>
-                          <div style={{marginTop: 8}}>上传照片</div>
-                        </div>
-                      </Upload>
-                    </Form.Item>
-                  </Space>
-                </Card>
-              );
-            })}
-          </div>
-        )}
-
-        <Button
-          type="primary"
-          htmlType="submit"
-          size="large"
-          block
-          disabled={adultQty + childQty <= 0}
-          style={{marginTop: 12, height: 48, fontSize: 16, fontWeight: 600}}
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={{adultQty: 0, childQty: 0}}
+          onFinish={onFinish}
         >
-          立即支付并出票
-        </Button>
-      </Form>
+          <Space size="large" wrap>
+            <Form.Item
+              label={`成人票（¥${concert.adultPrice}）`}
+              name="adultQty"
+              rules={[
+                {type: "number", min: 0, message: "请输入不小于 0 的整数"},
+              ]}
+              help={`限购 ${maxAdult} 张/人，您还可购买 ${remainAdult} 张`}
+            >
+              <InputNumber min={0} max={remainAdult} style={{width: 160}}/>
+            </Form.Item>
+
+            <Form.Item
+              label={`儿童票（¥${concert.childPrice}）`}
+              name="childQty"
+              rules={[
+                {type: "number", min: 0, message: "请输入不小于 0 的整数"},
+              ]}
+              help={`限购 ${maxChild} 张/人，您还可购买 ${remainChild} 张`}
+            >
+              <InputNumber min={0} max={remainChild} style={{width: 160}}/>
+            </Form.Item>
+
+            <Statistic title="合计金额" value={total} prefix="¥"/>
+          </Space>
+
+          {totalTickets > 0 && (
+            <div style={{marginTop: 24}}>
+              <Alert
+                type="warning"
+                showIcon
+                message="实名制购票提醒"
+                description="根据实名制购票要求，请您为每张票填写实际观演人的真实姓名、身份证号，并上传清晰的人脸照片。入场时将进行身份核验，信息不符将无法入场，感谢您的理解与配合。"
+                style={{marginBottom: 16}}
+              />
+              {Array.from({length: totalTickets}).map((_, index) => {
+                const ticketType = index < adultQty ? "adult" : "child";
+                const ticketTypeName =
+                  ticketType === "adult" ? "成人票" : "儿童票";
+                return (
+                  <Card
+                    key={index}
+                    size="small"
+                    title={`第 ${index + 1} 张票（${ticketTypeName}）`}
+                    style={{marginBottom: 16}}
+                  >
+                    <Space
+                      direction="vertical"
+                      style={{width: "100%"}}
+                      size="middle"
+                    >
+                      <Form.Item
+                        label="观演人姓名"
+                        name={`attendee_${index}_realName`}
+                        rules={[
+                          {
+                            required: true,
+                            message: "请您输入观演人的真实姓名",
+                          },
+                        ]}
+                      >
+                        <Input placeholder="请输入与身份证一致的姓名"/>
+                      </Form.Item>
+                      <Form.Item
+                        label="身份证号码"
+                        name={`attendee_${index}_idCard`}
+                        rules={[
+                          {required: true, message: "请您输入身份证号码"},
+                          {
+                            pattern:
+                              /^[1-9]\d{5}(18|19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[\dXx]$/,
+                            message: "身份证号码格式不正确，请您检查后重新输入",
+                          },
+                        ]}
+                      >
+                        <Input
+                          placeholder="请输入18位身份证号码"
+                          maxLength={18}
+                        />
+                      </Form.Item>
+                      <Form.Item
+                        label="人脸照片"
+                        name={`attendee_${index}_faceImage`}
+                        rules={[
+                          {
+                            required: true,
+                            message: "请您上传观演人的清晰人脸照片",
+                          },
+                        ]}
+                        valuePropName="fileList"
+                        getValueFromEvent={(e) => {
+                          if (Array.isArray(e)) {
+                            return e;
+                          }
+                          return e?.fileList;
+                        }}
+                      >
+                        <Upload
+                          listType="picture-card"
+                          maxCount={1}
+                          beforeUpload={() => false}
+                          accept="image/*"
+                        >
+                          <div>
+                            <UploadOutlined/>
+                            <div style={{marginTop: 8}}>上传照片</div>
+                          </div>
+                        </Upload>
+                      </Form.Item>
+                    </Space>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
+          <Button
+            type="primary"
+            htmlType="submit"
+            size="large"
+            block
+            disabled={adultQty + childQty <= 0}
+            style={{marginTop: 12, height: 48, fontSize: 16, fontWeight: 600}}
+          >
+            立即支付并出票
+          </Button>
+        </Form>
       </Card>
     </div>
   );

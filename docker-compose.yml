@@ -10,8 +10,6 @@ services:
       - "443:443/udp"
       - "9001:9001"
     environment:
-      # 服务器 IP，用于 HTTPS 自签证书的 SAN，使证书匹配 IP 访问
-      # HTTPS 模式下须与 MINIO_PUBLIC_HOST 中的 IP 保持一致
       SERVER_IP: ${SERVER_IP}
     volumes:
       - ./cms_data/caddy/Caddyfile:/etc/caddy/Caddyfile
@@ -99,14 +97,17 @@ services:
     container_name: cms_app
     restart: always
     volumes:
-      - ./cms_server:/app
-      - ./cms_data/server/node_modules:/app/node_modules
+      - ./cms_data/server:/app
     command: >
       sh -c "
       cd /app &&
-      npm ci --registry=https://registry.npmmirror.com/ &&
-      npm run build &&
-      node ./dist/main.js
+      if [ ! -d 'node_modules' ]; then
+        echo '🚀 node_modules 目录不存在，开始安装依赖...';
+        npm i --omit=dev --registry=https://registry.npmmirror.com/;
+      else
+        echo '📦 node_modules 目录已存在，跳过安装。';
+      fi &&
+      node main.js
       "
     ports:
       - "3000:3000"

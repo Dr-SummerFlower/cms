@@ -4,7 +4,10 @@ import React from "react";
 import {Link} from "react-router-dom";
 import type {Concert, ConcertStatus} from "../../types";
 
-const STATUS_CONFIG: Record<ConcertStatus, {label: string; tagColor: string; dateTagColor: string}> = {
+const STATUS_CONFIG: Record<
+  ConcertStatus,
+  { label: string; tagColor: string; dateTagColor: string }
+> = {
   upcoming: {label: "售票中", tagColor: "processing", dateTagColor: "blue"},
   ongoing: {label: "进行中", tagColor: "success", dateTagColor: "green"},
   completed: {label: "已结束", tagColor: "default", dateTagColor: "default"},

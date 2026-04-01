@@ -10,11 +10,26 @@ const {Text} = Typography;
 
 const STATUS_CONFIG: Record<
   ConcertStatus,
-  {label: string; tagColor: string; dotColor: string; dim: boolean}
+  { label: string; tagColor: string; dotColor: string; dim: boolean }
 > = {
-  completed: {label: "已结束", tagColor: "default", dotColor: "#bfbfbf", dim: true},
-  ongoing: {label: "进行中", tagColor: "success", dotColor: "#52c41a", dim: false},
-  upcoming: {label: "售票中", tagColor: "processing", dotColor: "#1677ff", dim: false},
+  completed: {
+    label: "已结束",
+    tagColor: "default",
+    dotColor: "#bfbfbf",
+    dim: true,
+  },
+  ongoing: {
+    label: "进行中",
+    tagColor: "success",
+    dotColor: "#52c41a",
+    dim: false,
+  },
+  upcoming: {
+    label: "售票中",
+    tagColor: "processing",
+    dotColor: "#1677ff",
+    dim: false,
+  },
 };
 
 interface TimelineNodeProps {
@@ -69,7 +84,8 @@ function TimelineNode({concert, isLast}: TimelineNodeProps): JSX.Element {
             position: "relative",
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.transform = "translateY(-3px)";
+            (e.currentTarget as HTMLElement).style.transform =
+              "translateY(-3px)";
             (e.currentTarget as HTMLElement).style.boxShadow = cfg.dim
               ? "none"
               : `0 6px 16px ${cfg.dotColor}55`;
@@ -86,7 +102,12 @@ function TimelineNode({concert, isLast}: TimelineNodeProps): JSX.Element {
               src={concert.poster}
               alt={concert.name}
               loading="lazy"
-              style={{width: "100%", height: 72, objectFit: "cover", display: "block"}}
+              style={{
+                width: "100%",
+                height: 72,
+                objectFit: "cover",
+                display: "block",
+              }}
             />
           ) : (
             <div
@@ -155,7 +176,10 @@ function TimelineNode({concert, isLast}: TimelineNodeProps): JSX.Element {
             </Text>
           </Tooltip>
         </Link>
-        <Text type="secondary" style={{fontSize: 11, display: "block", marginBottom: 2}}>
+        <Text
+          type="secondary"
+          style={{fontSize: 11, display: "block", marginBottom: 2}}
+        >
           {dateText}
         </Text>
         <Text
@@ -197,17 +221,18 @@ export default function ConcertTimeline(): JSX.Element {
       try {
         const [pastRes, upcomingRes] = await Promise.all([
           // 优先取进行中，若无则取最近已结束
-          listConcerts({page: 1, limit: 1, status: "ongoing"}).then(async (r) => {
-            if (r.items.length > 0) return r;
-            return listConcerts({page: 1, limit: 1, status: "completed"});
-          }),
+          listConcerts({page: 1, limit: 1, status: "ongoing"}).then(
+            async (r) => {
+              if (r.items.length > 0) return r;
+              return listConcerts({page: 1, limit: 1, status: "completed"});
+            },
+          ),
           listConcerts({page: 1, limit: 4, status: "upcoming"}),
         ]);
 
-        const merged = [
-          ...pastRes.items,
-          ...upcomingRes.items,
-        ].sort((a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf());
+        const merged = [...pastRes.items, ...upcomingRes.items].sort(
+          (a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf(),
+        );
 
         setConcerts(merged);
       } finally {

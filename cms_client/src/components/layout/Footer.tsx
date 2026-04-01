@@ -36,7 +36,10 @@ export default function AppFooter(): JSX.Element {
 
     syncUptime();
     // increment locally every second for smooth display
-    tick = setInterval(() => setUptime((prev) => (prev !== null ? prev + 1 : prev)), 1_000);
+    tick = setInterval(
+      () => setUptime((prev) => (prev !== null ? prev + 1 : prev)),
+      1_000,
+    );
     // re-sync with server every 5 minutes to correct drift
     sync = setInterval(syncUptime, 5 * 60_000);
 

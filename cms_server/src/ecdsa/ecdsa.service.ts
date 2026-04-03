@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+﻿import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import {
   createSign,
   createVerify,
@@ -41,7 +41,7 @@ export class EcdsaService {
         privateKey,
       };
     } catch (error) {
-      this.logger.error('ECDSA 密钥对生成失败', error instanceof Error ? error.stack : String(error));
+      this.logger.error(`ECDSA 密钥对生成失败 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
       throw new InternalServerErrorException('密钥生成失败，请稍后重试');
     }
   }
@@ -67,7 +67,7 @@ export class EcdsaService {
         data,
       };
     } catch (error) {
-      this.logger.error('ECDSA 签名失败，请检查私钥格式是否正确', error instanceof Error ? error.stack : String(error));
+      this.logger.error(`ECDSA 签名失败，请检查私钥格式是否正确 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
       throw new InternalServerErrorException('票据签名失败，请检查密钥配置');
     }
   }

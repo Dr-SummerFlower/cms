@@ -70,9 +70,12 @@ export class CaptchaService {
       if (error instanceof HttpException) {
         throw error;
       }
+      // 将错误类型与消息放入 message 参数（始终输出），stack 作为第二参数追加堆栈。
+      const errName = error instanceof Error ? error.constructor.name : typeof error;
+      const errMsg = error instanceof Error ? error.message : String(error);
       this.logger.error(
-        '生成验证码时发生错误',
-        error instanceof Error ? error.stack : String(error),
+        `生成验证码时发生错误 [${errName}]: ${errMsg}`,
+        error instanceof Error ? error.stack : undefined,
       );
       throw new InternalServerErrorException('生成验证码失败，请稍后重试');
     }
@@ -105,8 +108,8 @@ export class CaptchaService {
       return storedCode.toLowerCase() === code.toLowerCase().trim();
     } catch (error) {
       this.logger.error(
-        '校验验证码时发生错误',
-        error instanceof Error ? error.stack : String(error),
+        `校验验证码时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
       );
       // Redis 故障时保守返回 false，让用户重新获取验证码，避免绕过校验。
       return false;

@@ -1,4 +1,4 @@
-import { MailerService } from '@nestjs-modules/mailer';
+﻿import { MailerService } from '@nestjs-modules/mailer';
 import { InjectRedis, Redis } from '@nestjs-redis/client';
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { SendCodeDto } from './dto/send-code.dto';
@@ -48,8 +48,8 @@ export class EmailService {
       return { success: true };
     } catch (error) {
       this.logger.error(
-        `发送验证码邮件失败 [type=${type}, email=${email}]`,
-        error instanceof Error ? error.stack : String(error),
+        `发送验证码邮件失败 [type=${type}, email=${email}] [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
       );
       throw new InternalServerErrorException('邮件发送失败，请稍后重试');
     }
@@ -96,8 +96,8 @@ export class EmailService {
       return { success: true };
     } catch (error) {
       this.logger.error(
-        `发送演唱会提醒邮件失败 [concert=${concertInfo.name}, email=${email}]`,
-        error instanceof Error ? error.stack : String(error),
+        `发送演唱会提醒邮件失败 [concert=${concertInfo.name}, email=${email}] [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
       );
       throw new InternalServerErrorException(
         '演唱会提醒邮件发送失败，请稍后重试',
@@ -146,8 +146,8 @@ export class EmailService {
       return { success: true };
     } catch (error) {
       this.logger.error(
-        `发送退票拒绝通知邮件失败 [concert=${refundInfo.concertName}, email=${email}]`,
-        error instanceof Error ? error.stack : String(error),
+        `发送退票拒绝通知邮件失败 [concert=${refundInfo.concertName}, email=${email}] [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
       );
       throw new InternalServerErrorException(
         '退票拒绝通知邮件发送失败，请稍后重试',

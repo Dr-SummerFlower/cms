@@ -99,7 +99,10 @@ export class AuthService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error('用户登录时发生系统错误', error instanceof Error ? error.stack : String(error));
+      this.logger.error(
+        `用户登录时发生系统错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new InternalServerErrorException('登录失败，请稍后重试');
     }
   }
@@ -155,7 +158,10 @@ export class AuthService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error('用户注册时发生系统错误', error instanceof Error ? error.stack : String(error));
+      this.logger.error(
+        `用户注册时发生系统错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new InternalServerErrorException('用户注册失败，请稍后重试');
     }
   }
@@ -184,7 +190,10 @@ export class AuthService {
         // 刷新令牌场景下所有 HTTP 异常统一映射为 401，避免通过响应差异暴露内部状态。
         throw new UnauthorizedException('用户不存在或令牌无效');
       }
-      this.logger.error('刷新令牌时发生系统错误', error instanceof Error ? error.stack : String(error));
+      this.logger.error(
+        `刷新令牌时发生系统错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new UnauthorizedException('用户不存在或令牌无效');
     }
   }

@@ -29,7 +29,10 @@ export class ConcertsSchedulerService {
       await this.concertsService.updateConcertStatuses();
       this.logger.log('演唱会状态更新任务执行成功');
     } catch (error) {
-      this.logger.error('演唱会状态更新任务执行失败', error.stack);
+      this.logger.error(
+        `演唱会状态更新任务执行失败 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
     }
   }
 
@@ -44,7 +47,10 @@ export class ConcertsSchedulerService {
       await this.concertsService.updateConcertStatuses();
       this.logger.log('演唱会状态更新成功');
     } catch (error) {
-      this.logger.error('每日演唱会状态更新任务执行失败', error instanceof Error ? error.stack : error);
+      this.logger.error(
+        `每日演唱会状态更新任务执行失败 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
     }
   }
 
@@ -86,7 +92,10 @@ export class ConcertsSchedulerService {
         this.logger.log(`成功发送 ${successCount} 个演唱会提醒邮件`);
       }
     } catch (error) {
-      this.logger.error('演唱会提醒邮件任务执行失败', error instanceof Error ? error.stack : error);
+      this.logger.error(
+        `演唱会提醒邮件任务执行失败 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
     }
   }
 }

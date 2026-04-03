@@ -82,7 +82,10 @@ export class StoragesService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error(`上传文件到 ${folder} 目录时发生错误`, error instanceof Error ? error.stack : String(error));
+      this.logger.error(
+        `上传文件到 ${folder} 目录时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new InternalServerErrorException('文件上传失败，请稍后重试');
     }
   }
@@ -125,7 +128,10 @@ export class StoragesService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error(`上传 Buffer 到 ${folder} 目录时发生错误`, error instanceof Error ? error.stack : String(error));
+      this.logger.error(
+        `上传 Buffer 到 ${folder} 目录时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new InternalServerErrorException('文件上传失败，请稍后重试');
     }
   }
@@ -155,7 +161,10 @@ export class StoragesService {
         .toBuffer();
       return { buffer: converted, mimetype: 'image/webp' };
     } catch (error) {
-      this.logger.error('图片压缩处理失败', error instanceof Error ? error.stack : String(error));
+      this.logger.error(
+        `图片压缩处理失败 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new InternalServerErrorException('图片处理失败，请确认文件格式正确');
     }
   }
@@ -194,7 +203,10 @@ export class StoragesService {
         await this.client.setBucketPolicy(this.bucket, JSON.stringify(policy));
       }
     } catch (error) {
-      this.logger.error('确认存储桶存在时发生错误', error instanceof Error ? error.stack : String(error));
+      this.logger.error(
+        `确认存储桶存在时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new InternalServerErrorException(
         '对象存储服务不可用，请检查 MinIO 连接配置',
       );
@@ -236,7 +248,10 @@ export class StoragesService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error(`上传对象 ${objectName} 到 MinIO 时发生错误`, error instanceof Error ? error.stack : String(error));
+      this.logger.error(
+        `上传对象 ${objectName} 到 MinIO 时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new InternalServerErrorException('文件存储失败，请稍后重试');
     }
   }

@@ -59,7 +59,10 @@ export class ValidationService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error('验证码验证时发生错误', error instanceof Error ? error.stack : String(error));
+      this.logger.error(
+        `验证码验证时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new InternalServerErrorException('验证码服务暂时不可用，请稍后重试');
     }
   }
@@ -89,7 +92,10 @@ export class ValidationService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error('清除验证码时发生错误', error instanceof Error ? error.stack : String(error));
+      this.logger.error(
+        `清除验证码时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new InternalServerErrorException('验证码服务暂时不可用，请稍后重试');
     }
   }

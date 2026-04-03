@@ -1,4 +1,4 @@
-import {
+﻿import {
   BadRequestException,
   ConflictException,
   HttpException,
@@ -49,7 +49,7 @@ export class UsersService {
       if (err.code === 11000) {
         throw new ConflictException('该邮箱已被注册');
       }
-      this.logger.error('创建用户时发生错误', error instanceof Error ? error.stack : String(error));
+      this.logger.error(`创建用户时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
       throw new InternalServerErrorException('创建用户时发生错误');
     }
   }
@@ -74,7 +74,7 @@ export class UsersService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error('查询用户时发生错误', error instanceof Error ? error.stack : String(error));
+      this.logger.error(`查询用户时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
       throw new InternalServerErrorException('查询用户时发生错误');
     }
   }
@@ -102,7 +102,7 @@ export class UsersService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error('查询用户详情时发生错误', error instanceof Error ? error.stack : String(error));
+      this.logger.error(`查询用户详情时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
       throw new InternalServerErrorException('查询用户详情时发生错误');
     }
   }
@@ -153,7 +153,7 @@ export class UsersService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error('获取用户列表时发生错误', error instanceof Error ? error.stack : String(error));
+      this.logger.error(`获取用户列表时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
       throw new InternalServerErrorException('获取用户列表时发生错误');
     }
   }
@@ -231,7 +231,7 @@ export class UsersService {
       if (err.name === 'ValidationError') {
         throw new BadRequestException('用户数据验证失败');
       }
-      this.logger.error('更新用户信息时发生错误', error instanceof Error ? error.stack : String(error));
+      this.logger.error(`更新用户信息时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
       throw new InternalServerErrorException('更新用户信息时发生错误');
     }
   }
@@ -273,7 +273,7 @@ export class UsersService {
       if (err.name === 'ValidationError') {
         throw new BadRequestException('用户数据验证失败');
       }
-      this.logger.error('更新用户角色时发生错误', error instanceof Error ? error.stack : String(error));
+      this.logger.error(`更新用户角色时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
       throw new InternalServerErrorException('更新用户角色时发生错误');
     }
   }
@@ -302,7 +302,7 @@ export class UsersService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error('删除用户时发生错误', error instanceof Error ? error.stack : String(error));
+      this.logger.error(`删除用户时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
       throw new InternalServerErrorException('删除用户时发生错误');
     }
   }
@@ -332,7 +332,7 @@ export class UsersService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error('更新用户头像时发生错误', error instanceof Error ? error.stack : String(error));
+      this.logger.error(`更新用户头像时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
       throw new InternalServerErrorException('更新用户头像时发生错误');
     }
   }

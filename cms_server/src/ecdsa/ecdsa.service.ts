@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import {
   createSign,
   createVerify,
@@ -13,29 +13,37 @@ import { EcdsaKeyPair, EcdsaSignature, TicketQRData } from '../types';
  */
 @Injectable()
 export class EcdsaService {
+  private readonly logger = new Logger(EcdsaService.name);
+
   /**
    * 生成一组新的 ECDSA 公私钥。
    *
    * @returns PEM 格式编码的公钥与私钥
+   * @throws InternalServerErrorException 当密钥生成失败时抛出
    */
   generateKeyPair(): EcdsaKeyPair {
-    const { publicKey, privateKey } = generateKeyPairSync('ec', {
-      namedCurve: 'secp256k1',
-      publicKeyEncoding: {
-        type: 'spki',
-        format: 'pem',
-      },
-      privateKeyEncoding: {
-        type: 'pkcs8',
-        format: 'pem',
-      },
-    });
+    try {
+      const { publicKey, privateKey } = generateKeyPairSync('ec', {
+        namedCurve: 'secp256k1',
+        publicKeyEncoding: {
+          type: 'spki',
+          format: 'pem',
+        },
+        privateKeyEncoding: {
+          type: 'pkcs8',
+          format: 'pem',
+        },
+      });
 
-    // 公钥可随票据下发参与验签，私钥仅保留在后端用于签名。
-    return {
-      publicKey,
-      privateKey,
-    };
+      // 公钥可随票据下发参与验签，私钥仅保留在后端用于签名。
+      return {
+        publicKey,
+        privateKey,
+      };
+    } catch (error) {
+      this.logger.error('ECDSA 密钥对生成失败', error instanceof Error ? error.stack : String(error));
+      throw new InternalServerErrorException('密钥生成失败，请稍后重试');
+    }
   }
 
   /**
@@ -46,17 +54,22 @@ export class EcdsaService {
    * @returns 包含原始数据与十六进制签名结果的对象
    */
   sign(data: string, privateKey: string): EcdsaSignature {
-    const sign: Sign = createSign('SHA256');
-    sign.update(data);
-    sign.end();
+    try {
+      const sign: Sign = createSign('SHA256');
+      sign.update(data);
+      sign.end();
 
-    // 所有票据签名统一输出为十六进制字符串，便于落库和写入二维码。
-    const signature: string = sign.sign(privateKey, 'hex');
+      // 所有票据签名统一输出为十六进制字符串，便于落库和写入二维码。
+      const signature: string = sign.sign(privateKey, 'hex');
 
-    return {
-      signature,
-      data,
-    };
+      return {
+        signature,
+        data,
+      };
+    } catch (error) {
+      this.logger.error('ECDSA 签名失败，请检查私钥格式是否正确', error instanceof Error ? error.stack : String(error));
+      throw new InternalServerErrorException('票据签名失败，请检查密钥配置');
+    }
   }
 
   /**

@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  HttpException,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -67,18 +68,17 @@ export class ConcertsService {
 
       return result;
     } catch (error) {
-      if (error.name === 'ValidationError') {
-        throw new BadRequestException('演唱会数据验证失败');
-      }
-      if (error.code === 11000) {
-        throw new BadRequestException('演唱会名称已存在');
-      }
-      if (
-        error instanceof BadRequestException ||
-        error instanceof InternalServerErrorException
-      ) {
+      if (error instanceof HttpException) {
         throw error;
       }
+      const err = error as { name?: string; code?: number };
+      if (err.name === 'ValidationError') {
+        throw new BadRequestException('演唱会数据验证失败');
+      }
+      if (err.code === 11000) {
+        throw new BadRequestException('演唱会名称已存在');
+      }
+      this.logger.error('创建演唱会时发生错误', error instanceof Error ? error.stack : String(error));
       throw new InternalServerErrorException('创建演唱会时发生错误');
     }
   }
@@ -134,9 +134,10 @@ export class ConcertsService {
         totalPages,
       };
     } catch (error) {
-      if (error instanceof BadRequestException) {
+      if (error instanceof HttpException) {
         throw error;
       }
+      this.logger.error('获取演唱会列表时发生错误', error instanceof Error ? error.stack : String(error));
       throw new InternalServerErrorException('获取演唱会列表时发生错误');
     }
   }
@@ -163,12 +164,10 @@ export class ConcertsService {
       }
       return concert;
     } catch (error) {
-      if (
-        error instanceof BadRequestException ||
-        error instanceof NotFoundException
-      ) {
+      if (error instanceof HttpException) {
         throw error;
       }
+      this.logger.error('查询演唱会详情时发生错误', error instanceof Error ? error.stack : String(error));
       throw new InternalServerErrorException('查询演唱会详情时发生错误');
     }
   }
@@ -206,19 +205,17 @@ export class ConcertsService {
       }
       return result;
     } catch (error) {
-      if (error.name === 'ValidationError') {
-        throw new BadRequestException('演唱会数据验证失败');
-      }
-      if (error.code === 11000) {
-        throw new BadRequestException('演唱会名称已存在');
-      }
-      if (
-        error instanceof BadRequestException ||
-        error instanceof NotFoundException ||
-        error instanceof InternalServerErrorException
-      ) {
+      if (error instanceof HttpException) {
         throw error;
       }
+      const err = error as { name?: string; code?: number };
+      if (err.name === 'ValidationError') {
+        throw new BadRequestException('演唱会数据验证失败');
+      }
+      if (err.code === 11000) {
+        throw new BadRequestException('演唱会名称已存在');
+      }
+      this.logger.error('更新演唱会时发生错误', error instanceof Error ? error.stack : String(error));
       throw new InternalServerErrorException('更新演唱会时发生错误');
     }
   }
@@ -246,12 +243,10 @@ export class ConcertsService {
       // 删除后返回 null，前端据此刷新管理列表即可。
       return null;
     } catch (error) {
-      if (
-        error instanceof BadRequestException ||
-        error instanceof NotFoundException
-      ) {
+      if (error instanceof HttpException) {
         throw error;
       }
+      this.logger.error('删除演唱会时发生错误', error instanceof Error ? error.stack : String(error));
       throw new InternalServerErrorException('删除演唱会时发生错误');
     }
   }
@@ -378,12 +373,10 @@ export class ConcertsService {
       await concert.save();
       return concert;
     } catch (error) {
-      if (
-        error instanceof BadRequestException ||
-        error instanceof NotFoundException
-      ) {
+      if (error instanceof HttpException) {
         throw error;
       }
+      this.logger.error('更新演唱会海报时发生错误', error instanceof Error ? error.stack : String(error));
       throw new InternalServerErrorException('更新演唱会海报时发生错误');
     }
   }

@@ -1,8 +1,10 @@
 import { InjectRedis, Redis } from '@nestjs-redis/client';
 import {
   BadRequestException,
+  HttpException,
   Injectable,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 
 /**
@@ -10,6 +12,8 @@ import {
  */
 @Injectable()
 export class ValidationService {
+  private readonly logger = new Logger(ValidationService.name);
+
   constructor(@InjectRedis() private readonly redisService: Redis) {}
 
   /**
@@ -52,10 +56,11 @@ export class ValidationService {
         throw new BadRequestException('验证码错误');
       }
     } catch (error) {
-      if (error instanceof BadRequestException) {
+      if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException('验证码验证时发生错误');
+      this.logger.error('验证码验证时发生错误', error instanceof Error ? error.stack : String(error));
+      throw new InternalServerErrorException('验证码服务暂时不可用，请稍后重试');
     }
   }
 
@@ -81,10 +86,11 @@ export class ValidationService {
       // 注册或资料修改完成后主动清理验证码，避免后续重复使用。
       await this.redisService.del(key);
     } catch (error) {
-      if (error instanceof BadRequestException) {
+      if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException('清除验证码时发生错误');
+      this.logger.error('清除验证码时发生错误', error instanceof Error ? error.stack : String(error));
+      throw new InternalServerErrorException('验证码服务暂时不可用，请稍后重试');
     }
   }
 }

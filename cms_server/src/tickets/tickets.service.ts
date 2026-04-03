@@ -2,8 +2,10 @@ import { InjectRedis, Redis } from '@nestjs-redis/client';
 import {
   BadRequestException,
   ForbiddenException,
+  HttpException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -45,6 +47,8 @@ import {
  */
 @Injectable()
 export class TicketsService {
+  private readonly logger = new Logger(TicketsService.name);
+
   constructor(
     @InjectModel(Ticket.name)
     private readonly ticketModel: Model<TicketDocument>,
@@ -183,12 +187,10 @@ export class TicketsService {
 
       return createdTickets;
     } catch (error) {
-      if (
-        error instanceof BadRequestException ||
-        error instanceof NotFoundException
-      ) {
+      if (error instanceof HttpException) {
         throw error;
       }
+      this.logger.error('创建票务订单时发生错误', error instanceof Error ? error.stack : String(error));
       throw new InternalServerErrorException('创建票务订单时发生错误');
     }
   }
@@ -231,9 +233,10 @@ export class TicketsService {
         .sort({ createdAt: -1 })
         .exec()) as Ticket[];
     } catch (error) {
-      if (error instanceof BadRequestException) {
+      if (error instanceof HttpException) {
         throw error;
       }
+      this.logger.error('查询用户票据列表时发生错误', error instanceof Error ? error.stack : String(error));
       throw new InternalServerErrorException('查询用户票据列表时发生错误');
     }
   }
@@ -275,13 +278,10 @@ export class TicketsService {
 
       return ticket;
     } catch (error) {
-      if (
-        error instanceof BadRequestException ||
-        error instanceof NotFoundException ||
-        error instanceof ForbiddenException
-      ) {
+      if (error instanceof HttpException) {
         throw error;
       }
+      this.logger.error('查询票据详情时发生错误', error instanceof Error ? error.stack : String(error));
       throw new InternalServerErrorException('查询票据详情时发生错误');
     }
   }
@@ -381,14 +381,11 @@ export class TicketsService {
         message: '退票申请已提交，请等待管理员审核',
       };
     } catch (error) {
-      if (
-        error instanceof BadRequestException ||
-        error instanceof NotFoundException ||
-        error instanceof ForbiddenException
-      ) {
+      if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException('退票申请提交失败');
+      this.logger.error('退票申请提交时发生错误', error instanceof Error ? error.stack : String(error));
+      throw new InternalServerErrorException('退票申请提交失败，请稍后重试');
     }
   }
 
@@ -440,7 +437,11 @@ export class TicketsService {
           new Date(b.requestTime).getTime() - new Date(a.requestTime).getTime(),
       );
     } catch (error) {
-      throw new InternalServerErrorException('获取退票申请列表失败');
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error('获取退票申请列表时发生错误', error instanceof Error ? error.stack : String(error));
+      throw new InternalServerErrorException('获取退票申请列表失败，请稍后重试');
     }
   }
 
@@ -542,7 +543,7 @@ export class TicketsService {
             },
           );
         } catch (emailError) {
-          console.error('发送退票拒绝邮件失败:', emailError);
+          this.logger.error('发送退票拒绝邮件失败', emailError);
         }
 
         return {
@@ -551,24 +552,30 @@ export class TicketsService {
         };
       }
     } catch (error) {
-      if (
-        error instanceof BadRequestException ||
-        error instanceof NotFoundException
-      ) {
+      if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException('审核退票申请失败');
+      this.logger.error('审核退票申请时发生错误', error instanceof Error ? error.stack : String(error));
+      throw new InternalServerErrorException('审核退票申请失败，请稍后重试');
     } finally {
-      const requestKey = `refund_request:${ticketId}`;
-      const requestData: string | null =
-        await this.redisService.get(requestKey);
-      if (requestData) {
-        const request: RefundRequest = JSON.parse(requestData);
-        // 已处理申请继续保留一段时间，便于后台查看审核历史。
-        await this.redisService.setEx(
-          requestKey,
-          30 * 24 * 60 * 60,
-          JSON.stringify(request),
+      // finally 块单独捕获异常，防止 Redis 续期失败覆盖主流程的返回值或异常。
+      try {
+        const requestKey = `refund_request:${ticketId}`;
+        const requestData: string | null =
+          await this.redisService.get(requestKey);
+        if (requestData) {
+          const request: RefundRequest = JSON.parse(requestData);
+          // 已处理申请继续保留一段时间，便于后台查看审核历史。
+          await this.redisService.setEx(
+            requestKey,
+            30 * 24 * 60 * 60,
+            JSON.stringify(request),
+          );
+        }
+      } catch (finallyError) {
+        this.logger.error(
+          '更新退票申请过期时间时发生错误',
+          finallyError instanceof Error ? finallyError.stack : String(finallyError),
         );
       }
     }
@@ -654,14 +661,11 @@ export class TicketsService {
         nextRefreshTime,
       };
     } catch (error) {
-      if (
-        error instanceof BadRequestException ||
-        error instanceof NotFoundException ||
-        error instanceof ForbiddenException
-      ) {
+      if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException('生成二维码时发生错误');
+      this.logger.error('生成二维码时发生错误', error instanceof Error ? error.stack : String(error));
+      throw new InternalServerErrorException('生成二维码时发生错误，请稍后重试');
     }
   }
 
@@ -772,13 +776,11 @@ export class TicketsService {
         requiresManualVerification,
       };
     } catch (error) {
-      if (
-        error instanceof BadRequestException ||
-        error instanceof NotFoundException
-      ) {
+      if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException('验证票据时发生错误');
+      this.logger.error('验证票据时发生错误', error instanceof Error ? error.stack : String(error));
+      throw new InternalServerErrorException('验证票据时发生错误，请稍后重试');
     }
   }
 
@@ -841,13 +843,11 @@ export class TicketsService {
         message: '验票确认成功',
       };
     } catch (error) {
-      if (
-        error instanceof BadRequestException ||
-        error instanceof NotFoundException
-      ) {
+      if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException('确认验票时发生错误');
+      this.logger.error('确认验票时发生错误', error instanceof Error ? error.stack : String(error));
+      throw new InternalServerErrorException('确认验票时发生错误，请稍后重试');
     }
   }
 
@@ -928,10 +928,11 @@ export class TicketsService {
         .sort({ verifiedAt: -1 })
         .exec()) as VerificationRecord[];
     } catch (error) {
-      if (error instanceof BadRequestException) {
+      if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException('获取验证历史记录时发生错误');
+      this.logger.error('获取验证历史记录时发生错误', error instanceof Error ? error.stack : String(error));
+      throw new InternalServerErrorException('获取验证历史记录时发生错误，请稍后重试');
     }
   }
 

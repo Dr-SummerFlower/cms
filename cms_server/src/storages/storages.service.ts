@@ -1,4 +1,9 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { Client as MinioClient } from 'minio';
@@ -21,6 +26,7 @@ const IMAGE_MAX_WIDTH: Record<
  */
 @Injectable()
 export class StoragesService {
+  private readonly logger = new Logger(StoragesService.name);
   private readonly client: MinioClient;
   private readonly bucket: string;
 
@@ -54,23 +60,31 @@ export class StoragesService {
     file: Express.Multer.File,
     folder: 'avatar' | 'poster' | 'face',
   ): Promise<string> {
-    if (!file || !file.buffer || !file.originalname) {
-      throw new InternalServerErrorException('上传文件无效');
-    }
+    try {
+      if (!file || !file.buffer || !file.originalname) {
+        throw new InternalServerErrorException('上传文件无效');
+      }
 
-    // 上传前统一压缩并转码，减少对象存储体积与带宽开销。
-    const { buffer, mimetype } = await this.compressImage(
-      file.buffer,
-      file.mimetype,
-      folder,
-    );
-    const objectName = `${folder}/${new Date().toISOString().slice(0, 10)}/${randomUUID()}.webp`;
-    return await this.putObjectAndGetPath(
-      objectName,
-      buffer,
-      buffer.length,
-      mimetype,
-    );
+      // 上传前统一压缩并转码，减少对象存储体积与带宽开销。
+      const { buffer, mimetype } = await this.compressImage(
+        file.buffer,
+        file.mimetype,
+        folder,
+      );
+      const objectName = `${folder}/${new Date().toISOString().slice(0, 10)}/${randomUUID()}.webp`;
+      return await this.putObjectAndGetPath(
+        objectName,
+        buffer,
+        buffer.length,
+        mimetype,
+      );
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(`上传文件到 ${folder} 目录时发生错误`, error instanceof Error ? error.stack : String(error));
+      throw new InternalServerErrorException('文件上传失败，请稍后重试');
+    }
   }
 
   /**
@@ -89,23 +103,31 @@ export class StoragesService {
     mimetype: string,
     folder: 'avatars' | 'posters',
   ): Promise<string> {
-    if (buffer.length === 0) {
-      throw new InternalServerErrorException('上传内容为空');
-    }
-    const compressed = await this.compressImage(buffer, mimetype, folder);
+    try {
+      if (buffer.length === 0) {
+        throw new InternalServerErrorException('上传内容为空');
+      }
+      const compressed = await this.compressImage(buffer, mimetype, folder);
 
-    // 压缩后优先使用真实输出格式，保证文件扩展名与内容一致。
-    const ext =
-      compressed.mimetype === 'image/webp'
-        ? '.webp'
-        : `.${mimetype.split('/')[1] || 'bin'}`;
-    const objectName = `${folder}/${new Date().toISOString().slice(0, 10)}/${randomUUID()}${ext}`;
-    return await this.putObjectAndGetPath(
-      objectName,
-      compressed.buffer,
-      compressed.buffer.length,
-      compressed.mimetype,
-    );
+      // 压缩后优先使用真实输出格式，保证文件扩展名与内容一致。
+      const ext =
+        compressed.mimetype === 'image/webp'
+          ? '.webp'
+          : `.${mimetype.split('/')[1] || 'bin'}`;
+      const objectName = `${folder}/${new Date().toISOString().slice(0, 10)}/${randomUUID()}${ext}`;
+      return await this.putObjectAndGetPath(
+        objectName,
+        compressed.buffer,
+        compressed.buffer.length,
+        compressed.mimetype,
+      );
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(`上传 Buffer 到 ${folder} 目录时发生错误`, error instanceof Error ? error.stack : String(error));
+      throw new InternalServerErrorException('文件上传失败，请稍后重试');
+    }
   }
 
   /**
@@ -121,16 +143,21 @@ export class StoragesService {
     mimetype: string,
     folder: keyof typeof IMAGE_MAX_WIDTH,
   ): Promise<{ buffer: Buffer; mimetype: string }> {
-    if (!mimetype.startsWith('image/') || mimetype === 'image/gif') {
-      // GIF 动图和非图片文件保持原样，避免破坏内容结构。
-      return { buffer, mimetype };
+    try {
+      if (!mimetype.startsWith('image/') || mimetype === 'image/gif') {
+        // GIF 动图和非图片文件保持原样，避免破坏内容结构。
+        return { buffer, mimetype };
+      }
+      const maxWidth = IMAGE_MAX_WIDTH[folder];
+      const converted = await sharp(buffer)
+        .resize(maxWidth, undefined, { withoutEnlargement: true })
+        .webp({ lossless: true })
+        .toBuffer();
+      return { buffer: converted, mimetype: 'image/webp' };
+    } catch (error) {
+      this.logger.error('图片压缩处理失败', error instanceof Error ? error.stack : String(error));
+      throw new InternalServerErrorException('图片处理失败，请确认文件格式正确');
     }
-    const maxWidth = IMAGE_MAX_WIDTH[folder];
-    const converted = await sharp(buffer)
-      .resize(maxWidth, undefined, { withoutEnlargement: true })
-      .webp({ lossless: true })
-      .toBuffer();
-    return { buffer: converted, mimetype: 'image/webp' };
   }
 
   /**
@@ -139,31 +166,38 @@ export class StoragesService {
    * @returns 检查完成时不返回内容
    */
   private async ensureBucket(): Promise<void> {
-    const exists = await this.client
-      .bucketExists(this.bucket)
-      .catch(() => false);
-    if (!exists) {
-      await this.client.makeBucket(this.bucket, 'us-east-1');
+    try {
+      const exists = await this.client
+        .bucketExists(this.bucket)
+        .catch(() => false);
+      if (!exists) {
+        await this.client.makeBucket(this.bucket, 'us-east-1');
 
-      // 仅开放读取权限，上传仍然通过服务端凭证控制。
-      const policy = {
-        Version: '2012-10-17',
-        Statement: [
-          {
-            Action: ['s3:GetBucketLocation', 's3:ListBucket'],
-            Effect: 'Allow',
-            Principal: { AWS: ['*'] },
-            Resource: [`arn:aws:s3:::${this.bucket}`],
-          },
-          {
-            Action: ['s3:GetObject'],
-            Effect: 'Allow',
-            Principal: { AWS: ['*'] },
-            Resource: [`arn:aws:s3:::${this.bucket}/*`],
-          },
-        ],
-      };
-      await this.client.setBucketPolicy(this.bucket, JSON.stringify(policy));
+        // 仅开放读取权限，上传仍然通过服务端凭证控制。
+        const policy = {
+          Version: '2012-10-17',
+          Statement: [
+            {
+              Action: ['s3:GetBucketLocation', 's3:ListBucket'],
+              Effect: 'Allow',
+              Principal: { AWS: ['*'] },
+              Resource: [`arn:aws:s3:::${this.bucket}`],
+            },
+            {
+              Action: ['s3:GetObject'],
+              Effect: 'Allow',
+              Principal: { AWS: ['*'] },
+              Resource: [`arn:aws:s3:::${this.bucket}/*`],
+            },
+          ],
+        };
+        await this.client.setBucketPolicy(this.bucket, JSON.stringify(policy));
+      }
+    } catch (error) {
+      this.logger.error('确认存储桶存在时发生错误', error instanceof Error ? error.stack : String(error));
+      throw new InternalServerErrorException(
+        '对象存储服务不可用，请检查 MinIO 连接配置',
+      );
     }
   }
 
@@ -192,10 +226,18 @@ export class StoragesService {
     length: number,
     contentType: string,
   ): Promise<string> {
-    await this.ensureBucket();
-    await this.client.putObject(this.bucket, objectName, buffer, length, {
-      'Content-Type': contentType,
-    });
-    return this.buildPath(objectName);
+    try {
+      await this.ensureBucket();
+      await this.client.putObject(this.bucket, objectName, buffer, length, {
+        'Content-Type': contentType,
+      });
+      return this.buildPath(objectName);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(`上传对象 ${objectName} 到 MinIO 时发生错误`, error instanceof Error ? error.stack : String(error));
+      throw new InternalServerErrorException('文件存储失败，请稍后重试');
+    }
   }
 }

@@ -1,8 +1,10 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -19,6 +21,8 @@ import { LoginLimitService } from './login-limit.service';
  */
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
@@ -40,56 +44,64 @@ export class AuthService {
     captchaId: string;
     captchaCode: string;
   }): Promise<AuthResponse> {
-    const { email, password, captchaId, captchaCode } = dto;
+    try {
+      const { email, password, captchaId, captchaCode } = dto;
 
-    // 登录第一步先校验图形验证码，尽量在账号查询前拦住自动化撞库请求。
-    const isCaptchaValid = await this.captchaService.validate(
-      captchaId,
-      captchaCode,
-    );
-    if (!isCaptchaValid) {
-      throw new BadRequestException('验证码错误或已过期');
+      // 登录第一步先校验图形验证码，尽量在账号查询前拦住自动化撞库请求。
+      const isCaptchaValid = await this.captchaService.validate(
+        captchaId,
+        captchaCode,
+      );
+      if (!isCaptchaValid) {
+        throw new BadRequestException('验证码错误或已过期');
+      }
+
+      // 验证码通过后，再检查该邮箱是否正处于限流锁定期。
+      await this.loginLimitService.checkLimit(email);
+
+      const user: User = await this.usersService.findOne(email);
+      if (!user) {
+        // 用户不存在也计入失败次数，避免通过提示差异探测邮箱是否已注册。
+        await this.loginLimitService.recordFailure(email);
+        throw new BadRequestException('用户名或密码错误');
+      }
+      const isPwdValid: boolean = await bcrypt.compare(password, user.password);
+      if (!isPwdValid) {
+        // 密码错误与账号不存在统一反馈，并继续累计失败记录。
+        await this.loginLimitService.recordFailure(email);
+        throw new BadRequestException('用户名或密码错误');
+      }
+
+      // 登录成功后立即清空失败窗口，恢复该邮箱的正常登录状态。
+      await this.loginLimitService.clearFailure(email);
+
+      const id: string = String(user.id);
+      const payload: JwtPayload = {
+        sub: id,
+        username: user.username,
+      };
+      // 登录成功后同时签发访问令牌与刷新令牌，供前端建立登录态。
+      const tokens = await this.generateToken(payload);
+
+      const userInfo: IUserInfo = {
+        userId: id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+      };
+
+      return {
+        ...tokens,
+        user: userInfo,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error('用户登录时发生系统错误', error instanceof Error ? error.stack : String(error));
+      throw new InternalServerErrorException('登录失败，请稍后重试');
     }
-
-    // 验证码通过后，再检查该邮箱是否正处于限流锁定期。
-    await this.loginLimitService.checkLimit(email);
-
-    const user: User = await this.usersService.findOne(email);
-    if (!user) {
-      // 用户不存在也计入失败次数，避免通过提示差异探测邮箱是否已注册。
-      await this.loginLimitService.recordFailure(email);
-      throw new BadRequestException('用户名或密码错误');
-    }
-    const isPwdValid: boolean = await bcrypt.compare(password, user.password);
-    if (!isPwdValid) {
-      // 密码错误与账号不存在统一反馈，并继续累计失败记录。
-      await this.loginLimitService.recordFailure(email);
-      throw new BadRequestException('用户名或密码错误');
-    }
-
-    // 登录成功后立即清空失败窗口，恢复该邮箱的正常登录状态。
-    await this.loginLimitService.clearFailure(email);
-
-    const id: string = String(user.id);
-    const payload: JwtPayload = {
-      sub: id,
-      username: user.username,
-    };
-    // 登录成功后同时签发访问令牌与刷新令牌，供前端建立登录态。
-    const tokens = await this.generateToken(payload);
-
-    const userInfo: IUserInfo = {
-      userId: id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      avatar: user.avatar,
-    };
-
-    return {
-      ...tokens,
-      user: userInfo,
-    };
   }
 
   /**
@@ -105,12 +117,12 @@ export class AuthService {
     email: string;
     password: string;
   }): Promise<AuthResponse> {
-    const existingUser: User = await this.usersService.findOne(userData.email);
-    if (existingUser) {
-      throw new ConflictException('该邮箱已被注册');
-    }
-
     try {
+      const existingUser: User = await this.usersService.findOne(userData.email);
+      if (existingUser) {
+        throw new ConflictException('该邮箱已被注册');
+      }
+
       // 注册成功后直接创建用户，不再要求用户额外走一次登录流程。
       const user: User = await this.usersService.create({
         username: userData.username,
@@ -139,7 +151,11 @@ export class AuthService {
         ...tokens,
         user: userInfo,
       };
-    } catch {
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error('用户注册时发生系统错误', error instanceof Error ? error.stack : String(error));
       throw new InternalServerErrorException('用户注册失败，请稍后重试');
     }
   }
@@ -164,6 +180,11 @@ export class AuthService {
 
       return this.generateToken(newPayload);
     } catch (error) {
+      if (error instanceof HttpException) {
+        // 刷新令牌场景下所有 HTTP 异常统一映射为 401，避免通过响应差异暴露内部状态。
+        throw new UnauthorizedException('用户不存在或令牌无效');
+      }
+      this.logger.error('刷新令牌时发生系统错误', error instanceof Error ? error.stack : String(error));
       throw new UnauthorizedException('用户不存在或令牌无效');
     }
   }
@@ -185,7 +206,12 @@ export class AuthService {
       return await this.jwtService.verifyAsync<JwtPayload>(refreshToken, {
         secret: refreshSecret,
       });
-    } catch {
+    } catch (error) {
+      // 令牌校验失败属于预期内的安全事件，使用 warn 级别而非 error。
+      this.logger.warn(
+        'Refresh token 校验失败',
+        error instanceof Error ? error.message : String(error),
+      );
       throw new UnauthorizedException('无效的refresh token');
     }
   }

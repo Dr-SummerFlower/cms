@@ -1,5 +1,10 @@
 import { InjectRedis, Redis } from '@nestjs-redis/client';
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createCanvas } from 'canvas';
 import { randomUUID } from 'crypto';
@@ -10,6 +15,7 @@ import { CaptchaResult } from '../types';
  */
 @Injectable()
 export class CaptchaService {
+  private readonly logger = new Logger(CaptchaService.name);
   private readonly CAPTCHA_EXPIRE_SECONDS: number;
   private readonly CAPTCHA_WIDTH: number;
   private readonly CAPTCHA_HEIGHT: number;
@@ -52,8 +58,12 @@ export class CaptchaService {
         id,
         image,
       };
-    } catch {
-      throw new InternalServerErrorException('生成验证码失败');
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error('生成验证码时发生未知错误', error instanceof Error ? error.stack : String(error));
+      throw new InternalServerErrorException('生成验证码失败，请稍后重试');
     }
   }
 
@@ -69,18 +79,23 @@ export class CaptchaService {
       return false;
     }
 
-    const key = `captcha:${id}`;
-    const storedCode: string | null = await this.redisService.get(key);
+    try {
+      const key = `captcha:${id}`;
+      const storedCode: string | null = await this.redisService.get(key);
 
-    if (!storedCode) {
-      return false; // 验证码已过期或不存在
+      if (!storedCode) {
+        return false; // 验证码已过期或不存在
+      }
+
+      // 验证码采用一次性消费，用过就删，避免同一张图被重复提交。
+      await this.redisService.del(key);
+
+      // 输入前后空格和大小写都不影响校验结果。
+      return storedCode.toLowerCase() === code.toLowerCase().trim();
+    } catch (error) {
+      this.logger.error('校验验证码时发生错误', error instanceof Error ? error.stack : String(error));
+      return false;
     }
-
-    // 验证码采用一次性消费，用过就删，避免同一张图被重复提交。
-    await this.redisService.del(key);
-
-    // 输入前后空格和大小写都不影响校验结果。
-    return storedCode.toLowerCase() === code.toLowerCase().trim();
   }
 
   /**
@@ -159,12 +174,23 @@ export class CaptchaService {
       // 将canvas转换为Buffer
       return canvas.toBuffer('image/png');
     } catch (error) {
-      if (error instanceof Error && error.message.includes('canvas')) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (
+        message.includes('canvas') ||
+        message.includes('Cannot find module') ||
+        message.includes('NODE_MODULE_VERSION') ||
+        message.includes('invalid ELF')
+      ) {
+        this.logger.error(
+          'canvas 原生模块加载失败，请确认系统已安装 libcairo 等依赖并重新编译 canvas',
+          error instanceof Error ? error.stack : String(error),
+        );
         throw new InternalServerErrorException(
-          '验证码生成功能需要安装canvas库，请运行: npm install canvas',
+          '验证码图片生成失败：canvas 原生模块不可用，请联系管理员',
         );
       }
-      throw error;
+      this.logger.error('验证码图片渲染失败', error instanceof Error ? error.stack : String(error));
+      throw new InternalServerErrorException('验证码图片生成失败，请稍后重试');
     }
   }
 

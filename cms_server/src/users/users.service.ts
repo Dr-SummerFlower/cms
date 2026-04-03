@@ -1,8 +1,10 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -18,6 +20,8 @@ import { User, UserDocument } from './entities/user.entity';
  */
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
   ) {}
@@ -35,12 +39,17 @@ export class UsersService {
       // 用户创建时的密码加密与字段校验交由 schema / hook 统一处理。
       return (await this.userModel.create(userData)) as User;
     } catch (error) {
-      if (error.name === 'ValidationError') {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      const err = error as { name?: string; code?: number };
+      if (err.name === 'ValidationError') {
         throw new BadRequestException('用户数据验证失败');
       }
-      if (error.code === 11000) {
+      if (err.code === 11000) {
         throw new ConflictException('该邮箱已被注册');
       }
+      this.logger.error('创建用户时发生错误', error instanceof Error ? error.stack : String(error));
       throw new InternalServerErrorException('创建用户时发生错误');
     }
   }
@@ -62,9 +71,10 @@ export class UsersService {
         .findOne({ email })
         .select('+password')) as User;
     } catch (error) {
-      if (error instanceof BadRequestException) {
+      if (error instanceof HttpException) {
         throw error;
       }
+      this.logger.error('查询用户时发生错误', error instanceof Error ? error.stack : String(error));
       throw new InternalServerErrorException('查询用户时发生错误');
     }
   }
@@ -89,12 +99,10 @@ export class UsersService {
       }
       return user;
     } catch (error) {
-      if (
-        error instanceof BadRequestException ||
-        error instanceof NotFoundException
-      ) {
+      if (error instanceof HttpException) {
         throw error;
       }
+      this.logger.error('查询用户详情时发生错误', error instanceof Error ? error.stack : String(error));
       throw new InternalServerErrorException('查询用户详情时发生错误');
     }
   }
@@ -142,9 +150,10 @@ export class UsersService {
         totalPages,
       };
     } catch (error) {
-      if (error instanceof BadRequestException) {
+      if (error instanceof HttpException) {
         throw error;
       }
+      this.logger.error('获取用户列表时发生错误', error instanceof Error ? error.stack : String(error));
       throw new InternalServerErrorException('获取用户列表时发生错误');
     }
   }
@@ -215,16 +224,14 @@ export class UsersService {
 
       return result as User;
     } catch (error) {
-      if (error.name === 'ValidationError') {
-        throw new BadRequestException('用户数据验证失败');
-      }
-      if (
-        error instanceof BadRequestException ||
-        error instanceof NotFoundException ||
-        error instanceof InternalServerErrorException
-      ) {
+      if (error instanceof HttpException) {
         throw error;
       }
+      const err = error as { name?: string };
+      if (err.name === 'ValidationError') {
+        throw new BadRequestException('用户数据验证失败');
+      }
+      this.logger.error('更新用户信息时发生错误', error instanceof Error ? error.stack : String(error));
       throw new InternalServerErrorException('更新用户信息时发生错误');
     }
   }
@@ -259,15 +266,14 @@ export class UsersService {
       await user.save();
       return user;
     } catch (error) {
-      if (error.name === 'ValidationError') {
-        throw new BadRequestException('用户数据验证失败');
-      }
-      if (
-        error instanceof BadRequestException ||
-        error instanceof NotFoundException
-      ) {
+      if (error instanceof HttpException) {
         throw error;
       }
+      const err = error as { name?: string };
+      if (err.name === 'ValidationError') {
+        throw new BadRequestException('用户数据验证失败');
+      }
+      this.logger.error('更新用户角色时发生错误', error instanceof Error ? error.stack : String(error));
       throw new InternalServerErrorException('更新用户角色时发生错误');
     }
   }
@@ -290,15 +296,13 @@ export class UsersService {
       if (!user) {
         throw new NotFoundException('用户不存在');
       }
-      // 删除成功后返回 null，让上层按“已删除”处理即可。
+      // 删除成功后返回 null，让上层按"已删除"处理即可。
       return null;
     } catch (error) {
-      if (
-        error instanceof BadRequestException ||
-        error instanceof NotFoundException
-      ) {
+      if (error instanceof HttpException) {
         throw error;
       }
+      this.logger.error('删除用户时发生错误', error instanceof Error ? error.stack : String(error));
       throw new InternalServerErrorException('删除用户时发生错误');
     }
   }
@@ -325,12 +329,10 @@ export class UsersService {
       await user.save();
       return user;
     } catch (error) {
-      if (
-        error instanceof BadRequestException ||
-        error instanceof NotFoundException
-      ) {
+      if (error instanceof HttpException) {
         throw error;
       }
+      this.logger.error('更新用户头像时发生错误', error instanceof Error ? error.stack : String(error));
       throw new InternalServerErrorException('更新用户头像时发生错误');
     }
   }

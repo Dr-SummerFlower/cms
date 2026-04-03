@@ -10,11 +10,11 @@ export type AuthResult = {
 
 /**
  * 获取验证码图片
- * @returns 返回验证码ID和图片二进制数据
+ * @returns 返回验证码ID和SVG字符串
  */
 export async function getCaptcha(): Promise<CaptchaResult> {
   const resp = await http.get("/auth/captcha", {
-    responseType: "arraybuffer",
+    responseType: "text",
   });
   // 响应头可能被转换为小写，所以检查两种可能
   const captchaId = (resp.headers["x-captcha-id"] ||
@@ -24,7 +24,7 @@ export async function getCaptcha(): Promise<CaptchaResult> {
   }
   return {
     id: captchaId,
-    image: resp.data as ArrayBuffer,
+    svg: resp.data as string,
   };
 }
 

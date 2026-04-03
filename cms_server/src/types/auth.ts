@@ -62,6 +62,6 @@ export interface AuthResponse {
 export interface CaptchaResult {
   /** 验证码 ID。 */
   id: string;
-  /** 验证码图片二进制内容。 */
-  image: Buffer;
+  /** 验证码 SVG 字符串。 */
+  svg: string;
 }

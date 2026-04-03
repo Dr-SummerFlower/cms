@@ -203,27 +203,26 @@ export class AuthController {
 
   @ApiOperation({
     summary: '获取图片验证码',
-    description: '获取登录所需的图片验证码，返回图片二进制和验证码ID',
+    description: '获取登录所需的图片验证码，返回 SVG 图片字符串和验证码ID',
   })
   @ApiOkResponse({
-    description: '验证码图片（PNG格式）',
+    description: '验证码 SVG 图片',
     content: {
-      'image/png': {
+      'image/svg+xml': {
         schema: {
           type: 'string',
-          format: 'binary',
         },
-        example: 'PNG图片二进制数据',
+        example: '<svg>...</svg>',
       },
     },
   })
-  @ApiProduces('image/png')
+  @ApiProduces('image/svg+xml')
   @Get('captcha')
-  @Header('Content-Type', 'image/png')
+  @Header('Content-Type', 'image/svg+xml')
   async getCaptcha(@Res() res: Response): Promise<void> {
-    const { id, image } = await this.captchaService.generate();
+    const { id, svg } = await this.captchaService.generate();
     // 将验证码ID通过响应头返回，前端需要获取这个ID用于登录
     res.setHeader('X-Captcha-Id', id);
-    res.send(image);
+    res.send(svg);
   }
 }

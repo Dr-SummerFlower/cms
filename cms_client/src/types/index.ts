@@ -33,7 +33,7 @@ export interface User {
 
 export interface CaptchaResult {
   id: string;
-  image: ArrayBuffer;
+  svg: string;
 }
 
 export interface LoginDto {

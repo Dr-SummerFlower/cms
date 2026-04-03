@@ -60,25 +60,19 @@ export const CaptchaInput = React.forwardRef<
   ) => {
     const {token} = antdTheme.useToken();
     const [captchaId, setCaptchaId] = useState<string>("");
-    const [imageUrl, setImageUrl] = useState<string>("");
+    const [svgDataUrl, setSvgDataUrl] = useState<string>("");
     const [inputValue, setInputValue] = useState<string>("");
     const [loading, setLoading] = useState(false);
     const inputRef = useRef<React.ComponentRef<typeof Input>>(null);
-    const imageUrlRef = useRef<string>("");
 
     const loadCaptcha = useCallback(async (): Promise<void> => {
       setLoading(true);
       onLoadingChange?.(true);
       try {
-        const {id, image} = await getCaptcha();
+        const {id, svg} = await getCaptcha();
         setCaptchaId(id);
-        const blob = new Blob([image], {type: "image/png"});
-        const url = URL.createObjectURL(blob);
-        if (imageUrlRef.current) {
-          URL.revokeObjectURL(imageUrlRef.current);
-        }
-        imageUrlRef.current = url;
-        setImageUrl(url);
+        // 将 SVG 字符串编码为 data URL，供 <img> 直接渲染，无需创建 Blob URL。
+        setSvgDataUrl(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`);
         onRefresh?.();
       } catch (error) {
         const err =
@@ -93,11 +87,6 @@ export const CaptchaInput = React.forwardRef<
 
     useEffect(() => {
       loadCaptcha();
-      return () => {
-        if (imageUrlRef.current) {
-          URL.revokeObjectURL(imageUrlRef.current);
-        }
-      };
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -154,9 +143,9 @@ export const CaptchaInput = React.forwardRef<
         >
           {loading ? (
             <ReloadOutlined spin style={{fontSize: 16, padding: "0 8px"}}/>
-          ) : imageUrl ? (
+          ) : svgDataUrl ? (
             <img
-              src={imageUrl}
+              src={svgDataUrl}
               alt="验证码"
               style={{
                 maxHeight: "100%",

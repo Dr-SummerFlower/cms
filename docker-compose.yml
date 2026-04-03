@@ -16,6 +16,7 @@ services:
       - ./cms_data/site:/site
       - ./cms_data/caddy/data:/data
       - ./cms_data/caddy/config:/config
+      - ./cms_data/caddy/ssl:/ssl
     networks:
       - cms_network
     depends_on:
@@ -103,7 +104,7 @@ services:
       cd /app &&
       if [ ! -d 'node_modules' ]; then
         echo '🚀 node_modules 目录不存在，开始安装依赖...';
-        npm i --omit=dev --registry=https://registry.npmmirror.com/;
+        npm i --omit=dev;
       else
         echo '📦 node_modules 目录已存在，跳过安装。';
       fi &&

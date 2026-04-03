@@ -23,11 +23,28 @@
 }
 
 # MinIO 对象存储代理（HTTPS 模式，自签证书）
-{$SERVER_IP}:443 {
-  tls internal
+:443 {
+  encode zstd gzip
+
+  tls /ssl/cert.pem /ssl/key.pem
+
+  handle /api/* {
+    reverse_proxy cms_app:3000 {
+      health_uri /api/health
+      health_interval 10s
+      health_timeout 5s
+      health_status 2xx
+    }
+  }
 
   handle /media/* {
     reverse_proxy minio:9000
+  }
+
+  handle {
+    root * /site
+    try_files {path} /index.html
+    file_server
   }
 }
 

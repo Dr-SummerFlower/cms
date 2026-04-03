@@ -62,6 +62,7 @@ jobs:
           tar -czf "$TAR_NAME" \
             docker-compose.env \
             docker-compose.yml \
+            Dockerfile \
             cms_data/site \
             cms_data/server \
             cms_data/caddy/Caddyfile

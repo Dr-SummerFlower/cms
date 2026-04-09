@@ -55,6 +55,7 @@ jobs:
           rsync -a --delete cms_server/dist/ cms_data/server/
           cp cms_server/package.json cms_data/server/
           cp cms_server/package-lock.json cms_data/server/
+          cp -r cms_server/template cms_data/server/
 
       - name: 📦 生成压缩包
         run: |

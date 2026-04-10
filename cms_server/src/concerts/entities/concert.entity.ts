@@ -14,7 +14,7 @@ export class Concert extends Document {
   name: string;
 
   /** 演唱会海报地址。 */
-  @Prop({ required: false })
+  @Prop({ required: true })
   poster: string;
 
   /** 演唱会开始时间。 */

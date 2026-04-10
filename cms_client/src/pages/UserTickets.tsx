@@ -1,4 +1,4 @@
-import {App as AntdApp, Button, Input, Modal, Segmented, Space, Table, theme as antdTheme, Tooltip,} from "antd";
+import {App as AntdApp, Button, Input, Modal, Segmented, Space, Table, Tooltip,} from "antd";
 import {useEffect, useMemo, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {refundTicket} from "../api/tickets";
@@ -9,7 +9,6 @@ import type {TicketItem} from "../types";
 type StatusFilter = "all" | "valid" | "used" | "refunded";
 
 export default function UserTickets(): JSX.Element {
-  const {token} = antdTheme.useToken();
   const {items, loading, fetch} = useTicketStore();
   const {message} = AntdApp.useApp();
   const [status, setStatus] = useState<StatusFilter>("all");
@@ -135,14 +134,8 @@ export default function UserTickets(): JSX.Element {
         onCancel={() => setRefundOpen(false)}
         onOk={() => void submitRefund()}
         okText="提交申请"
-        styles={{
-          header: {
-            background: token.colorPrimaryBg,
-            borderBottom: `1px solid ${token.colorPrimaryBorder}`,
-          },
-        }}
       >
-        <div style={{marginBottom: 8, color: token.colorTextDescription}}>
+        <div style={{marginBottom: 8, color: "#999"}}>
           请填写退票原因（必填）
         </div>
         <Input.TextArea

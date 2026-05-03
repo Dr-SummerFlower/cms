@@ -71,7 +71,8 @@ export class CaptchaService {
         throw error;
       }
       // 将错误类型与消息放入 message 参数（始终输出），stack 作为第二参数追加堆栈。
-      const errName = error instanceof Error ? error.constructor.name : typeof error;
+      const errName =
+        error instanceof Error ? error.constructor.name : typeof error;
       const errMsg = error instanceof Error ? error.message : String(error);
       this.logger.error(
         `生成验证码时发生错误 [${errName}]: ${errMsg}`,

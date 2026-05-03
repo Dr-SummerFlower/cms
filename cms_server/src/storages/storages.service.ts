@@ -165,7 +165,9 @@ export class StoragesService {
         `图片压缩处理失败 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
         error instanceof Error ? error.stack : undefined,
       );
-      throw new InternalServerErrorException('图片处理失败，请确认文件格式正确');
+      throw new InternalServerErrorException(
+        '图片处理失败，请确认文件格式正确',
+      );
     }
   }
 

@@ -78,7 +78,10 @@ export class ConcertsService {
       if (err.code === 11000) {
         throw new BadRequestException('演唱会名称已存在');
       }
-      this.logger.error(`创建演唱会时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
+      this.logger.error(
+        `创建演唱会时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new InternalServerErrorException('创建演唱会时发生错误');
     }
   }
@@ -137,7 +140,10 @@ export class ConcertsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error(`获取演唱会列表时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
+      this.logger.error(
+        `获取演唱会列表时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new InternalServerErrorException('获取演唱会列表时发生错误');
     }
   }
@@ -167,7 +173,10 @@ export class ConcertsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error(`查询演唱会详情时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
+      this.logger.error(
+        `查询演唱会详情时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new InternalServerErrorException('查询演唱会详情时发生错误');
     }
   }
@@ -215,7 +224,10 @@ export class ConcertsService {
       if (err.code === 11000) {
         throw new BadRequestException('演唱会名称已存在');
       }
-      this.logger.error(`更新演唱会时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
+      this.logger.error(
+        `更新演唱会时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new InternalServerErrorException('更新演唱会时发生错误');
     }
   }
@@ -246,7 +258,10 @@ export class ConcertsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error(`删除演唱会时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
+      this.logger.error(
+        `删除演唱会时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new InternalServerErrorException('删除演唱会时发生错误');
     }
   }
@@ -382,7 +397,10 @@ export class ConcertsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error(`更新演唱会海报时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
+      this.logger.error(
+        `更新演唱会海报时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new InternalServerErrorException('更新演唱会海报时发生错误');
     }
   }

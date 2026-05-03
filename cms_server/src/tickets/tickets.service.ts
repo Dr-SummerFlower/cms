@@ -9,7 +9,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import * as QRCode from 'qrcode';
 import { Concert } from '../concerts/entities/concert.entity';
 import { EcdsaService } from '../ecdsa/ecdsa.service';
@@ -163,7 +163,9 @@ export class TicketsService {
           }
 
           // 每张票都单独绑定实名信息、人脸图像、签名与二维码原文。
-          const ticketData: TicketCreateData = this.createSingleTicket(
+          // _id 在 createSingleTicket 内预生成，调用方在此将其注入 Mongoose，
+          // 使签名原文与落库 _id 完全一致，同时保持 TicketCreateData 接口干净。
+          const { ticketId, data } = this.createSingleTicket(
             concert,
             userId,
             ticketItem,
@@ -172,9 +174,10 @@ export class TicketsService {
             attendee.idCard,
             faceImageUrls[imageIndex],
           );
-          const ticket: Ticket = (await this.ticketModel.create(
-            ticketData,
-          )) as Ticket;
+          const ticket: Ticket = (await this.ticketModel.create({
+            _id: ticketId,
+            ...data,
+          })) as Ticket;
           createdTickets.push(ticket);
           imageIndex++;
         }
@@ -190,7 +193,10 @@ export class TicketsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error(`创建票务订单时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
+      this.logger.error(
+        `创建票务订单时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new InternalServerErrorException('创建票务订单时发生错误');
     }
   }
@@ -236,7 +242,10 @@ export class TicketsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error(`查询用户票据列表时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
+      this.logger.error(
+        `查询用户票据列表时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new InternalServerErrorException('查询用户票据列表时发生错误');
     }
   }
@@ -281,7 +290,10 @@ export class TicketsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error(`查询票据详情时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
+      this.logger.error(
+        `查询票据详情时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new InternalServerErrorException('查询票据详情时发生错误');
     }
   }
@@ -375,6 +387,11 @@ export class TicketsService {
         `refund_request:${ticketId}`,
       );
 
+      // 申请入队后立即将票据状态置为"审核中"，与论文退票时序保持一致。
+      await this.ticketModel.findByIdAndUpdate(ticketId, {
+        status: 'pending',
+      });
+
       // 进入待审核队列后，由管理员在后台决定通过或拒绝。
       return {
         success: true,
@@ -384,7 +401,10 @@ export class TicketsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error(`退票申请提交时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
+      this.logger.error(
+        `退票申请提交时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new InternalServerErrorException('退票申请提交失败，请稍后重试');
     }
   }
@@ -440,8 +460,13 @@ export class TicketsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error(`获取退票申请列表时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
-      throw new InternalServerErrorException('获取退票申请列表失败，请稍后重试');
+      this.logger.error(
+        `获取退票申请列表时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+      throw new InternalServerErrorException(
+        '获取退票申请列表失败，请稍后重试',
+      );
     }
   }
 
@@ -483,7 +508,8 @@ export class TicketsService {
           throw new NotFoundException('票据不存在');
         }
 
-        if (ticket.status !== 'valid') {
+        // 正常流程下票据此时应为 pending，若已变更为 used/refunded 则拒绝操作。
+        if (ticket.status !== 'pending') {
           throw new BadRequestException('票据状态已变更，无法退票');
         }
 
@@ -519,6 +545,11 @@ export class TicketsService {
         if (!reviewNote) {
           throw new BadRequestException('拒绝申请时必须提供审核备注');
         }
+
+        // 拒绝退票时将票据状态回滚为 valid，用户可继续使用或再次申请退票。
+        await this.ticketModel.findByIdAndUpdate(ticketId, {
+          status: 'valid',
+        });
 
         request.status = 'rejected';
         request.reviewTime = new Date().toISOString();
@@ -558,7 +589,10 @@ export class TicketsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error(`审核退票申请时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
+      this.logger.error(
+        `审核退票申请时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new InternalServerErrorException('审核退票申请失败，请稍后重试');
     } finally {
       // finally 块单独捕获异常，防止 Redis 续期失败覆盖主流程的返回值或异常。
@@ -667,8 +701,13 @@ export class TicketsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error(`生成二维码时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
-      throw new InternalServerErrorException('生成二维码时发生错误，请稍后重试');
+      this.logger.error(
+        `生成二维码时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+      throw new InternalServerErrorException(
+        '生成二维码时发生错误，请稍后重试',
+      );
     }
   }
 
@@ -714,9 +753,9 @@ export class TicketsService {
       if (ticket.status === 'valid') {
         const currentTime: number = Date.now();
         const timestampAge: number = currentTime - qrData.timestamp;
-        const maxAge: number = 60000;
+        const maxAge: number = 30000;
 
-        // 仅接受一分钟内生成的动态二维码，降低截图复用风险。
+        // 仅接受 30 秒内生成的动态二维码，与前端刷新周期一致，防止截图复用。
         if (timestampAge > maxAge) {
           throw new BadRequestException('二维码已过期，请刷新后重试');
         }
@@ -782,7 +821,10 @@ export class TicketsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error(`验证票据时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
+      this.logger.error(
+        `验证票据时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new InternalServerErrorException('验证票据时发生错误，请稍后重试');
     }
   }
@@ -849,7 +891,10 @@ export class TicketsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error(`确认验票时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
+      this.logger.error(
+        `确认验票时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new InternalServerErrorException('确认验票时发生错误，请稍后重试');
     }
   }
@@ -934,8 +979,13 @@ export class TicketsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error(`获取验证历史记录时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
-      throw new InternalServerErrorException('获取验证历史记录时发生错误，请稍后重试');
+      this.logger.error(
+        `获取验证历史记录时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+      throw new InternalServerErrorException(
+        '获取验证历史记录时发生错误，请稍后重试',
+      );
     }
   }
 
@@ -959,12 +1009,13 @@ export class TicketsService {
     realName: string,
     idCard: string,
     faceImage: string,
-  ): TicketCreateData {
-    const tempTicketId: string = this.generateTempTicketId(timestamp);
+  ): { ticketId: string; data: TicketCreateData } {
+    // 在业务层预生成 ObjectId，使签名原文与最终落库的 _id 保持一致。
+    // _id 不写入业务接口，由调用方在调用 Mongoose create 时注入。
+    const ticketId: string = new Types.ObjectId().toHexString();
 
-    // 票据落库前先使用临时 ID 参与签名，后续验票时以二维码原文为准校验。
     const signatureData: string = this.ecdsaService.generateTicketSignatureData(
-      tempTicketId,
+      ticketId,
       String(concert._id),
       userId,
       timestamp,
@@ -974,14 +1025,14 @@ export class TicketsService {
       throw new BadRequestException('私钥解密失败，请检查环境配置');
     }
 
-    // 票据落库前先完成签名，后续验票时以二维码原文和公钥进行反向校验。
     const { signature }: { signature: string } = this.ecdsaService.sign(
       signatureData,
       concert.privateKey,
     );
 
+    // 初始二维码数据使用购票时间戳，与动态 QR 的刷新时间戳区分，仅作历史记录。
     const qrCodeData: string = this.ecdsaService.generateQRCodeData(
-      tempTicketId,
+      ticketId,
       signature,
       timestamp,
     );
@@ -990,31 +1041,20 @@ export class TicketsService {
       ticketItem.type === 'adult' ? concert.adultPrice : concert.childPrice;
 
     return {
-      concert: String(concert._id),
-      user: userId,
-      type: ticketItem.type,
-      price,
-      signature,
-      publicKey: concert.publicKey,
-      qrCodeData,
-      realName,
-      idCard,
-      faceImage,
+      ticketId,
+      data: {
+        concert: String(concert._id),
+        user: userId,
+        type: ticketItem.type,
+        price,
+        signature,
+        publicKey: concert.publicKey,
+        qrCodeData,
+        realName,
+        idCard,
+        faceImage,
+      },
     };
-  }
-
-  /**
-   * 生成用于二维码签名的临时票据标识。
-   *
-   * @param timestamp - 当前签名时间戳
-   * @returns 含时间戳与随机片段的临时票据 ID
-   */
-  private generateTempTicketId(timestamp: number): string {
-    const random: string = Math.random()
-      .toString(36)
-      .substring(2, 8)
-      .toUpperCase();
-    return `TEMP_${timestamp}_${random}`;
   }
 
   /**
@@ -1033,11 +1073,12 @@ export class TicketsService {
     tickets: TicketOrderItemDto[],
     concert: Concert,
   ): Promise<void> {
+    // pending（审核中）的票据尚未退款，计入限购数量，防止用户通过退票申请绕过限制。
     const existingTickets: Ticket[] = (await this.ticketModel
       .find({
         user: userId,
         concert: concertId,
-        status: { $in: ['valid', 'used'] },
+        status: { $in: ['valid', 'pending', 'used'] },
       })
       .exec()) as Ticket[];
 

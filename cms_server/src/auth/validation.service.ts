@@ -63,7 +63,9 @@ export class ValidationService {
         `验证码验证时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
         error instanceof Error ? error.stack : undefined,
       );
-      throw new InternalServerErrorException('验证码服务暂时不可用，请稍后重试');
+      throw new InternalServerErrorException(
+        '验证码服务暂时不可用，请稍后重试',
+      );
     }
   }
 
@@ -96,7 +98,9 @@ export class ValidationService {
         `清除验证码时发生错误 [${error instanceof Error ? error.constructor.name : typeof error}]: ${error instanceof Error ? error.message : String(error)}`,
         error instanceof Error ? error.stack : undefined,
       );
-      throw new InternalServerErrorException('验证码服务暂时不可用，请稍后重试');
+      throw new InternalServerErrorException(
+        '验证码服务暂时不可用，请稍后重试',
+      );
     }
   }
 }

@@ -28,7 +28,7 @@ export class Ticket extends Document {
   price: number;
 
   /** 票据当前状态。 */
-  @Prop({ enum: ['valid', 'used', 'refunded'], default: 'valid' })
+  @Prop({ enum: ['valid', 'pending', 'used', 'refunded'], default: 'valid' })
   status: TicketStatus;
 
   /** 票据签名。 */

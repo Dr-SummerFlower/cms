@@ -121,7 +121,9 @@ export class AuthService {
     password: string;
   }): Promise<AuthResponse> {
     try {
-      const existingUser: User = await this.usersService.findOne(userData.email);
+      const existingUser: User = await this.usersService.findOne(
+        userData.email,
+      );
       if (existingUser) {
         throw new ConflictException('该邮箱已被注册');
       }

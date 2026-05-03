@@ -12,7 +12,7 @@ export type TicketType = 'adult' | 'child';
  *
  * @category Model
  */
-export type TicketStatus = 'valid' | 'used' | 'refunded';
+export type TicketStatus = 'valid' | 'pending' | 'used' | 'refunded';
 
 /**
  * 单种票型的下单信息。

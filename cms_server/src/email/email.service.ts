@@ -1,6 +1,10 @@
 ﻿import { MailerService } from '@nestjs-modules/mailer';
 import { InjectRedis, Redis } from '@nestjs-redis/client';
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { SendCodeDto } from './dto/send-code.dto';
 
 /**

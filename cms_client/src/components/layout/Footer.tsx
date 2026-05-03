@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
-import { Layout } from "antd";
-import { ClockCircleOutlined } from "@ant-design/icons";
-import { getHealth } from "../../api/health";
+import {useEffect, useState} from "react";
+import {Layout} from "antd";
+import {ClockCircleOutlined} from "@ant-design/icons";
+import {getHealth} from "../../api/health";
 
-const { Footer } = Layout;
+const {Footer} = Layout;
 
 function formatUptime(seconds: number): string {
   const d = Math.floor(seconds / 86400);
@@ -27,7 +27,7 @@ export default function AppFooter(): JSX.Element {
 
     async function syncUptime() {
       try {
-        const { uptime: seconds } = await getHealth();
+        const {uptime: seconds} = await getHealth();
         setUptime(seconds);
       } catch {
         // silently ignore — backend may not be reachable
@@ -50,11 +50,11 @@ export default function AppFooter(): JSX.Element {
   }, []);
 
   return (
-    <Footer style={{ textAlign: "center", color: "rgba(0,0,0,0.45)" }}>
+    <Footer style={{textAlign: "center", color: "rgba(0,0,0,0.45)"}}>
       <div>© {new Date().getFullYear()} 演唱会管理系统</div>
       {uptime !== null && (
-        <div style={{ marginTop: 4, fontSize: 12 }}>
-          <ClockCircleOutlined style={{ marginRight: 4 }} />
+        <div style={{marginTop: 4, fontSize: 12}}>
+          <ClockCircleOutlined style={{marginRight: 4}}/>
           服务运行时间：{formatUptime(uptime)}
         </div>
       )}

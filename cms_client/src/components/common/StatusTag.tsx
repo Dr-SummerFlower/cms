@@ -17,6 +17,7 @@ type StatusTagProps<K extends StatusKind> = {
 
 const ticketMap: Record<TicketStatus, { color: string; text: string }> = {
   valid: {color: "green", text: "未使用"},
+  pending: {color: "gold", text: "审核中"},
   used: {color: "blue", text: "已使用"},
   refunded: {color: "red", text: "已退款"},
 };

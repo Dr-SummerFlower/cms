@@ -1,4 +1,4 @@
-import { getJson } from "../utils/http";
+import {getJson} from "../utils/http";
 
 export interface HealthStatus {
   status: "ok";

@@ -140,7 +140,7 @@ export interface CreateConcertDto {
 export type UpdateConcertDto = Partial<CreateConcertDto>;
 
 // ---- Ticket ----
-export type TicketStatus = "valid" | "used" | "refunded";
+export type TicketStatus = "valid" | "pending" | "used" | "refunded";
 export type TicketType = "adult" | "child";
 
 export interface TicketConcertLite {
@@ -241,7 +241,7 @@ export interface VerifyHistoryItem {
     _id: string;
     type: "adult" | "child";
     price: number;
-    status: "valid" | "used" | "refunded";
+    status: "valid" | "pending" | "used" | "refunded";
     concert: {
       _id: string;
       name: string;
@@ -278,7 +278,7 @@ export interface VerifyTicketResponse {
     concertVenue: string;
     type: "adult" | "child";
     price: number;
-    status: "valid" | "used" | "refunded";
+    status: "valid" | "pending" | "used" | "refunded";
     userName: string;
     userEmail: string;
     realName?: string;

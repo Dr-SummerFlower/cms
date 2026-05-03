@@ -6,7 +6,7 @@ import StatusTag from "../components/common/StatusTag.tsx";
 import {useTicketStore} from "../stores/ticketStore";
 import type {TicketItem} from "../types";
 
-type StatusFilter = "all" | "valid" | "used" | "refunded";
+type StatusFilter = "all" | "valid" | "pending" | "used" | "refunded";
 
 export default function UserTickets(): JSX.Element {
   const {items, loading, fetch} = useTicketStore();
@@ -91,7 +91,7 @@ export default function UserTickets(): JSX.Element {
           <Button onClick={() => navigate(`/me/tickets/${r.id}`)}>
             查看详情
           </Button>
-          <Tooltip title="仅未使用可申请退票">
+          <Tooltip title={r.status === "pending" ? "退票申请审核中" : "仅未使用可申请退票"}>
             <Button
               danger
               disabled={r.status !== "valid"}
@@ -108,6 +108,7 @@ export default function UserTickets(): JSX.Element {
   const filterOptions = [
     {label: "全部", value: "all"},
     {label: "未使用", value: "valid"},
+    {label: "审核中", value: "pending"},
     {label: "已使用", value: "used"},
     {label: "已退款", value: "refunded"},
   ];

@@ -1,0 +1,12 @@
+results/**
+!results/.gitkeep
+!results/html-report/
+!results/html-report/.gitkeep
+*.jtl
+jmeter.log
+data/user-tokens.csv
+data/purchase-users.csv
+data/inspector-tokens.csv
+data/concert-id.csv
+data/qr-codes.csv
+assets/*.png

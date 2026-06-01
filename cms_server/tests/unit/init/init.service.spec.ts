@@ -4,6 +4,8 @@ import { ConfigService } from '@nestjs/config';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model } from 'mongoose';
+import { Concert } from '../../../src/concerts/entities/concert.entity';
+import { EcdsaService } from '../../../src/ecdsa/ecdsa.service';
 import { InitService } from '../../../src/init/init.service';
 import { StoragesService } from '../../../src/storages/storages.service';
 import { User } from '../../../src/users/entities/user.entity';
@@ -24,6 +26,20 @@ describe('InitService', () => {
           useValue: {
             findOne: jest.fn(),
             create: jest.fn(),
+            insertMany: jest.fn(),
+          },
+        },
+        {
+          provide: getModelToken(Concert.name),
+          useValue: {
+            findOne: jest.fn(),
+            create: jest.fn(),
+          },
+        },
+        {
+          provide: EcdsaService,
+          useValue: {
+            generateKeyPair: jest.fn(),
           },
         },
         {

@@ -11,14 +11,6 @@ import { StoragesModule } from './storages/storages.module';
 import { TicketsModule } from './tickets/tickets.module';
 import { UsersModule } from './users/users.module';
 
-const envFilePath: string[] = ['.env'];
-const IS_DEV: boolean = process.env.RUNNING_ENV !== 'prod';
-if (IS_DEV) {
-  envFilePath.unshift('.env.dev');
-} else {
-  envFilePath.unshift('.env.prod');
-}
-
 @Module({
   imports: [
     GlobalModule,

@@ -12,11 +12,14 @@ import { GlobalInterceptor } from './global.interceptor';
 // 环境配置文件路径数组
 const envFilePath: string[] = ['.env'];
 // 判断当前环境是否为开发环境
-export const IS_DEV: boolean = process.env.RUNNING_ENV !== 'prod';
+export const IS_DEV: boolean = process.env.RUNNING_ENV === 'dev';
+export const IS_TEST: boolean = process.env.RUNNING_ENV === 'test';
 // 根据环境加载对应的配置文件
 if (IS_DEV) {
   // 开发环境优先加载.env.dev配置文件
   envFilePath.unshift('.env.dev');
+} else if (IS_TEST) {
+  envFilePath.unshift('.env.test');
 } else {
   // 生产环境优先加载.env.prod配置文件
   envFilePath.unshift('.env.prod');

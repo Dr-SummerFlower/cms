@@ -2,7 +2,8 @@
 
 ## 项目概述
 
-本仓库为演唱会/票务管理系统的单体仓库，包含前端 `cms_client` 与后端 `cms_server`。AI 在本项目中工作时，应优先阅读当前工作目录及其父级目录下的 AGENTS.md，以遵循该区域的约定。
+本仓库为演唱会/票务管理系统的单体仓库，包含前端 `cms_client` 与后端 `cms_server`。AI 在本项目中工作时，应优先阅读当前工作目录及其父级目录下的
+AGENTS.md，以遵循该区域的约定。
 
 ## 仓库结构
 
@@ -123,20 +124,71 @@ cd cms_server && npx tsc --noEmit
 
 ## 代码导航与重构
 
-**始终使用 LSP 进行代码导航和重构，禁止使用文本搜索（grep）：**
+### CodeGraph 语义搜索（推荐）
 
-- ✅ `typescript_find_references("SymbolName")` — 查找所有引用
-- ✅ `typescript_get_type_definition("symbol")` — 跳转到类型定义
-- ✅ `typescript_rename_symbol("oldName", "newName")` — 安全重命名
-- ✅ `typescript_find_implementations("InterfaceName")` — 查找实现
-- ✅ `typescript_get_diagnostics()` — 检查类型错误
+CodeGraph 已为项目建立索引，可使用语义搜索进行代码探索：
+
+- `codegraph_search("symbolName")` — 按符号名搜索
+- `codegraph_explore("query")` — 按自然语言问题探索代码区域，返回完整源码
+- `codegraph_node("symbolName", includeCode=true)` — 获取单个符号的详细信息
+- `codegraph_callers("symbolName")` — 查找调用者
+- `codegraph_callees("symbolName")` — 查找被调用方
+- `codegraph_impact("symbolName")` — 分析修改影响范围
+- `codegraph_files(path, pattern)` — 按路径/glob 列出索引文件
+- `codegraph_status()` — 查看索引健康状态
+
+### LSP 精确导航
+
+对于精确的重构操作，始终使用 LSP：
+
+- `typescript_find_references("SymbolName")` — 查找所有引用
+- `typescript_get_type_definition("symbol")` — 跳转到类型定义
+- `typescript_rename_symbol("oldName", "newName")` — 安全重命名
+- `typescript_find_implementations("InterfaceName")` — 查找实现
+- `typescript_get_diagnostics()` — 检查类型错误
+
+### 禁止的搜索方式
+
+- 禁止使用文本搜索（grep）进行代码导航与重构
+- 禁止使用 LSP 之外的文本匹配方式进行重命名
+
+## 前端路由一览
+
+| 路径                 | 页面                        | 权限                 |
+| -------------------- | --------------------------- | -------------------- |
+| `/`                  | HomePage                    | 公开                 |
+| `/login`             | LoginPage                   | 公开                 |
+| `/register`          | RegisterPage                | 公开                 |
+| `/concerts/:id`      | ConcertDetail               | 公开                 |
+| `/purchase/:id`      | PurchasePage                | USER/ADMIN/INSPECTOR |
+| `/me/tickets`        | UserTickets                 | USER/ADMIN/INSPECTOR |
+| `/me/tickets/:id`    | TicketDetail                | USER/ADMIN/INSPECTOR |
+| `/me/profile`        | UserProfileView             | USER/ADMIN/INSPECTOR |
+| `/me/profile/edit`   | UserProfileEdit             | USER/ADMIN/INSPECTOR |
+| `/admin`             | AdminLayout → AdminConcerts | ADMIN                |
+| `/admin/concerts`    | AdminConcerts               | ADMIN                |
+| `/admin/users`       | AdminUsers                  | ADMIN                |
+| `/admin/refunds`     | AdminRefunds                | ADMIN                |
+| `/inspector`         | InspectorVerify             | INSPECTOR/ADMIN      |
+| `/inspector/history` | VerifyHistory               | INSPECTOR/ADMIN      |
+
+## 后端 API 一览
+
+| 模块         | 路由前缀    | 核心接口                                                                                                                                      |
+| ------------ | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **auth**     | `/auth`     | POST login, POST register, POST refresh, GET captcha                                                                                          |
+| **concerts** | `/concerts` | POST /, GET /, GET /:id, PATCH /:id, DELETE /:id, PATCH /:id/poster                                                                           |
+| **tickets**  | `/tickets`  | POST /orders, GET /my, GET /:id, POST /:id/refund, GET /refund-requests, PUT /refund-requests/:ticketId/review, GET /:id/qrcode, POST /verify |
+| **users**    | `/users`    | GET /me, PATCH /me, GET /:id, GET / (管理员), PATCH /:id/role (管理员)                                                                        |
+| **email**    | `/email`    | POST / (发送验证码)                                                                                                                           |
 
 ## 相关 AGENTS.md
 
 - 前端约定与结构见：`cms_client/AGENTS.md`、`cms_client/src/AGENTS.md` 及各子目录
 - 后端约定与模块见：`cms_server/AGENTS.md`、`cms_server/src/AGENTS.md` 及各模块根目录
 
-## AI规则
+## AI 规则
 
 - AI 助手应遵循本 AGENTS.md 及各子目录 AGENTS.md 中的所有约定
 - 操作时注意专一性，比如，在编写项目的业务代码时禁止编写测试代码，在编写测试代码时禁止修改业务代码
+- 优先使用 CodeGraph 工具进行代码探索与理解，遇到需要精确重命名/重构的场景时切换使用 LSP

@@ -25,7 +25,7 @@ export async function createOrder(
 }
 
 export async function myTickets(params?: {
-  status?: "valid" | "used" | "refunded";
+  status?: "valid" | "pending" | "used" | "refunded";
   concertId?: string;
 }): Promise<ReadonlyArray<TicketItem>> {
   const raws = await getJson<ReadonlyArray<TicketItemRaw>>(

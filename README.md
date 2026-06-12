@@ -6,28 +6,28 @@
 
 ### 前端 (`cms_client`)
 
-| 类别   | 技术                    |
-|------|-----------------------|
-| 框架   | React 18 + TypeScript |
-| 构建   | Vite 7                |
-| UI   | Ant Design 5          |
+| 类别     | 技术                  |
+| -------- | --------------------- |
+| 框架     | React 18 + TypeScript |
+| 构建     | Vite 7                |
+| UI       | Ant Design 5          |
 | 状态管理 | Zustand               |
-| 路由   | React Router 7        |
-| 工具   | Axios、dayjs、ahooks    |
-| 扫码   | html5-qrcode          |
+| 路由     | React Router 7        |
+| 工具     | Axios、dayjs、ahooks  |
+| 扫码     | html5-qrcode          |
 
 ### 后端 (`cms_server`)
 
-| 类别   | 技术                                       |
-|------|------------------------------------------|
-| 框架   | NestJS 11 + TypeScript                   |
-| 数据库  | MongoDB 8 (Mongoose)                     |
-| 缓存   | Redis 8                                  |
-| 认证   | JWT (Passport)                           |
+| 类别     | 技术                                          |
+| -------- | --------------------------------------------- |
+| 框架     | NestJS 11 + TypeScript                        |
+| 数据库   | MongoDB 8 (Mongoose)                          |
+| 缓存     | Redis 8                                       |
+| 认证     | JWT (Passport)                                |
 | 文件存储 | MinIO(推荐版本：RELEASE.2024-06-13T22-53-53Z) |
-| 邮件   | Nodemailer                               |
-| 二维码  | qrcode                                   |
-| 图片处理 | sharp                                    |
+| 邮件     | Nodemailer                                    |
+| 二维码   | qrcode                                        |
+| 图片处理 | sharp                                         |
 
 ## 快速启动（开发环境）
 
@@ -73,28 +73,35 @@ npm run dev
 ## Docker 部署（生产环境）
 
 ```bash
-# 1. 配置根目录 .env 文件
+# 1. 配置环境变量
 cp docker-compose.env .env
-# 编辑 .env，修改所有密码和密钥
+# 编辑 .env，修改所有密码、密钥及邮件配置
 
-# 2. 构建前端静态文件
-cd cms_client && npm run build:docker
+# 2. 构建前端（产物输出至 cms_data/site/）
+cd cms_client && npm run build:docker && cd ..
 
-# 3. 启动所有服务
-cd ..
+# 3. 构建后端（产物自动输出至 cms_data/server/）
+cd cms_server && npm run build:docker && cd ..
+
+# 4. 启动所有服务
 docker compose up -d
 ```
+
+> **说明**：
+> - 前端构建产物通过 volumes 挂载至 Caddy 容器的 `/site` 目录进行静态服务
+> - 后端构建产物（`dist/`、`package.json`、`package-lock.json`、`template/`）挂载至 `cms_app` 容器的 `/app` 目录，容器首次启动时自动安装生产依赖后运行 `node main.js`
+> - `redis.conf` 即使为空文件也可正常工作，Redis 密码通过命令行参数传入
 
 服务启动后通过 Caddy 代理访问，默认端口 80/443。
 
 ## 用户角色
 
-| 角色             | 权限                 |
-|----------------|--------------------|
-| GUEST（访客）      | 浏览演出列表与详情          |
-| USER（用户）       | 购票、退票、查看电子票、编辑个人资料 |
-| INSPECTOR（检票员） | 扫码验票、查看验票历史        |
-| ADMIN（管理员）     | 演出管理、用户管理、退票审核、检票  |
+| 角色                | 权限                                 |
+| ------------------- | ------------------------------------ |
+| GUEST（访客）       | 浏览演出列表与详情                   |
+| USER（用户）        | 购票、退票、查看电子票、编辑个人资料 |
+| INSPECTOR（检票员） | 扫码验票、查看验票历史               |
+| ADMIN（管理员）     | 演出管理、用户管理、退票审核、检票   |
 
 ## 项目结构
 
